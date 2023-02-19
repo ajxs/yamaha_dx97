@@ -119,9 +119,20 @@ test_entry_reset_system:                        SUBROUTINE
 ; Set portamento speed to instantaneous.
     LDAA    #$FF
     STAA    <portamento_rate_scaled
-; @TODO: Why is this reset.
-    LDD     #$100
-    STD     <portamento_base_frequency
+
+; The following loop resets the current pitch EG levels for all 16 voices.
+; It sets each of the pitch EG levels to 0x4000.
+    LDAB    #16
+    LDX     #pitch_eg_current_frequency
+
+.reset_pitch_eg_loop:
+    LDAA    #64
+    STAA    0,x
+    INX
+    CLR     0,x
+    INX
+    DECB
+    BNE     .reset_pitch_eg_loop
 
 ; Clear EGS pitch-mod?
 ; @TODO.

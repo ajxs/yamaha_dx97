@@ -71,8 +71,20 @@ voice_remove:                                   SUBROUTINE
 ;
 ; ==============================================================================
 voice_remove_poly:                              SUBROUTINE
+; ==============================================================================
+; LOCAL TEMPORARY VARIABLES
+; ==============================================================================
+.voice_status_pointer:                          EQU #temp_variables
+.pitch_eg_step_pointer:                         EQU #(temp_variables + 2)
+
+; ==============================================================================
     LDAB    #EGS_VOICE_EVENT_OFF
+
+    LDX     #pitch_eg_current_step
+    STX     .pitch_eg_step_pointer
+
     LDX     #voice_status
+    STX     .voice_status_pointer
 
 .find_active_voice_loop:
 ; Check whether the MSB of the current voice's frequency is equal to the
@@ -81,12 +93,19 @@ voice_remove_poly:                              SUBROUTINE
     BNE     .find_active_voice_loop_increment
 
 ; Test whether the voice being stopped is currently active.
-    TIMX   #VOICE_STATUS_ACTIVE, 1
+    TIMX    #VOICE_STATUS_ACTIVE, 1
     BNE     .is_voice_sustained
 
 .find_active_voice_loop_increment:
     INX
     INX
+    STX     .voice_status_pointer
+
+    LDX     .pitch_eg_step_pointer
+    INX
+    STX     .pitch_eg_step_pointer
+
+    LDX     .voice_status_pointer
 
 ; The value in ACCB corresponds to the EGS 'Voice Event' field.
 ; Since the voice number is stored in fields 2-5, incrementing the index
@@ -112,15 +131,21 @@ voice_remove_poly:                              SUBROUTINE
 
 ; If sustain is not active, deactivate the voice, and store the voice
 ; event deactivating the voice to the EGS chip.
-    AIMX   #~VOICE_STATUS_ACTIVE, 1
+    AIMX    #~VOICE_STATUS_ACTIVE, 1
     STAB    egs_key_event
+
+; Set the pitch EG to its release stage.
+    LDX     .pitch_eg_step_pointer
+    LDAA    #4
+    STAA    0,x
+
     BRA     .exit
 
 .voice_sustained:
 ; Since the sustain pedal is depressed, set the voice status bit indicating
 ; that the voice is sustained, and reset the bit indicating it is active.
-    OIMX   #VOICE_STATUS_SUSTAIN, 1
-    AIMX   #~VOICE_STATUS_ACTIVE, 1
+    OIMX    #VOICE_STATUS_SUSTAIN, 1
+    AIMX    #~VOICE_STATUS_ACTIVE, 1
 
 .exit:
     RTS
@@ -174,6 +199,10 @@ voice_remove_mono:                              SUBROUTINE
     TST     sustain_status
     BMI     .voice_sustained
 
+; Set the pitch EG to its release stage.
+    LDAA    #4
+    STAA    pitch_eg_current_step
+
 ; Set the current voice's status entry to 'inactive', and send the 'Key Off'
 ; event signal to the EGS chip.
     AIMX    #~VOICE_STATUS_ACTIVE, 1
@@ -184,8 +213,8 @@ voice_remove_mono:                              SUBROUTINE
 .voice_sustained:
 ; Since the sustain pedal is depressed, set the voice status bit indicating
 ; that the voice is sustained, and reset the bit indicating it is active.
-    OIMX   #VOICE_STATUS_SUSTAIN, 1
-    AIMX   #~VOICE_STATUS_ACTIVE, 1
+    OIMX    #VOICE_STATUS_SUSTAIN, 1
+    AIMX    #~VOICE_STATUS_ACTIVE, 1
 
 .exit:
     RTS

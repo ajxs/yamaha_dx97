@@ -131,6 +131,7 @@ voice_convert_midi_note_to_log_freq:            SUBROUTINE
 ; VOICE_UDPATE_SUSTAIN_STATUS
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Tests to see whether the status of the sustain pedal has transition from
 ; active to inactive. If this is the case, this subroutine tests all voices to
@@ -176,6 +177,20 @@ voice_update_sustain_status:                    SUBROUTINE
     STAB    egs_key_event
     DELAY_SHORT
 
+; Set the pitch EG step for this voice to its release stage.
+    PSHB
+    PSHX
+
+    LDX     #pitch_eg_current_step
+    LSRB
+    LSRB
+    ABX
+    LDAB    #4
+    STAB    0,x
+
+    PULX
+    PULB
+
 .increment_loop_counter:
     INX
     INX
@@ -191,56 +206,3 @@ voice_update_sustain_status:                    SUBROUTINE
     STAA    <sustain_status
 
     RTS
-
-
-; =============================================================================
-; VOICE_SET_KEY_TRANSPOSE_BASE_FREQUENCY
-; =============================================================================
-; DESCRIPTION:
-; This subroutine calculates the 'key transpose' base logarithmic frequency.
-; This value is used in calculating the final frequency value for notes sent
-; to the EGS chip.
-;
-; This differs from the method used in the DX7. The DX7 simply adds the base
-; transpose note to each note number being played before calculating the
-; new note's frequency.
-;
-; MEMORY MODIFIED:
-; * key_transpose_base_frequency
-;
-; REGISTERS MODIFIED:
-; * ACCA, ACCB, IX
-;
-; =============================================================================
-voice_set_key_transpose_base_frequency:         SUBROUTINE
-    LDAB    patch_edit_key_transpose
-; '48' is the note number for C3.
-; This is the minimum value for the key transpose setting, with the default
-; value of '12' in the init patch buffer corresponding to 48 + 12 = C4.
-    ADDB    #48
-
-    BSR     voice_convert_midi_note_to_log_freq
-
-    LDD     <note_frequency
-
-; This value represents the logarithmic frequency of C4.
-    SUBD    #$4EA8
-    STD     <key_transpose_base_frequency
-
-    RTS
-
-
-; =============================================================================
-; This macro calculates the 'base' logarithmic frequency used in various
-; voice routines. It is calculated from the master tune and key transpose
-; frequency, and used when adding voices.
-; =============================================================================
-    .MAC GET_VOICE_BASE_FREQUENCY
-        CLRA
-        LDAB    master_tune
-        LSLD
-        LSLD
-        ADDD    <key_transpose_base_frequency
-    ; @TODO: What is this magic number?
-        ADDD    #$2458
-    .ENDM

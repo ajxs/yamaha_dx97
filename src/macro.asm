@@ -104,13 +104,12 @@
 ; Sets all of the synth's operators as being enabled.
 ;
 ; REGISTERS MODIFIED:
-; * ACCA, ACCB
+; * ACCA
 ;
 ; ==============================================================================
     .MAC RESET_OPERATOR_STATUS
-        LDD     #$101
-        STD     operator_4_enabled_status
-        STD     operator_2_enabled_status
+        LDAA    #$3F
+        STAA    patch_edit_operator_status
     .ENDM
 
 

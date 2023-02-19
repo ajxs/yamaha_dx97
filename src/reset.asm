@@ -25,7 +25,7 @@
 ; Reset the UI variables to a known-state on system reset.
 ;
 ; MEMORY MODIFIED:
-; * key_tranpose_set_mode_active
+; * key_transpose_set_mode_active
 ; * memory_protect
 ; * operator_selected_dest
 ; * ui_mode_memory_protect_state
@@ -40,7 +40,7 @@
 ; ==============================================================================
 handler_reset_initialise_ui_variables:          SUBROUTINE
 ; Clear the 'Key Transpose' mode flag.
-    CLR     key_tranpose_set_mode_active
+    CLR     key_transpose_set_mode_active
 
 ; Sets the internal patch memory in a protected state.
     LDAA    #1

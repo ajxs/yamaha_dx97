@@ -26,7 +26,7 @@
 ;
 ; ==============================================================================
 tape_input_patch:                               SUBROUTINE
-    LDX     #patch_buffer_tape_temp
+    LDX     #patch_buffer_incoming
     LDAB    #67
     STAB    <tape_byte_counter
     JSR     tape_input_pilot_tone
@@ -483,7 +483,7 @@ loc_ED60:
     JSR     tape_remote_output_low
 
 loc_ED63:
-    LDX     #patch_buffer_tape_temp
+    LDX     #patch_buffer_incoming
     STX     <memcpy_ptr_src
     LDX     #patch_buffer_edit
     JSR     patch_deserialise

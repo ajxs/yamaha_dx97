@@ -21,7 +21,6 @@
 ; PATCH_ACTIVATE_SCALE_LFO_SPEED
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Parses, and scales the LFO speed value. This subroutine is called during
 ; the patch activation process.
@@ -71,7 +70,7 @@ patch_activate_parse_lfo_speed:                 SUBROUTINE
 ; ==============================================================================
 ; PATCH_ACTIVATE_LFO_DELAY_INCREMENT
 ; ==============================================================================
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
 ; @TODO
 ; Processes the patch's LFO delay value to compute the LFO delay increment.
@@ -125,7 +124,7 @@ patch_activate_lfo_delay_increment:             SUBROUTINE
 ; ==============================================================================
 ; PATCH_ACTIVATE_LFO
 ; ==============================================================================
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
 ; This routine is responsible for parsing the serialised patch LFO data, and
 ; setting up the internal representation of the data used in internal LFO
@@ -167,7 +166,6 @@ patch_activate_lfo:                             SUBROUTINE
 
 
 ; ==============================================================================
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
 ; LFO Mod Sensitivity Table
 ; This table is used to translate serialised LFO Mod Sensitivity values
 ; into their internal representation.

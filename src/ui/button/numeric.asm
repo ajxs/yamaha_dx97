@@ -89,6 +89,7 @@ ui_button_numeric:                              SUBROUTINE
 ; UI_BUTTON_EDIT_1_TO_4_OPERATOR_ENABLE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @REMADE_FOR_6_OP
 ; @PRIVATE
 ; DESCRIPTION:
 ; Toggles the operator enable status of the synth's operators.
@@ -96,30 +97,34 @@ ui_button_numeric:                              SUBROUTINE
 ; ARGUMENTS:
 ; Registers:
 ; * ACCB: The triggering front-panel numeric button number.
+;         In this case numbers 0-3.
 ;
 ; MEMORY MODIFIED:
-; * operator_enabled_status
+; * patch_edit_operator_status
 ;
 ; REGISTERS MODIFIED:
 ; * ACCA, ACCB, IX
 ;
 ; ==============================================================================
 ui_button_edit_1_to_4_operator_enable:          SUBROUTINE
-; Use the triggering button number as an offset into the operator enabled
-; status array, and load the associated status.
-    LDX     #operator_enabled_status
+; Load the bitmask corresponding to the operator being toggled.
+    LDX     #table_operator_bitmask
     ABX
     LDAA    0,x
 
-; Increment and mask the operator's status to toggle the value, then store it.
-    INCA
-    ANDA    #1
-    STAA    0,x
-    BNE     .load_selected_operator_status
+    PSHA
 
-; Test if the operator being enabled/disabled is the same as the operator copy
-; source.
-; @TODO: Revisit and confirm.
+; XOR the bitmask with the operator status mask to toggle the selected operator.
+    EORA    patch_edit_operator_status
+    STAA    patch_edit_operator_status
+
+; Test whether this operator is now enabled, or disabled.
+    PULA
+
+    ANDA    patch_edit_operator_status
+    BNE     .exit
+
+; Test if the currently selected operator was disabled.
     CMPB    operator_selected_src
     BNE     .exit
 
@@ -130,20 +135,6 @@ ui_button_edit_1_to_4_operator_enable:          SUBROUTINE
     JSR     ui_button_numeric
     BRA     .exit
 
-.load_selected_operator_status:
-    LDX     #operator_enabled_status
-    LDAB    operator_selected_src
-    ANDB    #3
-    ABX
-
-; Test if the operator status has changed.
-    LDAA    0,x
-    BNE     .exit
-
-; Refer to comment above regarding selecting a new operator.
-    LDAB    #BUTTON_EDIT_11
-    JSR     ui_button_numeric
-
 .exit:
     LDAA    #EVENT_RELOAD_PATCH
     STAA    main_patch_event_flag
@@ -151,11 +142,24 @@ ui_button_edit_1_to_4_operator_enable:          SUBROUTINE
 
     RTS
 
+; ==============================================================================
+; @TAKEN_FROM_DX7_FIRMWARE
+; Operator Number Bitmask Table.
+; Contains bitmasks corresponding to the last 4 of the synth's six operators.
+; Used when enabling/disabling individual operators.
+; ==============================================================================
+table_operator_bitmask:
+    DC.B %1000
+    DC.B %100
+    DC.B %10
+    DC.B 1
+
 
 ; ==============================================================================
 ; UI_BUTTON_EDIT_11_OPERATOR_SELECT
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @REMADE_FOR_6_OP
 ; @PRIVATE
 ; DESCRIPTION:
 ; Handles the front-panel numeric button 11 being pressed when the synth is
@@ -181,19 +185,29 @@ ui_button_edit_11_operator_select:              SUBROUTINE
 ; loop counter in ACCA reaches zero.
 ; If no operators are enabled, the end effect is that the selected operator
 ; will remain the same.
-    LDAA    #4
+    LDAA    #6
 .find_next_selected_operator_loop:
 ; Increment and mask the selected operator, then use this as an index into the
-; operator enabled status array.
-    LDX     #operator_enabled_status
+; operator bitmask array.
     INCB
-    ANDB    #%11
-    ABX
 
-; Test whether the current operator is enabled. If so, this becomes the newly
-; selected operator.
-    TST     0,x
+; If ACCB > 5, loop around to 0.
+    CMPB    #6
+    BCS     .test_operator_status
+
+    CLRB
+.test_operator_status:
+; Test whether the current operator is enabled.
+    PSHA
+    LDX     #table_operator_bitmask
+    ABX
+    LDAA    0,x
+
+    ANDA     patch_edit_operator_status
+    PULA
+; If this operator is enabled it becomes the newly selected operator.
     BNE     .store_selected_operator
+
 ; Decrement the loop counter.
     DECA
     BNE     .find_next_selected_operator_loop
@@ -441,7 +455,7 @@ ui_button_edit_14:                              SUBROUTINE
 
 ; MEMORY MODIFIED:
 ; * ui_btn_numeric_last_pressed
-; * key_tranpose_set_mode_active
+; * key_transpose_set_mode_active
 ; * ui_active_param_address
 ;
 ; REGISTERS MODIFIED:
@@ -460,7 +474,7 @@ ui_button_edit_20_key_transpose:                SUBROUTINE
 
 ; Set the 'Key Transpose' mode as active.
     LDAB    #1
-    STAB    <key_tranpose_set_mode_active
+    STAB    <key_transpose_set_mode_active
 
 .clear_edit_parameter:
 ; Store the address of the 'null' edit parameter in the active edit parameter
@@ -548,7 +562,7 @@ ui_load_max_value_from_button:                  SUBROUTINE
 ; UI_BUTTON_EDIT_GET_ACTIVE_PARAMETER_ADDRESS
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Loads, and parses the entry in the edit parameter offset, and maximum value
 ; table, then stores the active parameter address, and maximum value.
@@ -574,41 +588,32 @@ ui_button_edit_get_active_parameter_address:    SUBROUTINE
     STAB    ui_active_param_max_value
     TAB
 
-; Is the param offset relative to the patch buffer, or the selected operator?
-; If it is below '69', it's a patch parameter.
-; If not, get the offset % 64.
-    CMPB    #69
-    BCS     .get_patch_buffer_offset
-
-    ANDB    #%111111
-
-.get_patch_buffer_offset:
     LDX     #patch_buffer_edit
     ABX
 
-; If bit 7 of the offset is set, this parameter is either relative to an
-; operator, or relative to an operator's envelope stage.
-    TSTA
-    BPL     .store_edit_param_address
+; Is the param offset relative to the patch buffer, or the selected operator?
+; If it is above '125', it's a patch parameter.
+; If not, it's either an EG parameter, or an operator parameter.
+    CMPB    #PATCH_PITCH_EG_R1
+    BCC     .store_param_pointer
 
-; If bit 6 is set, this indicates the parameter is an envelope stage.
-    BITA    #%1000000
-    BEQ     .get_pointer_to_operator
+    CMPB    #PATCH_OP_LVL_SCL_BREAK_POINT
+    BCC     .get_operator_offset
 
+; If this is an envelope stage, add it to the current parameter pointer.
     LDAB    ui_currently_selected_eg_stage
     ABX
 
+.get_operator_offset:
 ; Get a pointer to the currently selected operator, and add it to the current
 ; parameter pointer.
-.get_pointer_to_operator:
-    LDAA    operator_selected_src
-    COMA
-    ANDA    #%11
-    LDAB    #$F
+    LDAA    #5
+    SUBA    operator_selected_src
+    LDAB    #PATCH_DX7_UNPACKED_OP_STRUCTURE_SIZE
     MUL
     ABX
 
-.store_edit_param_address:
+.store_param_pointer:
     STX     ui_active_param_address
     BRA     ui_load_active_param_ptr_and_max_value
 
@@ -801,7 +806,6 @@ ui_button_function_set_active_parameter:        SUBROUTINE
 ; ==============================================================================
 ; DESCRIPTION:
 ; Loads the active edit parameter pointer, and max value.
-; @TODO
 ;
 ; ==============================================================================
 ui_load_active_param_ptr_and_max_value:         SUBROUTINE
@@ -841,54 +845,56 @@ table_max_param_values_edit_button_offset:      EQU (#table_max_param_values_edi
 
 ; ==============================================================================
 ; Edit mode parameter offset, and max value table.
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @REMADE_FOR_6_OP
 ; This table contains an array of entries used to get a pointer to the
 ; currently selected 'Edit Mode' parameter, and its associated max value.
-; The first byte of each entry is the offset, as well as a set of flags.
-; These flags determine whether the offset applies to the operator EG,
-; operator, or the patch as a whole. The offset will be used accordingly to set
-; up a pointer relative to the start of the patch edit buffer.
+; The first byte of each entry is the offset of the parameter.
+; If the offset is below 8, it is considered an envelope parameter.
+; If the offset is below 21, it is considered an operator parameter.
+; Otherwise it is considered a general patch parameter.
+; The offset will be used accordingly to set up a pointer relative to the start
+; of the patch edit buffer.
 ; The second byte is the maximum value for this parameter.
 ; ==============================================================================
 table_max_param_values_edit_mode:
-    DC.B $3C ; Algorithm
-    DC.B 7
-    DC.B $3D ; Feedback
-    DC.B 7
-    DC.B $43 ; LFO wave.
-    DC.B 5
-    DC.B $3F ; LFO speed.
-    DC.B 99
-    DC.B $40 ; LFO Delay.
-    DC.B 99
-    DC.B $42 ; Amp mod?
-    DC.B 99
-    DC.B $8A ; Pitch mod?
-    DC.B 3
-    DC.B $8C
+    DC.B PATCH_ALGORITHM
     DC.B 31
-    DC.B $8D
-    DC.B 99
-    DC.B $8E
-    DC.B 14
-    DC.B $C0
-    DC.B 99
-    DC.B $C4
-    DC.B 99
-    DC.B $89
+    DC.B PATCH_FEEDBACK
     DC.B 7
-    DC.B $88
+    DC.B PATCH_LFO_WAVEFORM
+    DC.B 5
+    DC.B PATCH_LFO_SPEED
     DC.B 99
-    DC.B $8B
+    DC.B PATCH_LFO_DELAY
+    DC.B 99
+    DC.B PATCH_LFO_AMP_MOD_DEPTH
+    DC.B 99
+    DC.B PATCH_OP_AMP_MOD_SENS
+    DC.B 3
+    DC.B PATCH_OP_FREQ_COARSE
+    DC.B 31
+    DC.B PATCH_OP_FREQ_FINE
+    DC.B 99
+    DC.B PATCH_OP_DETUNE
+    DC.B 14
+    DC.B PATCH_PITCH_EG_R1
+    DC.B 99
+    DC.B PATCH_PITCH_EG_L1
+    DC.B 99
+    DC.B PATCH_OP_LVL_SCL_LT_DEPTH
+    DC.B 99
+    DC.B PATCH_OP_LVL_SCL_RT_DEPTH
+    DC.B 99
+    DC.B PATCH_OP_OUTPUT_LEVEL
     DC.B 99
 max_value_oscillator_sync:
-    DC.B 62
+    DC.B PATCH_OSC_SYNC
     DC.B 1
 max_value_lfo_pitch_mod_depth:
-    DC.B 65
+    DC.B PATCH_LFO_PITCH_MOD_DEPTH
     DC.B 99
 max_value_lfo_pitch_mod_sens:
-    DC.B $44
+    DC.B PATCH_LFO_PITCH_MOD_SENS
     DC.B 7
 
 ; ==============================================================================
@@ -896,7 +902,6 @@ max_value_lfo_pitch_mod_sens:
 ; This table contains an array of pointers to the 'Function Mode' parameters,
 ; and their maximum allowed values.
 ; This table is used by the UI button functions.
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
 ; ==============================================================================
 table_max_parameter_values_function_mode:
     DC.W master_tune

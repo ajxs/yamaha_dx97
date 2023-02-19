@@ -60,12 +60,16 @@ patch_activate:                                 SUBROUTINE
     LDX     #patch_activate_operator_keyboard_scaling
     JSR     patch_activate_call_function_per_operator
 
+; Load operator keyboard velocity sensitivity.
+    LDX     #patch_activate_operator_velocity_sensitivity
+    JSR     patch_activate_call_function_per_operator
+
+    JSR     patch_activate_pitch_eg
+
 ; Load algorithm, and feedback levels to the OPS chip.
     JSR     patch_activate_mode_algorithm_feedback
     JSR     patch_activate_lfo
     JSR     portamento_calculate_rate
-
-    JSR     voice_set_key_transpose_base_frequency
 
     PULX
     PULB
@@ -78,25 +82,25 @@ patch_activate:                                 SUBROUTINE
 ; PATCH_ACTIVATE_CALL_FUNCTION_PER_OPERATOR
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; This subroutine is used to call a particular function once per each of the
-; synth's four operators. It is used during the 'patch activation' routine.
+; synth's six operators. It is used during the 'patch activation' routine.
 ;
 ; ARGUMENTS:
 ; Registers:
 ; * IX:   The callback function that will be called once for each of the
-;         synth's four operators.
+;         synth's six operators.
 ;
 ; MEMORY MODIFIED:
 ; * patch_activate_operator_number: The current operator number the callback
 ; function is being called for.
 ; * patch_activate_operator_offset: The 'offset' for the operator currently
 ; being processed.
-; Since the operator data in the patch buffer consists of four sequential
-; arrays of 15 bytes, this offset is incremented by 15 with each iteration of
-; the operator loop, and used as an offset into the operator data array in the
-; edit buffer.
+; Since the operator data in the patch buffer consists of six sequential
+; structures of 17 bytes, this offset is incremented by 17 with each iteration
+; of the operator loop, and used as an offset into the operator data array in
+; the patch edit buffer.
 ;
 ; ==============================================================================
 patch_activate_call_function_per_operator:      SUBROUTINE
@@ -117,12 +121,12 @@ patch_activate_call_function_per_operator:      SUBROUTINE
     PULX
     INC     patch_activate_operator_number
 
-; Add '15' to the offset to increment the offset to the next operator.
+; Add this value to the offset to increment the offset to the next operator.
 ; Once this has reached 60, all four operators have been processed.
-    LDAB    #15
+    LDAB    #PATCH_DX7_PACKED_OP_STRUCTURE_SIZE
     ADDB    <patch_activate_operator_offset
     STAB    <patch_activate_operator_offset
-    CMPB    #60
+    CMPB    #(PATCH_DX7_PACKED_OP_STRUCTURE_SIZE * 6)
     BNE     .call_function_per_operator_loop
 
 ; Restore these two variables.
@@ -136,7 +140,7 @@ patch_activate_call_function_per_operator:      SUBROUTINE
 ; ==============================================================================
 ; PATCH_ACTIVATE_LOAD_MODE_ALGORITHM_FEEDBACK_TO_OPS
 ; ==============================================================================
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Called as part of the 'Patch Activation' routine.
 ; This subroutine loads the 'Mode', 'Algorithm', and 'Feedback' values from
@@ -144,15 +148,7 @@ patch_activate_call_function_per_operator:      SUBROUTINE
 ;
 ; ==============================================================================
 patch_activate_mode_algorithm_feedback:         SUBROUTINE
-; Load the currently loaded patch's algorithm, and use this as an index
-; into the algorithm conversion table.
-; From this the correct DX7 algorithm number corresponding to the current
-; algorithm can be loaded.
-    LDX     #table_algorithm_conversion
     LDAB    patch_edit_algorithm
-    ABX
-    LDAB    0,x
-
 ; Shift this value left 3 times, and combine with the feedback value to
 ; create the combined value to load to the OPS.
     ASLB
@@ -175,6 +171,7 @@ patch_activate_mode_algorithm_feedback:         SUBROUTINE
 
 
 ; ==============================================================================
+; @TODO: Remove
 ; Algorithm Conversion Table
 ; This table is used to convert algorithms between the DX9 format, and the
 ; original DX7 format used in SysEx transmission, and in patch activation.
@@ -195,8 +192,7 @@ table_algorithm_conversion:
 ; ==============================================================================
 ; PATCH_ACTIVATE_OPERATOR_DETUNE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Loads operator detune values to the EGS operator detune buffer.
 ; Note: This subroutine differs from how the DX7's implementation in how it
@@ -206,8 +202,11 @@ table_algorithm_conversion:
 ; According to the 'DX7 Technical Analysis' book, bit 3 of the EGS detune
 ; buffer is the 'sign' bit, and the higher bits are ignored.
 ;
-; MEMORY USED:
-; * patch_activate_operator_number, patch_activate_operator_offset
+; ARGUMENTS:
+; Memory:
+; * patch_activate_operator_number: The operator number being activated.
+; * patch_activate_operator_offset: The offset of the current operator in
+;     patch memory.
 ;
 ; REGISTERS MODIFIED:
 ; * ACCA, ACCB, IX
@@ -221,7 +220,7 @@ patch_activate_operator_detune:                 SUBROUTINE
     LDX     #patch_buffer_edit
     LDAB    <patch_activate_operator_offset
     ABX
-    LDAA    PATCH_DX9_OP_DETUNE,x
+    LDAA    PATCH_OP_DETUNE,x
 
 ; If the operator detune value is below 7, get it's one's complement.
 ; Otherwise subtract 7, to create a value essentially between -7 - 7.
@@ -239,5 +238,75 @@ patch_activate_operator_detune:                 SUBROUTINE
     LDAB    <patch_activate_operator_number
     ABX
     STAA    0,x
+
+    RTS
+
+
+; ==============================================================================
+; PATCH_ACTIVATE_OPERATOR_VELOCITY_SENSITIVITY
+; ==============================================================================
+; @TAKEN_FROM_DX7_FIRMWARE
+; @REMADE_FOR_6_OP
+; DESCRIPTION:
+; Parses the 'Key Velocity Sensitivity' for the currently selected operator.
+; Once this value is transformed, it's stored in the global 'Op Sens' buffer.
+;
+; ARGUMENTS:
+; Memory:
+; * patch_activate_operator_number: The operator number being activated.
+; * patch_activate_operator_offset: The offset of the current operator in
+;     patch memory.
+;
+; MEMORY MODIFIED:
+; * patch_operator_velocity_sensitivity
+;
+; REGISTERS MODIFIED:
+; * ACCA, ACCB, IX
+;
+; This transformation is equivalent to:
+; def transform_key_vel_sens(op_kvs):
+;     B = op_kvs * 32
+;     A = (op_kvs << 1) | 0xF0
+;     A = (~A) & 0xFF
+;
+;     return (A << 8) | B
+;
+; Values:
+;  0: 3840
+;  1: 3360
+;  2: 2880
+;  3: 2400
+;  4: 1920
+;  5: 1440
+;  6: 960
+;  7: 480
+;
+; ==============================================================================
+patch_activate_operator_velocity_sensitivity:   SUBROUTINE
+    LDX     #patch_buffer_edit
+    LDAB    <patch_activate_operator_offset
+    ABX
+
+; Load KEY_VEL_SENS into A.
+; Multiply by 32, and push.
+    LDAA    PATCH_OP_KEY_VEL_SENS,x
+    LDAB    #32
+    MUL
+    PSHB
+
+; Parse operator sensitivity HIGH.
+    LDAA    PATCH_OP_KEY_VEL_SENS,x
+    ASLA
+    ORAA    #%11110000
+    COMA
+
+; Store the parsed operator keyboard velocity sensitivity.
+    LDX     #patch_operator_velocity_sensitivity
+    LDAB    patch_activate_operator_offset
+    ASLB
+    ABX
+    PULB
+    STAA    0,x
+    STAB    1,x
 
     RTS

@@ -10,6 +10,8 @@
 ; ==============================================================================
 ; voice/add/mono.asm
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; This subroutine handes 'adding' a new voice event when the synth is in
 ; monophonic mode.
@@ -105,11 +107,22 @@ voice_add_mono:                                 SUBROUTINE
 ; If 'Full-Time', don't update the 'Current' frequency, as the previous
 ; could still be in transition.
     TST     portamento_mode
-    BEQ     .send_voice_data_to_egs
+    BEQ     .reset_pitch_eg_level
 
     STD     64,x
 
-.send_voice_data_to_egs:
+; Reset the current pitch EG level to its initial value.
+; In the DX7, the final value, and the initial value are identical.
+; So when adding a voice, the initial level is set to the final value.
+.reset_pitch_eg_level:
+    LDAA    pitch_eg_parsed_level_final
+    CLRB
+    LSRD
+    STD     pitch_eg_current_frequency
+
+; Reset the 'Current Pitch EG Step' for this voice.
+    CLR     pitch_eg_current_step
+
     CLRA
     LDX     <note_frequency
     JSR     voice_add_operator_level_voice_frequency

@@ -29,7 +29,7 @@
 ;
 ; ==============================================================================
 tape_output_patch:                              SUBROUTINE
-    LDX     #patch_buffer_tape_temp
+    LDX     #patch_buffer_incoming
     LDAB    #67
     STAB    <tape_byte_counter
     JSR     tape_output_pilot_tone

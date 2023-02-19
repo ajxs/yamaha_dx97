@@ -16,49 +16,25 @@
 
     .PROCESSOR HD6303
 
-; ==============================================================================
-; Patch DX9 Edit Buffer Offsets.
-; These offsets can be used to access an individual field inside the patch
-; edit buffer, or an unpacked SysEx patch dump.
-; ==============================================================================
-PATCH_DX9_OP_EG_LEVEL_1                         EQU 4
-PATCH_DX9_OP_KBD_SCALE_RATE                     EQU 8
-PATCH_DX9_OP_KBD_SCALE_LEVEL                    EQU 9
-PATCH_DX9_OP_FREQ_COARSE                        EQU 12
-PATCH_DX9_OP_FREQ_FINE                          EQU 13
-PATCH_DX9_OP_DETUNE                             EQU 14
-
-PATCH_DX9_OP_STRUCTURE_SIZE                     EQU 15
-
-PATCH_DX9_ALGORITHM                             EQU 60
-PATCH_DX9_FEEDBACK                              EQU 61
-PATCH_DX9_OSC_SYNC                              EQU 62
-
-PATCH_DX9_LFO_SPEED                             EQU 63
-PATCH_DX9_LFO_DELAY                             EQU 64
-PATCH_DX9_LFO_PITCH_MOD_DEPTH                   EQU 65
-PATCH_DX9_LFO_AMP_MOD_DEPTH                     EQU 66
-PATCH_DX9_LFO_WAVEFORM                          EQU 67
-PATCH_DX9_LFO_PITCH_MOD_SENS                    EQU 68
-
-PATCH_DX9_KEY_TRANSPOSE                         EQU 69
+PATCH_DX7_PACKED_OP_STRUCTURE_SIZE              EQU 17
+PATCH_DX7_UNPACKED_OP_STRUCTURE_SIZE            EQU 21
 
 ; ==============================================================================
 ; Patch Edit Buffer Offsets.
 ; These offsets can be used to access an individual field inside the patch
 ; edit buffer, or an unpacked SysEx patch dump.
 ; ==============================================================================
-PATCH_OP_EG_R1                                  EQU 0
-PATCH_OP_EG_R2                                  EQU 1
-PATCH_OP_EG_R3                                  EQU 2
-PATCH_OP_EG_R4                                  EQU 3
-PATCH_OP_EG_L1                                  EQU 4
-PATCH_OP_EG_L2                                  EQU 5
-PATCH_OP_EG_L3                                  EQU 6
-PATCH_OP_EG_L4                                  EQU 7
-PATCH_OP_LVL_SCL_BRK_PT                         EQU 8
-PATCH_OP_LVL_SCL_LT_DPTH                        EQU 9
-PATCH_OP_LVL_SCL_RT_DPTH                        EQU 10
+PATCH_OP_EG_RATE_1                              EQU 0
+PATCH_OP_EG_RATE_2                              EQU 1
+PATCH_OP_EG_RATE_3                              EQU 2
+PATCH_OP_EG_RATE_4                              EQU 3
+PATCH_OP_EG_LEVEL_1                             EQU 4
+PATCH_OP_EG_LEVEL_2                             EQU 5
+PATCH_OP_EG_LEVEL_3                             EQU 6
+PATCH_OP_EG_LEVEL_4                             EQU 7
+PATCH_OP_LVL_SCL_BREAK_POINT                    EQU 8
+PATCH_OP_LVL_SCL_LT_DEPTH                       EQU 9
+PATCH_OP_LVL_SCL_RT_DEPTH                       EQU 10
 PATCH_OP_LVL_SCL_LT_CURVE                       EQU 11
 PATCH_OP_LVL_SCL_RT_CURVE                       EQU 12
 PATCH_OP_RATE_SCALING                           EQU 13
@@ -87,8 +63,8 @@ PATCH_LFO_PITCH_MOD_DEPTH                       EQU 139
 PATCH_LFO_AMP_MOD_DEPTH                         EQU 140
 PATCH_LFO_SYNC                                  EQU 141
 PATCH_LFO_WAVEFORM                              EQU 142
-PATCH_PITCH_MOD_SENS                            EQU 143
-PATCH_TRANSPOSE                                 EQU 144
+PATCH_LFO_PITCH_MOD_SENS                        EQU 143
+PATCH_KEY_TRANSPOSE                             EQU 144
 PATCH_PATCH_NAME                                EQU 145
 
 ; From https://homepages.abdn.ac.uk/d.j.benson/pages/dx7/sysex-format.txt
@@ -116,6 +92,34 @@ FN_PARAM_AFTERTOUCH_ASSIGN                      EQU 13
 
 PATCH_PACKED_ALGORITHM                          EQU 110
 
+; The patch number of the incoming patch buffer.
+PATCH_INCOMING_BUFFER_NUMBER                    EQU PATCH_BUFFER_COUNT
+
+; ==============================================================================
+; Serialisation/Deserialisation macros.
+; These macros simply compress some repetitive sequences used in the
+; patch deserialisation routine.
+; ==============================================================================
+    .MACRO INCREMENT_SRC_PTR_AND_STORE
+        INX
+        STX     <memcpy_ptr_src
+    .ENDM
+
+    .MACRO INCREMENT_DEST_PTR_AND_STORE
+        INX
+        STX     <memcpy_ptr_dest
+    .ENDM
+
+    .MACRO LOAD_SRC_PTR_AND_LOAD_ACCA
+        LDX     <memcpy_ptr_src
+        LDAA    0,x
+    .ENDM
+
+    .MACRO LOAD_DEST_PTR_AND_STORE_ACCA
+        LDX     <memcpy_ptr_dest
+        STAA    0,x
+    .ENDM
+
 ; ==============================================================================
 ; PATCH_OPERATOR_GET_PTR_TO_SELECTED
 ; ==============================================================================
@@ -138,14 +142,13 @@ patch_operator_get_ptr_to_selected:             SUBROUTINE
 ; ==============================================================================
 ; PATCH_OPERATOR_GET_PTR
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Gets a pointer to the specified operator's data in the patch edit buffer.
 ;
 ; ARGUMENTS:
 ; Registers:
-; * ACCB: The operator number (from 0-3) to get a pointer to.
+; * ACCB: The operator number (from 0-5) to get a pointer to.
 ;
 ; REGISTERS MODIFIED:
 ; * ACCA, ACCB, IX
@@ -155,13 +158,9 @@ patch_operator_get_ptr_to_selected:             SUBROUTINE
 ;
 ; ==============================================================================
 patch_operator_get_ptr:                         SUBROUTINE
-; Invert, and mask the operator number to reverse the order from 0-3 to 3-0.
-    COMB
-    ANDB    #3
-
 ; Get the offset into the patch edit buffer by multiplying the selected
 ; operator number by the size of an operator.
-    LDAA    #PATCH_DX9_OP_STRUCTURE_SIZE
+    LDAA    #PATCH_DX7_UNPACKED_OP_STRUCTURE_SIZE
     MUL
     ADDD    #patch_buffer_edit
     XGDX
@@ -172,7 +171,8 @@ patch_operator_get_ptr:                         SUBROUTINE
 ; ==============================================================================
 ; PATCH_GET_PTR_TO_CURRENT
 ; ==============================================================================
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @TAKEN_FROM_DX9_FIRMWARE
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Gets a pointer to the currently selected patch in the synth's memory.
 ;
@@ -191,14 +191,14 @@ patch_get_ptr_to_current:                       SUBROUTINE
     LDAB    patch_index_current
     BMI     .get_pointer_to_init_buffer
 
-    LDAA    #PATCH_SIZE_PACKED_DX9
+    LDAA    #PATCH_SIZE_PACKED_DX7
     MUL
     ADDD    #patch_buffer
     XGDX
     BRA     .exit
 
 .get_pointer_to_init_buffer:
-    LDX     #patch_buffer_init_voice_dx9
+    LDX     #patch_buffer_init_voice
 
 .exit:
     RTS
@@ -209,13 +209,17 @@ patch_get_ptr_to_current:                       SUBROUTINE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
-; @TODO
+; Serialises the currently loaded patch in the edit buffer to the compare
+; buffer, and deserialises the contents of the compare buffer.
+;
 ; ==============================================================================
 patch_copy_edit_to_compare_and_load_current:    SUBROUTINE
     LDX     #patch_buffer_edit
     STX     <memcpy_ptr_src
+
     LDX     #patch_buffer_compare
     JSR     patch_serialise
+
     JMP     patch_deserialise_current_to_edit
 
 
@@ -345,7 +349,7 @@ patch_save:
 ; ==============================================================================
 ; PATCH_OPERATOR_EG_COPY
 ; ==============================================================================
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Copies the envelope settings from the currently selected operator, to the
 ; specified destination operator.
@@ -361,8 +365,8 @@ patch_save:
 ; ==============================================================================
 patch_operator_eg_copy:                         SUBROUTINE
 ; Validate the specified operator number.
-; If >= 4, exit.
-    CMPB    #4
+; If >= 7, exit.
+    CMPB    #7
     BCC     .exit
 
     STAB    operator_selected_dest
@@ -372,7 +376,7 @@ patch_operator_eg_copy:                         SUBROUTINE
     JSR     patch_operator_get_ptr_to_selected
     STX     <memcpy_ptr_src
 
-    LDAB    #10
+    LDAB    #12
     JSR     memcpy
 
 ; Trigger a patch reload.
@@ -417,5 +421,42 @@ patch_convert_serialised_value_to_internal:     SUBROUTINE
     MUL
     LSLD
     LSLD
+
+    RTS
+
+
+; ==============================================================================
+; PATCH_PRINT_CURRENT_NAME
+; ==============================================================================
+; @NEW_FUNCTIONALITY
+; @NEEDS_TESTING
+; DESCRIPTION:
+; These annotations are used so that subroutines can be easily searched by
+; category.
+;
+; ARGUMENTS:
+; Memory:
+; * memcpy_pointer_dest: A pointer to where in the LCD buffer to print the
+;     patch name to.
+;
+; MEMORY MODIFIED:
+; * memcpy_pointer_source
+; * memcpy_pointer_dest
+;
+; REGISTERS MODIFIED:
+; * ACCA, ACCB, IX
+;
+; ==============================================================================
+patch_print_current_name:                       SUBROUTINE
+    LDX     #patch_edit_name
+
+.print_name_loop:
+    LDAB    0,x
+    JSR     lcd_store_character_and_increment_ptr
+    INX
+    CPX     #patch_edit_name + 10
+    BNE     .print_name_loop
+
+    JSR     lcd_update
 
     RTS

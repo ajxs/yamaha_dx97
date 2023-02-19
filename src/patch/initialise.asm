@@ -39,7 +39,6 @@ patch_initialise:                               SUBROUTINE
 ; ==============================================================================
 ; PATCH_INIT_EDIT_BUFFER
 ; ==============================================================================
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Initialises the patch edit buffer.
 ; This is called directly from several places to initialise the edit buffer
@@ -51,15 +50,17 @@ patch_init_edit_buffer:
     RESET_OPERATOR_STATUS
 
 ; Deserialise from the init patch buffer to the patch edit buffer.
-    LDX     #patch_buffer_init_voice_dx9
+    LDX     #patch_buffer_init_voice
     JMP     patch_deserialise_to_edit_from_ptr_and_reload
 
 
 ; ==============================================================================
-; Initialised Patch Buffer.
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; Initialise Patch Buffer.
+; This buffer contains the data to initialise the patch 'Edit Buffer'.
+; @REMADE_FOR_6_OP
 ; ==============================================================================
-patch_buffer_init_voice_dx9:
+patch_buffer_init_voice:
+; Operator 6.
     DC.B $63
     DC.B $63
     DC.B $63
@@ -71,23 +72,13 @@ patch_buffer_init_voice_dx9:
     DC.B 0
     DC.B 0
     DC.B 0
-    DC.B 1
     DC.B 0
-    DC.B 7
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
+    DC.B $38
     DC.B 0
     DC.B 0
+    DC.B 2
     DC.B 0
-    DC.B 0
-    DC.B 1
-    DC.B 0
-    DC.B 7
+; Operator 5.
     DC.B $63
     DC.B $63
     DC.B $63
@@ -99,28 +90,108 @@ patch_buffer_init_voice_dx9:
     DC.B 0
     DC.B 0
     DC.B 0
-    DC.B 1
     DC.B 0
-    DC.B 7
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
+    DC.B $38
     DC.B 0
     DC.B 0
+    DC.B 2
+    DC.B 0
+; Operator 4.
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B $38
+    DC.B 0
+    DC.B 0
+    DC.B 2
+    DC.B 0
+; Operator 3.
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B $38
+    DC.B 0
+    DC.B 0
+    DC.B 2
+    DC.B 0
+; Operator 2.
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B $38
+    DC.B 0
+    DC.B 0
+    DC.B 2
+    DC.B 0
+; Operator 1.
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B $38
     DC.B 0
     DC.B $63
-    DC.B 1
+    DC.B 2
     DC.B 0
-    DC.B 7
+; Pitch EG Rate.
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+; Pitch EG Level.
+    DC.B $32
+    DC.B $32
+    DC.B $32
+    DC.B $32
+; Algorithm.
     DC.B 0
+; Oscillator Key Sync/Feedback.
     DC.B 8
+; LFO Speed.
     DC.B $23
+; LFO Delay.
     DC.B 0
+; LFO Pitch Mod Depth.
     DC.B 0
+; LFO Amp Mod Depth.
     DC.B 0
+; LFO Wave / LFO Key Sync.
+    DC.B $31
+; Key Transpose.
     DC.B $18
-    DC.B 12
+    DC "INIT VOICE"

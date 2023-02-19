@@ -51,6 +51,7 @@
     INCLUDE "src/patch/activate/operator_eg.asm"
     INCLUDE "src/patch/activate/operator_frequency.asm"
     INCLUDE "src/patch/activate/operator_scaling.asm"
+    INCLUDE "src/patch/activate/pitch_eg.asm"
     INCLUDE "src/patch/activate/lfo.asm"
     INCLUDE "src/patch/deserialise.asm"
     INCLUDE "src/patch/initialise.asm"
@@ -59,6 +60,7 @@
     INCLUDE "src/patch/patch.asm"
     INCLUDE "src/patch/validate.asm"
     INCLUDE "src/pitch_bend.asm"
+    INCLUDE "src/pitch_eg.asm"
     INCLUDE "src/portamento.asm"
     INCLUDE "src/pedals.asm"
     INCLUDE "src/reset.asm"
@@ -93,6 +95,8 @@
     INCLUDE "src/voice/remove.asm"
     INCLUDE "src/voice/reset.asm"
     INCLUDE "src/voice/voice.asm"
+    INCLUDE "src/curve/log.asm"
+    INCLUDE "src/curve/keyboard_scaling.asm"
 
 ; The 'ROM' diagnostic test performs a checksum of the ROM.
 ; It loops over each byte in the ROM in 256 byte blocks, adding the value of

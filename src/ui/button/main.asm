@@ -236,13 +236,13 @@ ui_patch_compare_toggle:                        SUBROUTINE
     BEQ     .exit
 
     TST     patch_compare_mode_active
-    BNE     loc_DE89
+    BNE     .compare_mode_active
 
     LDAA    #1
     STAA    patch_compare_mode_active
     JMP     patch_copy_edit_to_compare_and_load_current
 
-loc_DE89:
+.compare_mode_active:
     CLR     patch_compare_mode_active
     JSR     patch_restore_edit_buffer_from_compare
     LDAA    #BUTTON_EDIT_20_KEY_TRANSPOSE
@@ -318,7 +318,7 @@ ui_button_edit_save_previous:                   SUBROUTINE
     STAA    ui_btn_numeric_previous_store_mode
 
 .exit:
-    CLR     key_tranpose_set_mode_active
+    CLR     key_transpose_set_mode_active
     RTS
 
 

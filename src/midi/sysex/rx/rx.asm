@@ -557,6 +557,8 @@ midi_sysex_rx_bulk_data_store:                  SUBROUTINE
 ; =============================================================================
 ; MIDI_SYSEX_RX_BULK_DATA_FINALISE
 ; =============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Finalises the received SysEx bulk patch data.
 ; This subroutine validates the bulk data checksum, and initiates the
@@ -579,16 +581,10 @@ midi_rx_sysex_bulk_data_finalise:               SUBROUTINE
     TST     midi_sysex_format_type
     BNE     .finalise_32_voices
 
-    JSR     midi_sysex_rx_bulk_data_serialise_single_to_bulk
-    LDAA    #20
-    STAA    <midi_sysex_rx_bulk_patch_index
-    JSR     midi_sysex_rx_bulk_data_deserialise
+; Copy the received patch to the 'incoming' buffer, and load it.
+    JSR     midi_sysex_rx_bulk_data_serialise_incoming
 
-; The carry flag being set here indicates that there was an error during
-; the deserialisation/conversion process.
-    BCS     .exit
-
-    LDAB    #20
+    LDAB    #PATCH_INCOMING_BUFFER_NUMBER
     JSR     patch_set_new_index_and_copy_edit_to_compare
     JSR     patch_load_clear_compare_mode_state
 
@@ -600,32 +596,26 @@ midi_rx_sysex_bulk_data_finalise:               SUBROUTINE
     LDX     #str_midi_received
     JSR     lcd_strcpy
 
-; Print the incoming patch name.
+; Print the received patch name.
 ; This copies each character of the patch name to the LCD 'next' buffer.
     LDX     #(lcd_buffer_next + 20)
     STX     <memcpy_ptr_dest
-    LDX     #(midi_buffer_sysex_rx_bulk + 118)
+    JSR     patch_print_current_name
 
-.print_name_loop:
-    LDAB    0,x
-    JSR     lcd_store_character_and_increment_ptr
-    INX
-    CPX     #midi_buffer_sysex_rx_bulk_end
-    BNE     .print_name_loop
-
-    JSR     lcd_update
     BRA     .exit
 
 .finalise_32_voices:
+; Since each patch is 128 bytes in size, and the SysEx data has a 7 bit length,
+; the data length's MSB indicates the number of patches in the dump.
 ; Decrement the MSB count to convert the total number of patches in the
 ; bulk patch dump to a usable patch index.
-; If this is more than 19, clamp.
+; If this is more than the highest patch buffer index, clamp.
     LDAB    <midi_sysex_byte_count_msb_param_number
     DECB
-    CMPB    #19
+    CMPB    #(PATCH_BUFFER_COUNT - 1)
     BLS     .set_index
 
-    LDAB    #19
+    LDAB    #(PATCH_BUFFER_COUNT - 1)
 
 .set_index:
 ; Set the new patch index.
@@ -721,7 +711,7 @@ midi_sysex_rx_param_function_64_to_78:          SUBROUTINE
 ; ARGUMENTS:
 ; Registers:
 ; * ACCA: The incoming SysEx parameter number.
-; * ACCB: The incoming SysEx parameter data
+; * ACCB: The incoming SysEx parameter data.
 ;
 ; =============================================================================
 midi_sysex_rx_param_function_button:            SUBROUTINE
@@ -758,129 +748,23 @@ midi_sysex_rx_param_function_button:            SUBROUTINE
 
 
 ; =============================================================================
-; MIDI_SYSEX_RX_BULK_DATA_SERIALISE_SINGLE_TO_BULK
+; MIDI_SYSEX_RX_BULK_DATA_SERIALISE_INCOMING
 ; =============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; This subroutine serialises patch data received via the SysEx 'single'
 ; patch method to the bulk 'packed' format, which will later be deserialised
 ; into the patch edit buffer.
 ;
 ; =============================================================================
-midi_sysex_rx_bulk_data_serialise_single_to_bulk:
+midi_sysex_rx_bulk_data_serialise_incoming:
     LDX     #midi_buffer_sysex_rx_single
     STX     <memcpy_ptr_src
-    LDX     #midi_buffer_sysex_rx_bulk
-    STX     <memcpy_ptr_dest
-    LDAB    #6
 
-_midi_rx_sysex_bulk_data_serialise_single_to_bulk_operator_loop:
-    PSHB
+    LDX     #patch_buffer_incoming
+    STX     <memcpy_ptr_dest
 
-; Copy first 11 parameters.
-    LDAB    #11
-    JSR     memcpy_store_dest_and_copy_accb_bytes
-    LDX     <memcpy_ptr_src
-    LDD     0,x
-    ANDA    #3
-    ANDB    #3
-    ASLB
-    ASLB
-    ABA
-    LDX     <memcpy_ptr_dest
-    STAA    0,x
-    LDX     <memcpy_ptr_src
-    LDAA    2,x
-    ANDA    #7
-    LDAB    9,x
-    ANDB    #$F
-    ASLB
-    ASLB
-    ASLB
-    ABA
-    LDX     <memcpy_ptr_dest
-    STAA    1,x
-    LDX     <memcpy_ptr_src
-    LDD     3,x
-    ANDA    #3
-    ANDB    #7
-    ASLB
-    ASLB
-    ABA
-    LDX     <memcpy_ptr_dest
-    STAA    2,x
-    LDX     <memcpy_ptr_src
-    LDAA    5,x
-    LDX     <memcpy_ptr_dest
-    STAA    3,x
-    LDX     <memcpy_ptr_src
-    LDD     6,x
-    ANDA    #1
-    ANDB    #$1F
-    ASLB
-    ABA
-    LDX     <memcpy_ptr_dest
-    STAA    4,x
-    LDX     <memcpy_ptr_src
-    LDAA    8,x
-    LDX     <memcpy_ptr_dest
-    STAA    5,x
-    LDX     <memcpy_ptr_src
-    LDAB    #$A
-    ABX
-    STX     <memcpy_ptr_src
-    LDX     <memcpy_ptr_dest
-    LDAB    #6
-    ABX
-    STX     <memcpy_ptr_dest
-    PULB
-    DECB
-    BNE     _midi_rx_sysex_bulk_data_serialise_single_to_bulk_operator_loop
-
-    LDAB    #9
-    JSR     memcpy_store_dest_and_copy_accb_bytes
-    LDX     <memcpy_ptr_src
-    LDD     0,x
-    INX
-    INX
-    STX     <memcpy_ptr_src
-    ANDA    #7
-    ANDB    #1
-    ASLB
-    ASLB
-    ASLB
-    ABA
-    LDX     <memcpy_ptr_dest
-    STAA    0,x
-    INX
-    STX     <memcpy_ptr_dest
-    LDAB    #4
-    JSR     memcpy_store_dest_and_copy_accb_bytes
-    LDX     <memcpy_ptr_src
-    LDD     0,x
-    ANDA    #1
-    ANDB    #7
-    ASLB
-    ABA
-    LDAB    2,x
-    ANDB    #7
-    ASLB
-    ASLB
-    ASLB
-    ASLB
-    ABA
-    INX
-    INX
-    INX
-    STX     <memcpy_ptr_src
-    LDX     <memcpy_ptr_dest
-    STAA    0,x
-    INX
-    STX     <memcpy_ptr_dest
-    LDAB    #$B
-    JSR     memcpy_store_dest_and_copy_accb_bytes
-    RTS
+    JMP     patch_serialise
 
 
 ; =============================================================================
@@ -905,17 +789,17 @@ midi_sysex_rx_bulk_data_deserialise:            SUBROUTINE
     LDX     #midi_buffer_sysex_rx_bulk
     STX     <memcpy_ptr_src
 
-; Ensure patch number is less than, or equal to 20.
-; @TODO: Why 20? Wouldn't a value of 20 overwrite the tape temp buffer?
+; Ensure patch number is less than, or equal to the size of the patch buffer.
+; A value equal to the patch count will write the patch into the tape buffer.
     LDAA    <midi_sysex_rx_bulk_patch_index
-    CMPA    #20
-    BLS     _midi_sysex_rx_bulk_data_deserialise_get_ptr
+    CMPA    #PATCH_BUFFER_COUNT
+    BLS     .get_patch_buffer_pointer
 
-    LDAA    #20
+    LDAA    #PATCH_BUFFER_COUNT
 
-_midi_sysex_rx_bulk_data_deserialise_get_ptr:
+.get_patch_buffer_pointer:
 ; Get index into patch buffer.
-    LDAB    #64
+    LDAB    #PATCH_SIZE_PACKED_DX7
     MUL
     ADDD    #patch_buffer
     STD     <memcpy_ptr_dest

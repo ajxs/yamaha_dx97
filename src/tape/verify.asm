@@ -194,7 +194,7 @@ tape_verify:                                    SUBROUTINE
 ;
 ; ==============================================================================
 tape_verify_patch:                              SUBROUTINE
-    LDX     #patch_buffer_tape_temp
+    LDX     #patch_buffer_incoming
     STX     <copy_ptr_src
 
 ; Setup destination pointer.

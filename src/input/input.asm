@@ -65,7 +65,7 @@ main_input_handler:
 ; * ACCB: The front-panel button code.
 ;
 ; MEMORY MODIFIED:
-; * key_tranpose_set_mode_active
+; * key_transpose_set_mode_active
 ; * ui_flag_blocks_key_transpose
 ;
 ; ==============================================================================
@@ -77,7 +77,7 @@ main_input_handler_process_button:              SUBROUTINE
 
 ; If any key other than the data input slider, or 'Yes/No' are pressed
 ; clear the key transpose mode flag.
-    CLR     key_tranpose_set_mode_active
+    CLR     key_transpose_set_mode_active
     CLR     ui_flag_blocks_key_transpose
 ; Falls-through below.
 
@@ -312,6 +312,7 @@ input_button_numeric_edit_mode:                 SUBROUTINE
 ; INPUT_BUTTON_NUMERIC_PLAY_MODE
 ; ==============================================================================
 ; @PRIVATE
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Handles a front-panel numeric button press while the synth's user-interface
 ; is in 'Play Mode'. Specifically this means 'Memory Select' mode while
@@ -325,7 +326,12 @@ input_button_numeric_edit_mode:                 SUBROUTINE
 ;
 ; ==============================================================================
 input_button_numeric_play_mode:                 SUBROUTINE
+; If the numeric button is higher than the modified patch count, exit.
+    CMPB    #PATCH_BUFFER_COUNT
+    BCC     .exit
+
     JSR     patch_load
+.exit:
     BRA     input_update_led_and_menu
 
 

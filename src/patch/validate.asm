@@ -19,8 +19,8 @@
 ; ==============================================================================
 ; PATCH_VALIDATE
 ; ==============================================================================
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Validates the patch data currently loaded into the synth's 'Edit Buffer'.
 ; This subroutine iterates over all of the patch data, comparing it to a
@@ -29,7 +29,7 @@
 ;
 ; ==============================================================================
 patch_validate:                                 SUBROUTINE
-    LDAB    #4
+    LDAB    #6
     LDX     #patch_buffer_edit
     STX     <memcpy_ptr_src
 
@@ -40,14 +40,14 @@ patch_validate:                                 SUBROUTINE
     LDX     #table_max_patch_values
     STX     <memcpy_ptr_dest
     PSHB
-    LDAB    #15
+    LDAB    #PATCH_DX7_UNPACKED_OP_STRUCTURE_SIZE
     BSR     patch_validate_fix_max_values
     PULB
     DECB
     BNE     .validate_operator_loop
 
 ; Validate the remaining non-operator values.
-    LDAB    #10
+    LDAB    #19
     BRA     patch_validate_fix_max_values
 
 
@@ -55,9 +55,24 @@ patch_validate:                                 SUBROUTINE
 ; PATCH_VALIDATE_FIX_MAX_VALUES
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
-; @TODO
+; Validates patch data against a table of maximum values.
+; If an individual byte of patch data exceeds the maximum as specified in the
+; table, it is cleared to 0.
+;
+; ARGUMENTS:
+; Registers:
+; * ACCB: The number of bytes to validate
+;
+; Memory:
+; * memcpy_ptr_src:  A pointer to the patch data to be validated.
+;                    This pointer is incremented with each validation.
+; * memcpy_ptr_dest: A pointer to the data to validate against.
+;                    This pointer is incremented with each validation.
+;
+; REGISTERS MODIFIED:
+; * ACCA, ACCB, IX
 ;
 ; ==============================================================================
 patch_validate_fix_max_values:                  SUBROUTINE
@@ -87,28 +102,72 @@ patch_validate_fix_max_values:                  SUBROUTINE
 ; This is used for validation of incoming data.
 ; ==============================================================================
 table_max_patch_values:
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B 7
+; EG Rate.
+    DC.B 99
+    DC.B 99
+    DC.B 99
+    DC.B 99
+; EG Level.
+    DC.B 99
+    DC.B 99
+    DC.B 99
+    DC.B 99
+; Keyboard Scaling Breakpoint.
+    DC.B 99
+; Left/Right Scaling Depth.
+    DC.B 99
+    DC.B 99
+; Left/Right Scaling Curve.
     DC.B 3
-    DC.B $63
-    DC.B $1F
-    DC.B $63
-    DC.B $E
+    DC.B 3
+; Keyboard Rate Scaling.
     DC.B 7
+; Amp Mod Sensitivity.
+    DC.B 3
+; Key Velocity Sensitivity.
     DC.B 7
+; Operator Output Level.
+    DC.B 99
+; Operator Mode.
     DC.B 1
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B $63
-    DC.B 5
+; Operator Frequency Coarse.
+    DC.B 31
+; Operator Frequency Fine.
+    DC.B 99
+; Operator Detune.
+    DC.B 14
+
+; Pitch EG Rate.
+    DC.B 99
+    DC.B 99
+    DC.B 99
+    DC.B 99
+
+; Pitch EG Level.
+    DC.B 99
+    DC.B 99
+    DC.B 99
+    DC.B 99
+
+; Algorithm.
+    DC.B 31
+; Feedback
     DC.B 7
-    DC.B $18
+; Oscillator Sync.
+    DC.B 1
+; LFO Speed.
+    DC.B 99
+; LFO Delay.
+    DC.B 99
+; LFO Pitch Mod Depth.
+    DC.B 99
+; LFO Amp Mod Depth.
+    DC.B 99
+; LFO Sync.
+    DC.B 1
+; LFO Waveform.
+    DC.B 5
+; Pitch Mod Sensitivity.
+    DC.B 7
+; Key Transpose.
+    DC.B 48

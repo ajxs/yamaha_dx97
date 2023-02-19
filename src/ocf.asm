@@ -159,7 +159,7 @@ handler_ocf_compare_mode_led_blink:             SUBROUTINE
 ; This is where all of the synth's periodicly repeated functions are called.
 ;
 ; MEMORY MODIFIED:
-; * portamento_update_toggle
+; * pitch_eg_update_toggle
 ;
 ; REGISTERS MODIFIED:
 ; * ACCA, ACCB, IX
@@ -176,8 +176,12 @@ handler_ocf:                                    SUBROUTINE
 ; Toggle the flag to determine whether portamento, or pitch modulation are
 ; updated in this interrupt. Refer to documentation in the variable definition
 ; file `ram.asm`.
-    COM     portamento_update_toggle
+    COM     pitch_eg_update_toggle
 
+; @TODO: Ignore if MIDI messages are pending, like in DX7 firmware.
+    JSR     portamento_process
+
+; @TODO: Create toggle for enabling active sensing, like in DX7 firwmare.
     JSR     active_sensing_update_counter
     JSR     active_sensing_test_for_timeout
 
@@ -186,16 +190,16 @@ handler_ocf:                                    SUBROUTINE
     JSR     lfo_process
     JSR     mod_amp_update
 
-    TST     portamento_update_toggle
-    BPL     .process_portamento
+    TST     pitch_eg_update_toggle
+    BPL     .process_pitch_eg
 
     JSR     voice_update_sustain_status
     JSR     mod_pitch_update
     JSR     handler_ocf_compare_mode_led_blink
     BRA     .reset_timers_and_exit
 
-.process_portamento:
-    JSR     portamento_process
+.process_pitch_eg:
+    JSR     pitch_eg_process
 
 .reset_timers_and_exit:
 ; Clear the OCF interrupt flag by reading from the timer control register.

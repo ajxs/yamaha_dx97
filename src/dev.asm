@@ -24,14 +24,6 @@ developer_reset_parameters:                     SUBROUTINE
     LDAA    #64
     STAA    master_tune
 
-    CLR     mono_poly
-
-    CLR     patch_compare_mode_active
-
-; Set the portamento time to instantaneous.
-    LDAA    #0
-    STAA    portamento_time
-
     LDAA    #0
     STAA    midi_channel_rx
 
@@ -42,6 +34,33 @@ developer_reset_parameters:                     SUBROUTINE
 
     LDAA    #1
     STAA    sys_info_avail
+
+    LDAA    #$80
+    STAA    patch_index_current
+
+    CLR     patch_compare_mode_active
+
+; Reset performance parameters.
+    CLR     mono_poly
+
+; Set the portamento time to instantaneous.
+    LDAA    #0
+    STAA    portamento_time
+
+    LDAA    #99
+    STAA    mod_wheel_range
+    STAA    breath_control_range
+
+    LDAA    #7
+    STAA    mod_wheel_assign
+    STAA    breath_control_assign
+
+    LDAA    #1
+    STAA    mod_wheel_amp
+    STAA    mod_wheel_eg_bias
+
+    STAA    breath_control_amp
+    STAA    breath_control_eg_bias
 
 ; Initialise the patch edit buffer.
     JSR     patch_init_edit_buffer

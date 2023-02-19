@@ -156,6 +156,8 @@ ui_print_eg_copy_mode:                          SUBROUTINE
 ; ==============================================================================
 ; UI_PRINT_EDIT_MODE
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Prints the 'Edit Mode' user-interface.
 ; This contains the information about the current algorithm, the operator
@@ -168,38 +170,60 @@ ui_print_edit_mode:                             SUBROUTINE
 
 ; Print the current patch's algorithm.
     LDAA    patch_edit_algorithm
-    ANDA    #7
     INCA
     CLRB
     JSR     lcd_print_number_two_digits
-    LDX     #(lcd_buffer_next + 7)
-    STX     <memcpy_ptr_dest
 
 ; Print the enabled status of each individual operator.
 ; The 'Print Single Number' routine will print a '1', or '0' to indicate
 ; the status of each operator. Incrementing the LCD write pointer with
 ; each iteration.
-    LDX     #operator_enabled_status
+; @Note: This is moved 1 space to the left, to match the position on the DX7.
+    LDX     #lcd_buffer_next + 6
+    STX     <memcpy_ptr_dest
 
+    LDAA     patch_edit_operator_status
+
+; Rotate left twice times, since we're testing 6 operators.
+; This will place the six operator statuses at bits 7-2 in ACCA.
+; With each iteration, this value will be rotated left.
+; This will set the carry bit to the status of each operator.
+    ASLA
+    ASLA
+
+    LDAB    #6
 .print_operator_enabled_loop:
-    LDAA    0,x
-    ANDA    #1
+    ROLA
+
+    PSHA
+    PSHB
+
+    LDAA    #0
+    BCC     .print_operator_status
+
+    LDAA    #1
+.print_operator_status:
     JSR     lcd_print_number_single_digit
-    INX
-    CPX     #(operator_enabled_status + 4)
+
+    PULB
+    PULA
+    DECB
     BNE     .print_operator_enabled_loop
 
     LDAB    ui_btn_numeric_last_pressed
     CMPB    #BUTTON_EDIT_10_MOD_SENS
     BNE     .is_last_button_12
+
     TST     ui_btn_edit_10_sub_function
     BEQ     .print_selected_operator
 
 .is_last_button_12:
     CMPB    #BUTTON_EDIT_12_OSC_FREQ_COARSE
     BCS     ui_print_parameter
+
     CMPB    #BUTTON_EDIT_14_DETUNE_SYNC
     BNE     .is_last_button_20
+
     TST     ui_btn_edit_14_sub_function
     BNE     ui_print_parameter
 
@@ -219,7 +243,6 @@ ui_print_edit_mode:                             SUBROUTINE
     STX     lcd_buffer_next + 13
 
     LDAA    operator_selected_src
-    ANDA    #%11
     ADDA    #'1
     STAA    lcd_buffer_next + 15
 

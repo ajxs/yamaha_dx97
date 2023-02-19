@@ -29,7 +29,10 @@ PATCH_SIZE_PACKED_DX7:                          EQU 128
 PATCH_SIZE_UNPACKED_DX9:                        EQU 69
 PATCH_SIZE_UNPACKED_DX7:                        EQU 155
 
-PATCH_BUFFER_SIZE:                              EQU (20 * PATCH_SIZE_PACKED_DX9)
+PATCH_BUFFER_COUNT:                             EQU 8
+PATCH_BUFFER_SIZE_BYTES:                        EQU PATCH_BUFFER_COUNT * PATCH_SIZE_PACKED_DX7
+
+KEYBOARD_SCALE_CURVE_LENGTH                     EQU 43
 
     SEG.U ram_internal
     ORG $80
@@ -47,18 +50,14 @@ sustain_status:                                 DS 1
 patch_activate_operator_number:                 DS 1
 patch_activate_operator_offset:                 DS 1
 
-; @TODO: These variables can likely be replaced by temporary variables.
-keyboard_scaling_scaled_rate:                   DS 1
-keyboard_scaling_unknown:                       DS 1
-
 ; @TODO: What are these variables? They can probably be removed.
 ; Deprecate these in future in place of temporary variables.
 copy_ptr_src:                                   DS 2
 copy_ptr_dest:                                  DS 2
 copy_counter:                                   DS 1
 
-key_tranpose_set_mode_active:                   DS 1
-key_transpose_base_frequency:                   DS 2
+key_transpose_set_mode_active:                  DS 1
+
 keyboard_last_scanned_values:                   DS 12
 
 ; This variable stores the number of the last incoming note received via MIDI.
@@ -74,6 +73,7 @@ note_frequency_low:                             EQU (#note_frequency + 1)
 
 ; The index of the selected voice during the 'Voice Add' subroutine.
 ; Once a free voice to hold the new note is found, its index is stored here.
+; This is 0-30
 voice_add_index:                                DS 1
 
 tape_byte_counter:DS 1
@@ -87,20 +87,6 @@ portamento_rate_scaled:                         DS 1
 
 pitch_bend_amount:                              DS 1
 pitch_bend_frequency:                           DS 2
-
-; @Note: These portamento-related variables cannot be moved to temporary
-; variables, since they are used in subroutines called as part of the periodic
-; OCF interrupt.
-
-; This variable stores the base logarithmic frequency that is added to the
-; final voice pitch during portamento calculations.
-portamento_base_frequency:                      DS 2
-; This value represents the final increment/decrement added to the current
-; logarithmic voice frequency to move a voice's pitch towards the next note
-; during portamento.
-portamento_final_increment:                     DS 2
-porta_process_loop_index:                       DS 1
-porta_process_target_frequency:                 DS 2
 
 lfo_phase_increment:                            DS 2
 lfo_delay_increment:                            DS 2
@@ -123,7 +109,7 @@ mod_amount_total:                               DS 1
 ; This flag is used to determine whether portamento, or pitch modulation
 ; should be updated in the OCF interrupt. The reason is likely to save CPU
 ; cycles used by these expensive operations.
-portamento_update_toggle:                       DS 1
+pitch_eg_update_toggle:                         DS 1
 
 lcd_print_number_print_zero_flag:               DS 1
 lcd_print_number_divisor:                       DS 1
@@ -182,8 +168,9 @@ midi_sysex_format_type:                         DS 1
 midi_sysex_tx_checksum:                         DS 1
 midi_sysex_rx_checksum:                         DS 1
 
-; The index of the current patch being received during a 32 voice SysEx
-; bulk data dump.
+; The index of the current patch being received during a SysEx bulk data dump.
+; This is set to '20' when receiving a single voice, which will store it in
+; the tape buffer.
 midi_sysex_rx_bulk_patch_index:                 DS 1
 ; Whether the synth is currently receiving SysEx data.
 midi_sysex_rx_active_flag:                      DS 1
@@ -202,6 +189,10 @@ active_sensing_rx_counter:                      DS 1
 midi_sysex_receive_data_active:                 DS 1
 midi_error_code:                                DS 1
 
+portamento_voice_toggle:                        DS 1
+
+; These temporary variables are used in interrupt routines.
+interrupt_temp_registers:                       DS 16
 
     SEG.U ram_external
     ORG $800
@@ -226,32 +217,40 @@ midi_buffer_sysex_rx_bulk_end:                  EQU *
 midi_channel_rx:                                DS 1
 midi_channel_tx:                                DS 1
 
-patch_buffer:                                   DS PATCH_BUFFER_SIZE
-patch_buffer_tape_temp:                         DS PATCH_SIZE_PACKED_DX9
+patch_buffer:                                   DS PATCH_BUFFER_SIZE_BYTES
+; This is essentially a 'hidden' patch buffer, used to store a patch received
+; via MIDI/cassette tape. This can be loaded programmatically in the same way
+; as a normal patch in the patch buffer, but is not accessible via the UI.
+patch_buffer_incoming:                          DS PATCH_SIZE_PACKED_DX7
 tape_patch_output_counter:                      DS 1
 tape_patch_checksum:                            DS 2
 
-patch_buffer_compare:                           DS PATCH_SIZE_PACKED_DX9
+patch_buffer_compare:                           DS PATCH_SIZE_PACKED_DX7
 
 ; ==============================================================================
 ; Patch Edit Buffer.
 ; This is where the currently loaded patch is unpacked, and stored in memory.
 ; ==============================================================================
-patch_buffer_edit:                              DS PATCH_SIZE_UNPACKED_DX9
-patch_edit_op_4_kbd_scaling_rate:               EQU (#patch_buffer_edit + PATCH_DX9_OP_KBD_SCALE_RATE)
-patch_edit_op_4_kbd_scaling_level:              EQU (#patch_buffer_edit + PATCH_DX9_OP_KBD_SCALE_LEVEL)
-patch_edit_algorithm:                           EQU (#patch_buffer_edit + PATCH_DX9_ALGORITHM)
-patch_edit_feedback:                            EQU (#patch_buffer_edit + PATCH_DX9_FEEDBACK)
-patch_edit_oscillator_sync:                     EQU (#patch_buffer_edit + PATCH_DX9_OSC_SYNC)
+patch_buffer_edit:                              DS PATCH_SIZE_UNPACKED_DX7
 
-patch_edit_lfo_speed:                           EQU (#patch_buffer_edit + PATCH_DX9_LFO_SPEED)
-patch_edit_lfo_delay:                           EQU (#patch_buffer_edit + PATCH_DX9_LFO_DELAY)
-patch_edit_lfo_pitch_mod_depth:                 EQU (#patch_buffer_edit + PATCH_DX9_LFO_PITCH_MOD_DEPTH)
-patch_edit_lfo_amp_mod_depth:                   EQU (#patch_buffer_edit + PATCH_DX9_LFO_AMP_MOD_DEPTH)
-patch_edit_lfo_waveform:                        EQU (#patch_buffer_edit + PATCH_DX9_LFO_WAVEFORM)
-patch_edit_lfo_pitch_mod_sens:                  EQU (#patch_buffer_edit + PATCH_DX9_LFO_PITCH_MOD_SENS)
+patch_edit_algorithm:                           EQU (#patch_buffer_edit + PATCH_ALGORITHM)
+patch_edit_feedback:                            EQU (#patch_buffer_edit + PATCH_FEEDBACK)
+patch_edit_oscillator_sync:                     EQU (#patch_buffer_edit + PATCH_OSC_SYNC)
 
-patch_edit_key_transpose:                       EQU (#patch_buffer_edit + PATCH_DX9_KEY_TRANSPOSE)
+patch_edit_lfo_speed:                           EQU (#patch_buffer_edit + PATCH_LFO_SPEED)
+patch_edit_lfo_delay:                           EQU (#patch_buffer_edit + PATCH_LFO_DELAY)
+patch_edit_lfo_pitch_mod_depth:                 EQU (#patch_buffer_edit + PATCH_LFO_PITCH_MOD_DEPTH)
+patch_edit_lfo_amp_mod_depth:                   EQU (#patch_buffer_edit + PATCH_LFO_AMP_MOD_DEPTH)
+patch_edit_lfo_waveform:                        EQU (#patch_buffer_edit + PATCH_LFO_WAVEFORM)
+patch_edit_lfo_pitch_mod_sens:                  EQU (#patch_buffer_edit + PATCH_LFO_PITCH_MOD_SENS)
+
+patch_edit_pitch_eg:                            EQU (#patch_buffer_edit + PATCH_PITCH_EG_R1)
+
+patch_edit_key_transpose:                       EQU (#patch_buffer_edit + PATCH_KEY_TRANSPOSE)
+
+patch_edit_name:                                EQU (#patch_buffer_edit + PATCH_PATCH_NAME)
+
+patch_edit_operator_status:                     EQU (#patch_buffer_edit + PATCH_OPERATOR_ON_OFF_STATUS)
 
 ; This value is used as a 'null' edit parameter.
 ; When it is selected as the active 'Edit Parameter', any data input will have
@@ -303,12 +302,36 @@ memory_protect:                                 DS 1
 tape_unknown_byte_15DC:                         DS 1
 tape_patch_index:                               DS 1
 
-; The status of each operator.
-operator_enabled_status:                        DS 4
-operator_4_enabled_status:                      EQU (#operator_enabled_status + 0)
-operator_3_enabled_status:                      EQU (#operator_enabled_status + 1)
-operator_2_enabled_status:                      EQU (#operator_enabled_status + 2)
-operator_1_enabled_status:                      EQU (#operator_enabled_status + 3)
+; The current Pitch EG step for each of the synth's voices.
+pitch_eg_current_step:                          DS 16
+
+; The current Pitch EG frequency for each of the synth's voices.
+; The default value for each of these 16 entries is 0x4000.
+; This corresponds to a value of '50' in a patch's Pitch EG level stage.
+pitch_eg_current_frequency:                     DS 32
+
+; @TODO: Document this.
+; The code depends on these two arrays being in this sequential order.
+pitch_eg_parsed_rate:                           DS 4
+pitch_eg_parsed_level:                          DS 4
+; The final pitch EG frequency for the current patch.
+; This doubles as the INITIAL pitch EG frequency.
+pitch_eg_parsed_level_final:                    EQU (#pitch_eg_parsed_level + 3)
+
+; @TODO: Document
+patch_operator_velocity_sensitivity:            DS 12
+
+; The operator keyboard scaling curve data.
+; When the keyboard scaling for an operator is parsed from the patch data,
+; this curve data is created with the amplitude scaling factor for the full
+; keyboard range.
+; The MSB of the note frequency word is used as an index into this curve data
+; when looking up the scaling factor for a particular note.
+; Length: 6 * 43.
+operator_keyboard_scaling:                      DS (6 * KEYBOARD_SCALE_CURVE_LENGTH)
+operator_keyboard_scaling_2:                    EQU (#operator_keyboard_scaling + KEYBOARD_SCALE_CURVE_LENGTH)
+
+operator_volume:                                DS 6
 
 ; This variable stores the synth's current UI mode, and memory protect state.
 ; Refer to the 'ui_memory_protect_state_set' subroutine for how the memory
@@ -431,8 +454,6 @@ analog_input_breath_controller:                 EQU (#analog_input_current + 2)
 analog_input_slider:                            EQU (#analog_input_current + 3)
 analog_input_battery_voltage:                   EQU (#analog_input_current + 4)
 
-operator_keyboard_scaling:                      DS 29 * 4
-
 lcd_buffer_current:                             DS 32
 lcd_buffer_current_end:                         EQU *
 
@@ -448,7 +469,7 @@ lcd_buffer_next_end:                            EQU *
 ; Note: Also ensure that these variables are not used in subroutines that call
 ; one another. If these are used in such situations, ensure that they do not
 ; clobber eachother.
-temp_variables:                                 DS 10
+temp_variables:                                 DS 12
 
 ; Since the voice buffers occupy a fixed position at the top of RAM so that
 ; they lie adjacent to the EGS chip, the stack can be positioned in a way that

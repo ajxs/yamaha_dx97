@@ -161,7 +161,7 @@ keyboard_event_handler:                         SUBROUTINE
 
 ; Test whether the 'Set Key Tranpose' mode is active.
 ; In this case the next keypress sets the root note.
-    LDAA    <key_tranpose_set_mode_active
+    LDAA    <key_transpose_set_mode_active
     BNE     keyboard_set_key_transpose
 
 ; Send the MIDI 'Note On' event, then jump to adding a new voice with the
@@ -224,14 +224,12 @@ keyboard_set_key_transpose:                     SUBROUTINE
 ; After the key transpose has been set, send the new value via SysEx.
     JSR     midi_sysex_tx_key_transpose
 
-    JSR     voice_set_key_transpose_base_frequency
-
 ; Set the patch edit buffer as having been modified.
     LDAA    #1
     STAA    patch_current_modified_flag
     JSR     ui_print_update_led_and_menu
 
 .clear_key_transpose_flag:
-    CLR     key_tranpose_set_mode_active
+    CLR     key_transpose_set_mode_active
 
     RTS

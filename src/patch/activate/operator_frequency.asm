@@ -22,7 +22,8 @@
 ; ==============================================================================
 ; PATCH_ACTIVATE_OPERATOR_FREQUENCY
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX7_FIRMWARE
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Constructs the final frequency value for the specified operator, and loads it
 ; to the EGS chip.
@@ -39,53 +40,103 @@
 ;
 ; ==============================================================================
 patch_activate_operator_frequency:              SUBROUTINE
-; Load this operator's coarse frequency.
+; ==============================================================================
+; LOCAL TEMPORARY VARIABLES
+; ==============================================================================
+.operator_pointer:                              EQU #temp_variables
+.operator_coarse_freq:                          EQU #temp_variables + 2
+.operator_fine_freq_offset:                     EQU #temp_variables + 4
+
+; ==============================================================================
     LDX     #patch_buffer_edit
     LDAB    <patch_activate_operator_offset
     ABX
-    PSHX
+    STX     .operator_pointer
 
-; Use the patch's coarse frequency value as an index into the table.
-    LDAB    PATCH_DX9_OP_FREQ_COARSE,x
+    LDAB    PATCH_OP_MODE,x
+    BNE     .osc_mode_fixed
+
+; Use the serialised 'Op Freq Coarse' value (0-31) as an index into the
+; coarse frequency lookup table.
+; Store the resulting coarse freq value in a temporary variable.
+    LDAB    18,x
     ASLB
     LDX     #table_operator_frequency_coarse
     ABX
     LDD     0,x
+    STD     .operator_coarse_freq
 
-; Load this operator's fine frequency.
-    PULX
-    PSHA
-    PSHB
+; Parse the fine operator frequency.
+; Store 'Op Freq Fine' (0-99) * 2 as a temporary variable.
+; This value will be used as an index into the fine frequency lookup table.
+; The resulting value will be added to the coarse frequency to produce
+; the final result.
+    LDX     .operator_pointer
+    LDAB    PATCH_OP_FREQ_FINE,x
+    LDAA    #2
+    MUL
+    STD     .operator_fine_freq_offset
 
-; Use the patch's fine frequency value as an index into the table.
-    LDAB    PATCH_DX9_OP_FREQ_FINE,x
-    CLRA
-    LSLD
-    ADDD    #table_operator_frequency_fine
+    LDD     #table_operator_frequency_fine
+    ADDD    .operator_fine_freq_offset
+    STD     .operator_pointer
+    LDX     .operator_pointer
+    LDD     0,x
 
-    XGDX
-    PULB
-    PULA
-    ADDD    0,x
-
+; The final ratio frequency value is:
+; Ratio_Frequency = 0x232C + FREQ_COARSE + FREQ_FINE.
+    ADDD    .operator_coarse_freq
     ADDD    #$232C
 
-; Truncate the final value to 14 bits.
-    ANDB    #$FE
-    PSHB
+; The final frequency value is a 14-bit integer, shifted left two bits.
+; Bit 0 holds the flag indicating whether this is a fixed frequency value.
+; Clear this bit to indicate this operator uses a ratio frequency.
+    ANDB    #%11111110
+    JMP     .load_operator_frequency_to_egs
 
-; Write this value to the EGS operator frequency register.
-    LDX     #egs_operator_frequency
-    LDAB    <patch_activate_operator_number
+; Use the serialised 'Op Freq Coarse' value (0-31) % 3, as an index
+; into the fixed frequency lookup table.
+; Store the resulting frequency value in a temporary variable.
+.osc_mode_fixed:
+    LDX     .operator_pointer
+    LDAB    PATCH_OP_FREQ_COARSE,x
+    ANDB    #%11
     ASLB
+
+    LDX     #table_operator_frequency_fixed
     ABX
-    PULB
+    LDD     0,x
+    STD     .operator_coarse_freq
 
+; Scale the fine fixed frequency by multipying by 136.
+    LDX     .operator_pointer
+    LDAA    PATCH_OP_FREQ_FINE,x
+    LDAB    #136
+    MUL
+
+; The final fixed frequency value is:
+; Fixed_Frequency = 0x16AC + FREQ_FIXED + FREQ_FINE.
+    ADDD    #$16AC
+    ADDD    .operator_coarse_freq
+
+; The final frequency value is a 14-bit integer, shifted left two bits.
+; Bit 0 holds the flag indicating whether this is a fixed frequency value.
+; Set this bit to indicate this operator uses a fixed frequency.
+    ORAB    #1
+
+.load_operator_frequency_to_egs:
+    PSHB
+    LDAB    patch_activate_operator_number
+    ASLB
+    LDX     #egs_operator_frequency
+    ABX
+
+; Write the 16-bit pitch, and fixed-frequency flag value to the EGS.
     STAA    0,x
-    NOP
+    PULB
     STAB    1,x
-
     RTS
+
 
 ; ==============================================================================
 ; Operator coarse frequency value table.
@@ -235,3 +286,13 @@ table_operator_frequency_fine:
     DC.W $FC4
     DC.W $FE2
     DC.W $1000
+
+
+; ==============================================================================
+; Fixed Frequency Lookup Table.
+; ==============================================================================
+table_operator_frequency_fixed:
+    DC.W 0
+    DC.W $3526
+    DC.W $6A4C
+    DC.W $9F74

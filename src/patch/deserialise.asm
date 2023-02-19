@@ -10,98 +10,199 @@
 ; ==============================================================================
 ; patch/deserialise.asm
 ; ==============================================================================
+; @TAKEN_FROM_DX7_FIRMWARE
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
-; This file contains the code for deserialising a patch from storage into the
-; synth's edit buffer.
+; Deserialises a patch from the 'packed' format used to store patches in the
+; synth's internal to the 'unpacked' format in the synth's edit buffer.
+; @Note: This is largely taken from the DX7 firmware, but the call signature
+; is modified to match that of the DX9.
+;
+; ARGUMENTS:
+; Registers:
+; * IX:   A pointer to the destination buffer for the deserialised patch.
+;
+; Memory:
+; * memcpy_ptr_src:  The source patch buffer pointer.
+;
+; REGISTERS MODIFIED:
+; * ACCA, ACCB, IX
+;
 ; ==============================================================================
 
     .PROCESSOR HD6303
 
-; ==============================================================================
-; PATCH_DESERIALISE
-; ==============================================================================
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
-; DESCRIPTION:
-; @TODO
-; Deserialises a patch from the 'packed' format used to store patches in the
-; synth's internal to the 'unpacked' format in the synth's edit buffer.
-;
-; ARGUMENTS:
-; Memory:
-; * memcpy_ptr_src:  The source patch buffer pointer.
-; * memcpy_ptr_dest: The destination patch buffer pointer.
-;
-; ==============================================================================
 patch_deserialise:                              SUBROUTINE
-    LDAB    #4
+; ==============================================================================
+; LOCAL TEMPORARY VARIABLES
+; ==============================================================================
+.operator_counter:                              EQU #temp_variables
+.temp_variable:                                 EQU #temp_variables + 1
+
+; ==============================================================================
+    STX     memcpy_ptr_dest
+
+    LDAB    #6
+    STAB    .operator_counter
 
 .deserialise_operator_loop:
-    PSHB
-    LDAB    #9
-    JSR     memcpy_store_dest_and_copy_accb_bytes
-    LDX     <memcpy_ptr_src
-    LDAA    0,x
-    ANDA    #7
-    LDX     <memcpy_ptr_dest
-    STAA    0,x
-    INX
-    STX     <memcpy_ptr_dest
-    LDX     <memcpy_ptr_src
-    LDAA    0,x
-    INX
-    STX     <memcpy_ptr_src
-    LSRA
-    LSRA
-    LSRA
-    ANDA    #3
-    LDX     <memcpy_ptr_dest
-    STAA    0,x
-    INX
-    LDAB    #4
-    JSR     memcpy_store_dest_and_copy_accb_bytes
-    PULB
-    DECB
-    BNE     .deserialise_operator_loop
+; Copy the first 11 bytes of the operator structure.
+; These are identical in the packed/unpacked format.
+    LDAB    #11
+    JSR     memcpy
 
-    LDAB    #1
-    JSR     memcpy_store_dest_and_copy_accb_bytes
-    LDX     <memcpy_ptr_src
-    LDAA    0,x
-    ANDA    #7
-    LDX     <memcpy_ptr_dest
+; Deserialise byte 11.
+    LOAD_SRC_PTR_AND_LOAD_ACCA
+    INCREMENT_SRC_PTR_AND_STORE
+    STAA    .temp_variable
+
+; Mask the left scaling curve value, and store.
+    ANDA    #%11
+    LOAD_DEST_PTR_AND_STORE_ACCA
+    INX
+
+; Mask the right curve value, and store.
+    LDAA    .temp_variable
+    ANDA    #%1100
+    LSRA
+    LSRA
     STAA    0,x
+    INCREMENT_DEST_PTR_AND_STORE
+
+; Deserialise byte 12.
+    LOAD_SRC_PTR_AND_LOAD_ACCA
+    STAA    .temp_variable
+
+; Mask, and store the oscillator rate scaling.
+    ANDA    #%111
+    INCREMENT_SRC_PTR_AND_STORE
+    LOAD_DEST_PTR_AND_STORE_ACCA
+
+; Mask, and store the oscillator detune value.
+    LDAA    .temp_variable
+    LSRA
+    LSRA
+    LSRA
+    STAA    7,x
+    INCREMENT_DEST_PTR_AND_STORE
+
+; Deserialise byte 13.
+    LOAD_SRC_PTR_AND_LOAD_ACCA
+    INCREMENT_SRC_PTR_AND_STORE
+    STAA    .temp_variable
+
+; Mask, and store the amp modulation sensitivity value.
+    ANDA    #%11
+    LOAD_DEST_PTR_AND_STORE_ACCA
     INX
-    STX     <memcpy_ptr_dest
-    LDX     <memcpy_ptr_src
-    LDAA    0,x
-    INX
-    STX     <memcpy_ptr_src
+
+; Mask, and store the key velocity sensitivity value.
+    LDAA    .temp_variable
     LSRA
     LSRA
-    LSRA
+    STAA    0,x
+    INCREMENT_DEST_PTR_AND_STORE
+
+; Deserialise byte 14.
+    LOAD_SRC_PTR_AND_LOAD_ACCA
+    INCREMENT_SRC_PTR_AND_STORE
+    LOAD_DEST_PTR_AND_STORE_ACCA
+    INCREMENT_DEST_PTR_AND_STORE
+
+; Deserialise byte 15.
+    LOAD_SRC_PTR_AND_LOAD_ACCA
+    INCREMENT_SRC_PTR_AND_STORE
+    STAA    .temp_variable
+
+; Mask and store the oscillator mode value.
     ANDA    #1
-    LDX     <memcpy_ptr_dest
-    STAA    0,x
+    LOAD_DEST_PTR_AND_STORE_ACCA
+
+; Mask, and store the coarse frequency value.
     INX
+    LDAA    .temp_variable
+    LSRA
+    STAA    0,x
+    INCREMENT_DEST_PTR_AND_STORE
+
+; Deserialise byte 16.
+    LOAD_SRC_PTR_AND_LOAD_ACCA
+    INCREMENT_SRC_PTR_AND_STORE
+    LOAD_DEST_PTR_AND_STORE_ACCA
+    INX
+    INCREMENT_DEST_PTR_AND_STORE
+
+; Decrement the operator loop counter.
+    DEC     .operator_counter
+    BEQ     .copy_patch_values
+
+    JMP     .deserialise_operator_loop
+
+.copy_patch_values:
+; Copy the pitch EG values.
+    LDAB    #8
+    JSR     memcpy
+
+; Deserialise byte 110.
+    LOAD_SRC_PTR_AND_LOAD_ACCA
+    INCREMENT_SRC_PTR_AND_STORE
+    LOAD_DEST_PTR_AND_STORE_ACCA
+    INCREMENT_DEST_PTR_AND_STORE
+
+; Deserialise byte 111.
+    LOAD_SRC_PTR_AND_LOAD_ACCA
+    INCREMENT_SRC_PTR_AND_STORE
+    STAA    .temp_variable
+
+; Mask, and store the feedback value.
+    ANDA    #%111
+    LOAD_DEST_PTR_AND_STORE_ACCA
+
+; Mask, and store the oscillator key sync value.
+    INX
+    LDAA    .temp_variable
+    LSRA
+    LSRA
+    LSRA
+    STAA    0,x
+    INCREMENT_DEST_PTR_AND_STORE
+
+; Copy bytes 112-115.
     LDAB    #4
-    JSR     memcpy_store_dest_and_copy_accb_bytes
-    LDX     <memcpy_ptr_src
-    LDAA    0,x
-    ANDA    #7
-    LDX     <memcpy_ptr_dest
+    JSR     memcpy
+
+; Deserialise byte 116.
+    LOAD_SRC_PTR_AND_LOAD_ACCA
+    INCREMENT_SRC_PTR_AND_STORE
+    STAA    .temp_variable
+
+; Mask, and store the LFO Key Sync value.
+    ANDA    #1
+    LOAD_DEST_PTR_AND_STORE_ACCA
+
+; Mask, and store the LFO Wave value.
+    INX
+    LDAA    .temp_variable
+    LSRA
+    ANDA    #%111
     STAA    0,x
+
+; Mask, and store the LFO Pitch Mod Sensitivity value.
     INX
-    STX     <memcpy_ptr_dest
-    LDX     <memcpy_ptr_src
-    LDAA    0,x
-    INX
-    STX     <memcpy_ptr_src
+    LDAA    .temp_variable
     LSRA
     LSRA
     LSRA
-    ANDA    #7
-    LDX     <memcpy_ptr_dest
+    LSRA
     STAA    0,x
-    INX
-    LDAB    #1
-    JMP     memcpy_store_dest_and_copy_accb_bytes
+    INCREMENT_DEST_PTR_AND_STORE
+
+; Deserialise byte 117.
+    LOAD_SRC_PTR_AND_LOAD_ACCA
+    INCREMENT_SRC_PTR_AND_STORE
+    LOAD_DEST_PTR_AND_STORE_ACCA
+    INCREMENT_DEST_PTR_AND_STORE
+
+; Copy the patch name.
+    LDAB    #10
+    JMP     memcpy

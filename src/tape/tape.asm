@@ -37,7 +37,7 @@
 ;
 ; ==============================================================================
 tape_calculate_patch_checksum:                  SUBROUTINE
-    LDX     #patch_buffer_tape_temp
+    LDX     #patch_buffer_incoming
     LDAB    #65
     STAB    <copy_counter
     CLRA
@@ -208,6 +208,7 @@ str_function_control_verify:            DC "FUNCTION CONTROLVERIFY COMPLETED", 0
 ; PATCH_COPY_TO_TAPE_BUFFER
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @NEEDS_TO_BE_REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Copies a patch from the synth's internal memory into the temporary tape
 ; buffer, prior to being output via the cassette interface.
@@ -222,7 +223,7 @@ patch_copy_to_tape_buffer:
     MUL
     ADDD    #patch_buffer
     STD     <copy_ptr_src
-    LDX     #patch_buffer_tape_temp
+    LDX     #patch_buffer_incoming
     STX     <copy_ptr_dest
     BRA     patch_copy
 
@@ -231,6 +232,7 @@ patch_copy_to_tape_buffer:
 ; PATCH_COPY_FROM_TAPE_BUFFER
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @NEEDS_TO_BE_REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Copies a patch from the synth's temporary tape buffer into the synth's
 ; internal memory, after being received via the cassette interface.
@@ -241,7 +243,7 @@ patch_copy_to_tape_buffer:
 ;
 ; ==============================================================================
 patch_copy_from_tape_buffer:                    SUBROUTINE
-    LDX     #patch_buffer_tape_temp
+    LDX     #patch_buffer_incoming
     STX     <copy_ptr_src
     LDAB    #64
     MUL

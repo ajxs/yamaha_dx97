@@ -10,6 +10,8 @@
 ; ==============================================================================
 ; voice/add/poly.asm
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; This subroutine handes 'adding' a new voice event when the synth is in
 ; polyphonic mode.
@@ -42,7 +44,7 @@ voice_add_poly:                                 SUBROUTINE
 ; Test the status of each voice to find one that is marked as inactive.
     LDX     #voice_status
     ABX
-    TIMX   #VOICE_STATUS_ACTIVE, 1
+    TIMX    #VOICE_STATUS_ACTIVE, 1
     BEQ     .found_inactive_voice
 
     INCB
@@ -92,7 +94,7 @@ voice_add_poly:                                 SUBROUTINE
 ; If it is inactive, proceed to setting the frequency for this voice.
     LDX     #voice_status
     ABX
-    TIMX   #VOICE_STATUS_ACTIVE, 1
+    TIMX    #VOICE_STATUS_ACTIVE, 1
     BEQ     .set_second_voice_frequency
 
 ; Decrement the loop index.
@@ -115,6 +117,25 @@ voice_add_poly:                                 SUBROUTINE
     LDD     <note_frequency
     ORAB    #VOICE_STATUS_ACTIVE
     STD     0,x
+
+; Reset the current pitch EG level to its initial value.
+; In the DX7, the final value, and the initial value are identical. So when
+; adding a voice, the initial level is set to the final value.
+    LDX     #pitch_eg_current_frequency
+    LDAB    <voice_add_index
+    ABX
+
+    LDAA    pitch_eg_parsed_level_final
+    CLRB
+    LSRD
+    STD     0,x
+
+; Reset the 'Current Pitch EG Step' for this voice.
+    LDX     #pitch_eg_current_step
+    LDAB    <voice_add_index
+    LSRB
+    ABX
+    CLR     0,x
 
 ; Reset the LFO Delay.
     TST     patch_edit_lfo_delay

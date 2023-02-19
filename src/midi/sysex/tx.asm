@@ -182,7 +182,7 @@ midi_sysex_tx_param_change_algorithm_check:     SUBROUTINE
 ; MIDI_SYSEX_TX_PARAM_CHANGE_OPERATOR_ENABLE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Combines the status of each of the synth's operators into a single value,
 ; and then sends it via SysEx.
@@ -207,27 +207,7 @@ midi_sysex_tx_param_change_operator_enable:     SUBROUTINE
     JSR     midi_tx
     LDAA    #27
     JSR     midi_tx
-
-    LDX     #operator_enabled_status
-    CLRA
-
-; Iterate over each of the operators.
-; If the operator is enabled, set the carry bit, and 'rotate' it leftwards
-; into the most-significant bit of ACCA.
-; This final value will then be sent via MIDI.
-.send_operator_status_loop:
-    CLC
-    TST     0,x
-    BEQ     .add_operator_status_to_result
-
-    SEC
-
-.add_operator_status_to_result:
-    ROLA
-    INX
-    CPX     #(operator_enabled_status + 4)
-    BNE     .send_operator_status_loop
-
+    LDAA    patch_edit_operator_status
     JSR     midi_tx
 
 .exit:
@@ -308,7 +288,7 @@ midi_sysex_tx_tape_incoming_single_patch:   SUBROUTINE
     BEQ     .exit
 
     CLR     midi_sysex_patch_number
-    LDX     #patch_buffer_tape_temp
+    LDX     #patch_buffer_incoming
     STX     <memcpy_ptr_src
     JSR     midi_sysex_tx_bulk_data_serialise_bulk_to_src_pointer
     LDAA    #$30 ; '0'
@@ -391,8 +371,10 @@ midi_sysex_tx_bulk_data_send_init_voice:        SUBROUTINE
     BEQ     .exit
 
     CLR     midi_sysex_patch_number
-    LDX     #patch_buffer_init_voice_dx9
+
+    LDX     #patch_buffer_init_voice
     STX     <memcpy_ptr_src
+
     JSR     midi_sysex_tx_bulk_data_serialise_bulk_to_src_pointer
     LDX     #(midi_buffer_sysex_tx_bulk + 122)
     STX     <memcpy_ptr_dest
