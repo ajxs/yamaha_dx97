@@ -148,6 +148,70 @@ handler_reset_print_welcome_message:            SUBROUTINE
 
 
 ; ==============================================================================
+; HANDLER_RESET_VALIDATE_PARAMETERS
+; ==============================================================================
+; @PRIVATE
+; DESCRIPTION:
+; Validates important synth parameters to ensure they're within their
+; valid range.
+;
+; MEMORY MODIFIED:
+; * master_tune
+; * pitch_bend_range
+; * pitch_bend_step
+; * midi_channel_rx
+; * midi_channel_tx
+; * portamento_time
+;
+; REGISTERS MODIFIED:
+; * ACCA, ACCB, IX
+;
+; ==============================================================================
+handler_reset_validate_parameters:              SUBROUTINE
+; Ensure that the 'Master Tune' value is within the 0 - 0x1FF range.
+    LDD     master_tune
+    LSRD
+    CLRA
+    LSLD
+    STD     master_tune
+
+; Validate the pitch-bend range.
+    LDAA    #13
+    CMPA    pitch_bend_range
+    BHI     .validate_pitch_bend_step
+
+    CLR     pitch_bend_range
+
+.validate_pitch_bend_step:
+    CMPA    pitch_bend_step
+    BHI     .validate_midi_rx_channel
+
+    CLR     pitch_bend_step
+
+.validate_midi_rx_channel:
+; Ensure that the MIDI RX channel is valid.
+; This checks that '16' is higher than the MIDI channel.
+    LDAA    #16
+    CMPA    midi_channel_rx
+    BHI     .reset_midi_channel_tx
+
+    CLR     midi_channel_rx
+
+.reset_midi_channel_tx:
+    CLR     midi_channel_tx
+
+; Validate the portamento time is under 100.
+    LDAA    #100
+    CMPA    portamento_time
+    BHI     .exit
+
+    CLR     portamento_time
+
+.exit
+    RTS
+
+
+; ==============================================================================
 ; HANDLER_RESET
 ; ==============================================================================
 ; DESCRIPTION:
@@ -209,16 +273,7 @@ handler_reset:                                  SUBROUTINE
 ; chip, which will be performed in the subsequent subroutine call.
     JSR     handler_reset_initialise_ui_variables
 
-; Ensure that the MIDI RX channel is valid.
-; This checks that '16' is higher than the MIDI channel.
-    LDAA    #16
-    CMPA    midi_channel_rx
-    BHI     .reset_midi_channel_tx
-
-    CLR     midi_channel_rx
-
-.reset_midi_channel_tx:
-    CLR     midi_channel_tx
+    JSR     handler_reset_validate_parameters
 
 ; Read, and store the battery voltage.
 ; This is the only point that the battery voltage is actually read.
@@ -245,8 +300,7 @@ handler_reset:                                  SUBROUTINE
 
 .reset_voice_data:
 ; Reset the EGS, and the internal voice frequency buffers.
-    JSR     voice_reset_egs
-    JSR     voice_reset_frequency_data
+    JSR     voice_reset
 
 ; Reload of all patch data to the EGS chip.
 ; This is necessary here since no data is currently loaded.
@@ -271,7 +325,7 @@ handler_reset:                                  SUBROUTINE
     JSR     developer_reset_parameters
 
 ; Enable the output-compare interrupt, and clear condition flags.
-    LDAA    #TIMER_CTRL_EOCI1
+    LDAA    #TIMER_CTRL_EOCI
     STAA    <timer_ctrl_status
     CLRA
     TAP

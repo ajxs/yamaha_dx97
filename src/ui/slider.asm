@@ -73,76 +73,21 @@ ui_slider:                                      SUBROUTINE
     MUL
     LDX     ui_active_param_address
 
+    CPX     #master_tune
+    BEQ     .parameter_is_master_tune
+
 ; This branch, and the exit label were not in the original DX9 firmware.
 ; This was added to provide cleaner subroutine local labels.
-    BRA     ui_update_numeric_parameter
+    JMP     ui_update_numeric_parameter
+
+.parameter_is_master_tune:
+; If the currently selected edit parameter is the master tune setting set this
+; manually, as the scaled value is expanded to two bytes.
+    TAB
+    CLRA
+    LSLD
+    STD     master_tune
 
 .exit:
     RTS
 
-
-; ==============================================================================
-; UI_UPDATE_NUMERIC_PARAMETER
-; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; DESCRIPTION:
-; Handles updating a numeric edit parameter.
-; This subroutine is called via the front-panel increment/decrement, and
-; slider input handler routines.
-;
-; ARGUMENTS:
-; Registers:
-; * ACCA: flkjakf
-;
-; MEMORY MODIFIED:
-; * main_patch_event_flag
-; * patch_current_modified_flag
-; * active_voice_count
-;
-; REGISTERS MODIFIED:
-; * ACCA, ACCB, IX
-;
-; ==============================================================================
-ui_update_numeric_parameter:                    SUBROUTINE
-; Check if the value has been updated by the previous operation.
-; If so, store the newly updated value.
-    CMPA    0,x
-    BEQ     .exit
-
-    STAA    0,x
-
-; Trigger the reloading of the patch data to the EGS chip.
-    LDAA    #EVENT_RELOAD_PATCH
-    STAA    main_patch_event_flag
-
-; If the previous front-panel button press that initiated this action
-; originated from a function parameter button, branch.
-    LDAA    ui_btn_numeric_last_pressed
-    CMPA    #BUTTON_EDIT_20_KEY_TRANSPOSE
-    BCC     .function_parameter
-
-; Set the patch edit buffer as having been modified.
-    LDAA    #1
-    STAA    patch_current_modified_flag
-    BRA     .exit
-
-.function_parameter:
-; If the parameter being updated is the synth's polyphony mode, stop all
-; voices, and reset the voice buffers.
-    CMPA    #BUTTON_FUNCTION_2
-    BEQ     .reset_voices
-
-; If the MIDI channel is updated, reset all voices.
-    CMPA    #BUTTON_FUNCTION_6
-    BNE     .exit
-
-    TST     ui_btn_function_6_sub_function
-    BNE     .exit
-
-.reset_voices:
-    JSR     voice_reset_egs
-    JSR     voice_reset_frequency_data
-    CLR     active_voice_count
-
-.exit:
-    RTS

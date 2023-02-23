@@ -57,7 +57,7 @@ patch_init_edit_buffer:
 ; ==============================================================================
 ; Initialise Patch Buffer.
 ; This buffer contains the data to initialise the patch 'Edit Buffer'.
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; ==============================================================================
 patch_buffer_init_voice:
 ; Operator 6.

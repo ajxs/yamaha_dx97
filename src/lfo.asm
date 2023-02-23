@@ -43,10 +43,11 @@ LFO_SAMPLE_AND_HOLD_PRIME_2:                    EQU 11
 lfo_process:                                    SUBROUTINE
     LDD     <lfo_delay_accumulator
     ADDD    <lfo_delay_increment
-    BCC     .store_delay_accumulator
 
+; After adding the increment, does this overflow?
 ; If the carry bit is set on account of the delay accumulator overflowing,
 ; clamp the LFO delay accumulator at 0xFFFF.
+    BCC     .store_delay_accumulator
 
 ; If the LFO delay accumulator has overflowed its 16-bit register, then
 ; the 'Fade In' accumulator becomes active. This counter constitutes a

@@ -312,7 +312,7 @@ input_button_numeric_edit_mode:                 SUBROUTINE
 ; INPUT_BUTTON_NUMERIC_PLAY_MODE
 ; ==============================================================================
 ; @PRIVATE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Handles a front-panel numeric button press while the synth's user-interface
 ; is in 'Play Mode'. Specifically this means 'Memory Select' mode while

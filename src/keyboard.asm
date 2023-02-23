@@ -115,6 +115,10 @@ keyboard_scan:                                  SUBROUTINE
     EORA    0,x
     STAA    0,x
 
+; Set the note velocity of a keypress to its maximum.
+    LDAA    #127
+    STAA    <note_velocity
+
 .exit:
     RTS
 

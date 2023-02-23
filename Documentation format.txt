@@ -20,8 +20,9 @@
 ; FUNCTION_NAME
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @TAKEN_FROM_DX7_FIRMWARE
 ; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @TAKEN_FROM_DX7_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; @NEW_FUNCTIONALITY
 ; @NEEDS_TESTING
 ; @NEEDS_FIXING
@@ -67,3 +68,6 @@
 ; @TODO
 ;
 ; ==============================================================================
+
+
+; @DX7_ROM_VARIABLE_NAME: M_MONO_POLY

@@ -20,6 +20,8 @@
 ; ==============================================================================
 ; UI_BUTTON_MAIN
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
 ; Main UI subroutine for the 'main', non-numeric, front-panel buttons.
 ; This subroutine creates an index into a jump table based upon the current
@@ -86,7 +88,7 @@ ui_button_main:                                 SUBROUTINE
 ; ==============================================================================
     DC.B ui_memory_protect_state_set - *
     DC.B ui_memory_protect_state_clear - *
-    DC.B ui_mode_fn - *
+    DC.B ui_mode_function - *
     DC.B ui_mode_edit - *
     DC.B .exit - *
 
@@ -96,6 +98,8 @@ ui_button_main:                                 SUBROUTINE
 ; ==============================================================================
 ; UI_BUTTON_EDIT_FUNCTION
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
 ; Handles an 'Edit' keypress while the synth's UI is in 'Function' mode.
 ; @TODO
@@ -106,13 +110,15 @@ ui_button_edit_function:                        SUBROUTINE
 ; Falls-through below.
 
 ; ==============================================================================
-; UI_MODE_FN
+; UI_MODE_FUNCTION
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
-; Sets the synt's UI mode to 'Function'
+; Sets the synth's UI mode to 'Function'
 ;
 ; ==============================================================================
-ui_mode_fn:                                     SUBROUTINE
+ui_mode_function:                               SUBROUTINE
     CLR     ui_mode_memory_protect_state
     LDAB    ui_btn_numeric_previous_fn_mode
     JMP     ui_button_numeric
@@ -121,6 +127,8 @@ ui_mode_fn:                                     SUBROUTINE
 ; ==============================================================================
 ; UI_BUTTON_FUNCTION_EDIT
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
 ; Handles a 'Function' keypress while the synth's UI is in 'Edit' mode.
 ;
@@ -132,6 +140,8 @@ ui_button_function_edit:                        SUBROUTINE
 ; ==============================================================================
 ; UI_MODE_EDIT
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
 ; Sets the synth's UI into 'Edit' mode.
 ;
@@ -150,6 +160,8 @@ ui_mode_edit:                                   SUBROUTINE
 ; ==============================================================================
 ; UI_BUTTON_FUNCTION_MEMORY_SELECT
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
 ; Handles a 'Memory Select' keypress while the UI is in 'Function' mode.
 ;
@@ -162,6 +174,8 @@ ui_button_function_memory_select:               SUBROUTINE
 ; ==============================================================================
 ; UI_MODE_EDIT_BTN_STORE
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
 ; Handles the 'STORE' button being pressed while the synth's UI is in
 ; 'Edit Mode'. If the synth is not currently in 'Patch Compare' mode, this will
@@ -178,6 +192,8 @@ ui_button_edit_store:                           SUBROUTINE
 ; ==============================================================================
 ; UI_MEMORY_PROTECT_STATE_SET
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
 ; This subroutine sets the memory protect bits in the UI state register.
 ; These bits are set based upon the current value of the memory protection.
@@ -207,6 +223,8 @@ ui_memory_protect_state_set:                    SUBROUTINE
 ; ==============================================================================
 ; UI_MEMORY_PROTECT_STATE_CLEAR
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
 ; Clears the UI memory protect state.
 ;
@@ -228,6 +246,8 @@ ui_memory_protect_state_clear:                  SUBROUTINE
 ; ==============================================================================
 ; UI_PATCH_COMPARE_TOGGLE
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
 ; @TODO
 ; ==============================================================================
@@ -265,6 +285,8 @@ loc_DE9E:
 ; ==============================================================================
 ; UI_BUTTON_EDIT_MEMORY_SELECT
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
 ; @TODO
 ;
@@ -276,6 +298,8 @@ ui_button_edit_memory_select:                   SUBROUTINE
 ; ==============================================================================
 ; UI_BUTTON_MEMORY_SELECT
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
 ; @TODO
 ;
@@ -294,6 +318,8 @@ ui_button_memory_select:                        SUBROUTINE
 ; ==============================================================================
 ; UI_BUTTON_EDIT_SAVE_PREVIOUS
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
 ; This routine saves the previous numeric button pressed while the synth's UI
 ; was in 'Edit' mode.
@@ -366,5 +392,5 @@ ui_button_function_save_previous:               SUBROUTINE
     STAA    ui_btn_numeric_previous_store_mode
 
 .clear_test_mode_button_input_state:
-    CLR     test_mode_button_state
+    CLR     ui_test_mode_button_combo_state
     RTS

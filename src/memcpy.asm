@@ -28,6 +28,7 @@
 ; ARGUMENTS:
 ; Registers:
 ; * ACCB: The number of bytes to copy.
+; * IX:   The destination address.
 ;
 ; ==============================================================================
 

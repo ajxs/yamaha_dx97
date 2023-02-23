@@ -152,15 +152,15 @@ patch_activate_lfo:                             SUBROUTINE
     STAA    <lfo_mod_depth_amp
 
 ; Parse the LFO waveform.
-    LDAA    4,x
+    LDAA    5,x
     STAA    lfo_waveform
 
 ; Parse the LFO Mod Sensitivity.
-    LDAB    5,x
+    LDAB    6,x
     LDX     #table_lfo_mod_sensitivity
     ABX
     LDAA    0,x
-    STAA    lfo_mod_sensitivity
+    STAA    lfo_pitch_mod_sensitivity
 
     RTS
 

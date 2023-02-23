@@ -11,7 +11,7 @@
 ; patch/deserialise.asm
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Deserialises a patch from the 'packed' format used to store patches in the
 ; synth's internal to the 'unpacked' format in the synth's edit buffer.

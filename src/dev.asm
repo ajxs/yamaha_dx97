@@ -21,8 +21,8 @@
 ; ==============================================================================
 developer_reset_parameters:                     SUBROUTINE
 ; Reset master tune and performance parameters.
-    LDAA    #64
-    STAA    master_tune
+    LDD     #$100
+    STD     master_tune
 
     LDAA    #0
     STAA    midi_channel_rx
@@ -44,23 +44,20 @@ developer_reset_parameters:                     SUBROUTINE
     CLR     mono_poly
 
 ; Set the portamento time to instantaneous.
-    LDAA    #0
-    STAA    portamento_time
+; The internal scaled rate will be calculated when the patch is 'activated'.
+    CLR     portamento_time
+    CLR     portamento_mode
+    CLR     portamento_glissando_enabled
 
-    LDAA    #99
-    STAA    mod_wheel_range
-    STAA    breath_control_range
+    CLR     mod_wheel_range
+    CLR     mod_wheel_pitch
+    CLR     mod_wheel_amp
+    CLR     mod_wheel_eg_bias
 
-    LDAA    #7
-    STAA    mod_wheel_assign
-    STAA    breath_control_assign
-
-    LDAA    #1
-    STAA    mod_wheel_amp
-    STAA    mod_wheel_eg_bias
-
-    STAA    breath_control_amp
-    STAA    breath_control_eg_bias
+    CLR     breath_control_range
+    CLR     breath_control_pitch
+    CLR     breath_control_amp
+    CLR     breath_control_eg_bias
 
 ; Initialise the patch edit buffer.
     JSR     patch_init_edit_buffer

@@ -31,7 +31,8 @@ ui_increment_decrement_parameter:               SUBROUTINE
     TST     patch_compare_mode_active
     BEQ     .load_parameter_address
 
-; If the currently selected 'edit parameter' is the null parameter, exit.
+; This ensures that if 'Compare Mode' is active, only function parameters can
+; be modified using the increment/decrement functionality.
     LDX     ui_active_param_address
     CPX     #null_edit_parameter
     BCS     .exit

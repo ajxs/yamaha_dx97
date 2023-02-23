@@ -82,7 +82,7 @@ patch_activate:                                 SUBROUTINE
 ; PATCH_ACTIVATE_CALL_FUNCTION_PER_OPERATOR
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; This subroutine is used to call a particular function once per each of the
 ; synth's six operators. It is used during the 'patch activation' routine.
@@ -122,11 +122,11 @@ patch_activate_call_function_per_operator:      SUBROUTINE
     INC     patch_activate_operator_number
 
 ; Add this value to the offset to increment the offset to the next operator.
-; Once this has reached 60, all four operators have been processed.
-    LDAB    #PATCH_DX7_PACKED_OP_STRUCTURE_SIZE
+; Once this has reached the total, all six operators have been processed.
+    LDAB    #PATCH_DX7_UNPACKED_OP_STRUCTURE_SIZE
     ADDB    <patch_activate_operator_offset
     STAB    <patch_activate_operator_offset
-    CMPB    #(PATCH_DX7_PACKED_OP_STRUCTURE_SIZE * 6)
+    CMPB    #(PATCH_DX7_UNPACKED_OP_STRUCTURE_SIZE * 6)
     BNE     .call_function_per_operator_loop
 
 ; Restore these two variables.
@@ -140,7 +140,7 @@ patch_activate_call_function_per_operator:      SUBROUTINE
 ; ==============================================================================
 ; PATCH_ACTIVATE_LOAD_MODE_ALGORITHM_FEEDBACK_TO_OPS
 ; ==============================================================================
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Called as part of the 'Patch Activation' routine.
 ; This subroutine loads the 'Mode', 'Algorithm', and 'Feedback' values from
@@ -192,7 +192,7 @@ table_algorithm_conversion:
 ; ==============================================================================
 ; PATCH_ACTIVATE_OPERATOR_DETUNE
 ; ==============================================================================
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Loads operator detune values to the EGS operator detune buffer.
 ; Note: This subroutine differs from how the DX7's implementation in how it
@@ -246,7 +246,7 @@ patch_activate_operator_detune:                 SUBROUTINE
 ; PATCH_ACTIVATE_OPERATOR_VELOCITY_SENSITIVITY
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Parses the 'Key Velocity Sensitivity' for the currently selected operator.
 ; Once this value is transformed, it's stored in the global 'Op Sens' buffer.
@@ -302,7 +302,7 @@ patch_activate_operator_velocity_sensitivity:   SUBROUTINE
 
 ; Store the parsed operator keyboard velocity sensitivity.
     LDX     #patch_operator_velocity_sensitivity
-    LDAB    patch_activate_operator_offset
+    LDAB    patch_activate_operator_number
     ASLB
     ABX
     PULB

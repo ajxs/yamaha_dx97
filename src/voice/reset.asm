@@ -37,12 +37,14 @@ voice_reset:                                    SUBROUTINE
 ; VOICE_RESET_FREQUENCY_DATA
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Resets the synth's internal voice frequency data.
 ; This resets the status of each of the synth's 16 voices, and their associated
 ; frequency data.
 ; This includes the 'Note Frequency', and voice status, the 'Current', and
 ; 'Target' frequencies for each voice.
+; The equivalent subroutine in the DX7 ROM is located at offset 0xD0AC.
 ;
 ; ==============================================================================
 voice_reset_frequency_data:                     SUBROUTINE
@@ -64,16 +66,16 @@ voice_reset_frequency_data:                     SUBROUTINE
     CPX     #(voice_status + 32)
     BNE     .reset_status_loop
 
-; Reset the two voice frequency buffers.
-; Writes a default value (@TODO) into the current, and target
-; pitch arrays.
+; Reset the voice frequency buffers.
+; Writes a default value (@TODO) into the current, and target frequency arrays.
+; This same default value is used in both the DX7, and DX9 ROMs.
     LDD     #$2EA8
 
 .reset_frequency_buffers_loop:
     STD     0,x
     INX
     INX
-    CPX     #(voice_frequency_current + 32)
+    CPX     #(voice_frequency_current_glissando + 32)
     BNE     .reset_frequency_buffers_loop
 
     PULX

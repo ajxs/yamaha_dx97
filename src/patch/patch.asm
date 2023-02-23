@@ -82,7 +82,7 @@ FN_PARAM_PORTAMENTO_MODE                        EQU 3
 FN_PARAM_PORTAMENTO_GLISS                       EQU 4
 FN_PARAM_PORTAMENTO_TIME                        EQU 5
 FN_PARAM_MOD_WHEEL_RANGE                        EQU 6
-FN_PARAM_MOD_WHEEL_ASSIGN                       EQU 7
+FN_PARAM_mod_wheel_pitch                       EQU 7
 FN_PARAM_FOOT_CONTROL_RANGE                     EQU 8
 FN_PARAM_FOOT_CONTROL_ASSIGN                    EQU 9
 FN_PARAM_BREATH_CONT_RANGE                      EQU 10
@@ -142,7 +142,7 @@ patch_operator_get_ptr_to_selected:             SUBROUTINE
 ; ==============================================================================
 ; PATCH_OPERATOR_GET_PTR
 ; ==============================================================================
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Gets a pointer to the specified operator's data in the patch edit buffer.
 ;
@@ -172,7 +172,7 @@ patch_operator_get_ptr:                         SUBROUTINE
 ; PATCH_GET_PTR_TO_CURRENT
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Gets a pointer to the currently selected patch in the synth's memory.
 ;
@@ -191,16 +191,37 @@ patch_get_ptr_to_current:                       SUBROUTINE
     LDAB    patch_index_current
     BMI     .get_pointer_to_init_buffer
 
-    LDAA    #PATCH_SIZE_PACKED_DX7
-    MUL
-    ADDD    #patch_buffer
-    XGDX
-    BRA     .exit
+    JMP     patch_get_ptr
 
 .get_pointer_to_init_buffer:
     LDX     #patch_buffer_init_voice
 
 .exit:
+    RTS
+
+
+; ==============================================================================
+; PATCH_GET_PTR
+; ==============================================================================
+; DESCRIPTION:
+; Gets a pointer to the a specified patch in the synth's memory.
+;
+; ARGUMENTS:
+; Registers:
+; * ACCB: The 0-indexed patch number to get a pointer to.
+;
+; REGISTERS MODIFIED:
+; * ACCA, ACCB, IX
+;
+; RETURNS:
+; * IX: A pointer to the currently selected patch.
+;
+; ==============================================================================
+patch_get_ptr:                                  SUBROUTINE
+    LDAA    #PATCH_SIZE_PACKED_DX7
+    MUL
+    ADDD    #patch_buffer
+    XGDX
     RTS
 
 
@@ -349,7 +370,7 @@ patch_save:
 ; ==============================================================================
 ; PATCH_OPERATOR_EG_COPY
 ; ==============================================================================
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Copies the envelope settings from the currently selected operator, to the
 ; specified destination operator.

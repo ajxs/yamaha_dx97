@@ -1,7 +1,28 @@
 ; ==============================================================================
-; PITCH_EG_PROCESS
+; YAMAHA DX9/7 FIRMWARE
+; Copyright (C) 2022 AJXS (https://ajxs.me/)
+;
+; This program is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; ==============================================================================
+; voice/add.asm
 ; ==============================================================================
 ; DESCRIPTION:
+; This file contains the subroutines used to add a voice with a new note, in
+; response to an incoming 'Note On' MIDI message, or a key being pressed.
+; ==============================================================================
+
+    .PROCESSOR HD6303
+
+; ==============================================================================
+; PITCH_EG_PROCESS
+; ==============================================================================
+; @TAKEN_FROM_DX7_FIRMWARE:0xE616
+; DESCRIPTION:
+; @TODO
 ; Processes the pitch EG for all voices.
 ; This subroutine loads the levels of each of the synth's 16 voices, testing
 ; whether each of them is above, or below the final level for its current
@@ -15,9 +36,9 @@ pitch_eg_process:                               SUBROUTINE
 ; ==============================================================================
 .pitch_eg_voice_freq_pointer:                   EQU #interrupt_temp_registers
 .pitch_eg_voice_step_pointer:                   EQU #interrupt_temp_registers + 2
-.pitch_eg_voice_index:                          EQU #interrupt_temp_registers + 4
-.pitch_eg_increment:                            EQU #interrupt_temp_registers + 5
-.pitch_eg_next_frequency:                       EQU #interrupt_temp_registers + 7
+.pitch_eg_next_frequency:                       EQU #interrupt_temp_registers + 4
+.pitch_eg_increment:                            EQU #interrupt_temp_registers + 6
+.pitch_eg_voice_index:                          EQU #interrupt_temp_registers + 8
 
 ; ==============================================================================
     LDX     #pitch_eg_current_frequency
@@ -71,12 +92,13 @@ pitch_eg_process:                               SUBROUTINE
 ; the current level is compared against.
     TAB
     ABX
-; Load PITCH_EG_RATE[B].
+
+; Load the pitch EG rate for this step.
     LDAB    0,x
     CLRA
     STD     <.pitch_eg_increment
 
-; Load PITCH_EG_LEVEL[B].
+; Load the pitch EG level for this step.
     LDAA    4,x
     CLRB
     LSRD
@@ -94,14 +116,11 @@ pitch_eg_process:                               SUBROUTINE
 
 ; Subtract the increment value from the current level. If the value goes
 ; below 0, this means that the current step is finished.
-
-; _PITCH_EG_LEVEL_LOWER:
     LDX     <.pitch_eg_voice_freq_pointer
     LDD     0,x
     SUBD    <.pitch_eg_increment
     BMI     .eg_step_finished
 
-; _IS_PITCH_EG_LEVEL_LOWER_FINISHED?:
     CMPA    <.pitch_eg_next_frequency
     BHI     .eg_step_not_finished
 
@@ -152,12 +171,10 @@ pitch_eg_process:                               SUBROUTINE
     INX
     STX     <.pitch_eg_voice_freq_pointer
 
-; _INCREMENT_EG_STEP_PTR:
     LDX     <.pitch_eg_voice_step_pointer
     INX
     STX     <.pitch_eg_voice_step_pointer
 
-; _DECREMENT_EG_VOICE_LOOP_COUNTER:
     DEC     .pitch_eg_voice_index
     BEQ     .exit
 

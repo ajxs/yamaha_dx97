@@ -118,7 +118,7 @@ test_eg_op_load_next_test_stage:                SUBROUTINE
 ; Load the test patch.
     LDX     #test_eg_op_patch_buffer
     LDAB    <test_stage_sub_2
-    LDAA    #64
+    LDAA    #PATCH_SIZE_PACKED_DX7
     MUL
     ABX
     JSR     patch_deserialise_to_edit_from_ptr_and_reload
@@ -220,46 +220,229 @@ test_eg_op_repeat:                              SUBROUTINE
 
     RTS
 
+; ==============================================================================
+; Defines a default, initialised operator.
+; ==============================================================================
+    .MAC DEFAULT_OPERATOR
+        DC.B $63
+        DC.B $63
+        DC.B $63
+        DC.B $63
+        DC.B $63
+        DC.B $63
+        DC.B $63
+        DC.B 0
+        DC.B 0
+        DC.B 0
+        DC.B 0
+        DC.B 0
+        DC.B $38
+        DC.B 0
+        DC.B 0
+        DC.B 2
+        DC.B 0
+    .ENDM
 
 ; ==============================================================================
 ; The patches used in the EG/OP test stages.
 ; ==============================================================================
 test_eg_op_patch_buffer:
-; Envelope Test Patch.
-    DC.B $63, $63, $63, $63, $63    ; 0
-    DC.B $63, $63, 0, 0, 0, 0       ; 5
-    DC.B 1, 0, 7, $32, $63, $63     ; 11
-    DC.B $38, $63, $63, $63, 0      ; 17
-    DC.B 0, 0, $63, 1, 0, 7, $32    ; 22
-    DC.B $63, $63, $38, $63, $63    ; 29
-    DC.B $63, 0, 0, 0, $63, 1       ; 34
-    DC.B 0, 7, $32, $63, $63        ; 40
-    DC.B $38, $63, $63, $63, 0      ; 45
-    DC.B 0, 0, $63, 1, 0, 7, 7      ; 50
-    DC.B 8, 0, 0, 0, 0, 0, $C       ; 57
+; Operator 6.
+    DEFAULT_OPERATOR
+; Operator 5.
+    DEFAULT_OPERATOR
+; Operator 4.
+    DEFAULT_OPERATOR
+; Operator 3.
+    DEFAULT_OPERATOR
+; Operator 2.
+    DEFAULT_OPERATOR
+; Operator 1.
+    DC.B $32
+    DC.B $63
+    DC.B $63
+    DC.B $38
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B $38
+    DC.B 0
+    DC.B $63
+    DC.B 2
+    DC.B 0
+; Pitch EG Rate.
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+; Pitch EG Level.
+    DC.B $32
+    DC.B $32
+    DC.B $32
+    DC.B $32
+; Algorithm.
+    DC.B 7
+; Oscillator Key Sync/Feedback.
+    DC.B 8
+; LFO Speed.
+    DC.B 0
+; LFO Delay.
+    DC.B 0
+; LFO Pitch Mod Depth.
+    DC.B 0
+; LFO Amp Mod Depth.
+    DC.B 0
+; LFO Wave / LFO Key Sync.
+    DC.B $31
+; Key Transpose.
+    DC.B $18
+    DC "EGS TEST 1"
 
-; Modulation Test Patch.
-    DC.B $63, $63, $63, $63, $63    ; 64
-    DC.B $63, $63, 0, 0, 0, 0       ; 69
-    DC.B 1, 0, 7, $63, $63, $63     ; 75
-    DC.B $63, $63, $63, $63, 0      ; 81
-    DC.B 0, 0, 0, 1, 0, 7, $43      ; 86
-    DC.B $32, $20, $32, $4B, $4F    ; 93
-    DC.B $59, 0, 0, 0, $5B, 1       ; 98
-    DC.B 0, 7, $63, $63, $63        ; 104
-    DC.B $31, $63, $63, $63, 0      ; 109
-    DC.B 0, 0, $63, 1, 0, 7, 0      ; 114
-    DC.B 8, 0, 0, 0, 0, 0, $C       ; 121
+; Operator 6.
+    DEFAULT_OPERATOR
+; Operator 5.
+    DEFAULT_OPERATOR
+; Operator 4.
+    DEFAULT_OPERATOR
+; Operator 3.
+    DEFAULT_OPERATOR
+; Operator 2.
+    DC.B $43
+    DC.B $32
+    DC.B $20
+    DC.B $32
+    DC.B $4B
+    DC.B $4F
+    DC.B $59
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B $38
+    DC.B 0
+    DC.B $5B
+    DC.B 2
+    DC.B 0
+; Operator 1.
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $31
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B $38
+    DC.B 0
+    DC.B $63
+    DC.B 2
+    DC.B 0
+; Pitch EG Rate.
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+; Pitch EG Level.
+    DC.B $32
+    DC.B $32
+    DC.B $32
+    DC.B $32
+; Algorithm.
+    DC.B 0
+; Oscillator Key Sync/Feedback.
+    DC.B 8
+; LFO Speed.
+    DC.B 0
+; LFO Delay.
+    DC.B 0
+; LFO Pitch Mod Depth.
+    DC.B 0
+; LFO Amp Mod Depth.
+    DC.B 0
+; LFO Wave / LFO Key Sync.
+    DC.B $31
+; Key Transpose.
+    DC.B $18
+    DC "EGS TEST 2"
 
-; Feedback Test Patch.
-    DC.B $63, $63, $63, $63, $63    ; 128
-    DC.B $63, $63, 0, 0, 0, 0       ; 133
-    DC.B 1, 0, 7, $63, $63, $63     ; 139
-    DC.B $63, $63, $63, $63, 0      ; 145
-    DC.B 0, 0, 0, 1, 0, 7, $4B      ; 150
-    DC.B $36, $23, 0, $1B, $39      ; 157
-    DC.B $63, 0, 0, 0, $44, 1       ; 162
-    DC.B 0, 7, $63, $63, $63        ; 168
-    DC.B $37, $63, $63, $63, 0      ; 173
-    DC.B 0, 0, $63, 1, 0, 7, 2      ; 178
-    DC.B $F, 0, 0, 0, 0, 0, $C      ; 185
+; Operator 6.
+    DEFAULT_OPERATOR
+; Operator 5.
+    DEFAULT_OPERATOR
+; Operator 4.
+    DEFAULT_OPERATOR
+; Operator 3.
+    DEFAULT_OPERATOR
+; Operator 2.
+    DC.B $4B
+    DC.B $36
+    DC.B $23
+    DC.B 0
+    DC.B $1B
+    DC.B $39
+    DC.B $63
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B $38
+    DC.B 0
+    DC.B $44
+    DC.B 2
+    DC.B 0
+; Operator 1.
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $37
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B $38
+    DC.B 0
+    DC.B $63
+    DC.B 2
+    DC.B 0
+; Pitch EG Rate.
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B $63
+; Pitch EG Level.
+    DC.B $32
+    DC.B $32
+    DC.B $32
+    DC.B $32
+; Algorithm.
+    DC.B 2
+; Oscillator Key Sync/Feedback.
+    DC.B $F
+; LFO Speed.
+    DC.B 0
+; LFO Delay.
+    DC.B 0
+; LFO Pitch Mod Depth.
+    DC.B 0
+; LFO Amp Mod Depth.
+    DC.B 0
+; LFO Wave / LFO Key Sync.
+    DC.B $31
+; Key Transpose.
+    DC.B $18
+    DC "EGS TEST 3"

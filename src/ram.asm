@@ -29,7 +29,7 @@ PATCH_SIZE_PACKED_DX7:                          EQU 128
 PATCH_SIZE_UNPACKED_DX9:                        EQU 69
 PATCH_SIZE_UNPACKED_DX7:                        EQU 155
 
-PATCH_BUFFER_COUNT:                             EQU 8
+PATCH_BUFFER_COUNT:                             EQU 4
 PATCH_BUFFER_SIZE_BYTES:                        EQU PATCH_BUFFER_COUNT * PATCH_SIZE_PACKED_DX7
 
 KEYBOARD_SCALE_CURVE_LENGTH                     EQU 43
@@ -42,8 +42,10 @@ memcpy_ptr_src:                                 DS 2
 memcpy_ptr_dest:                                DS 2
 
 key_switch_scan_input:                          DS 4
+; @DX7_ROM_VARIABLE_NAME: M_PEDAL_INPUT_STATUS
 pedal_status_current:                           DS 1
 pedal_status_previous:                          DS 1
+; @DX7_ROM_VARIABLE_NAME: M_MONO_SUSTAIN_PEDAL_ACTIVE
 sustain_status:                                 DS 1
 
 ; This variable address is shared by the test 'read button input' function.
@@ -60,30 +62,48 @@ key_transpose_set_mode_active:                  DS 1
 
 keyboard_last_scanned_values:                   DS 12
 
+; @DX7_ROM_VARIABLE_NAME: M_NOTE_KEY
 ; This variable stores the number of the last incoming note received via MIDI.
 ; It also stores the last scanned key, and pending key event.
 ; If this value is 0xFF, it indicates there is no key event pending.
 ; If bit 7 of this byte is set, it indicates that this note event is a
 ; 'Key Down' event originating from the keyboard, otherwise it is a 'Key Up'.
 note_number:                                    DS 1
+; @DX7_ROM_VARIABLE_NAME: M_NOTE_VEL
 note_velocity:                                  DS 1
 
+; This variable stores the previous played note.
+; This is used when the synth is in monophonic mode, and the portamento mode is
+; set to 'Fingered'. If two notes are currently active, and the new note is
+; released, this will be the note that the portamento will transition towards.
+note_number_previous:                           DS 1
+
+; @DX7_ROM_VARIABLE_NAME: M_KEY_FREQ
+; This is the base logarithmic frequency of the current note, before the
+; current pitch EG level is added.
 note_frequency:                                 DS 2
 note_frequency_low:                             EQU (#note_frequency + 1)
 
-; The index of the selected voice during the 'Voice Add' subroutine.
-; Once a free voice to hold the new note is found, its index is stored here.
-; This is 0-30
+note_frequency_previous:                        DS 2
+
+; @TODO: ...
 voice_add_index:                                DS 1
 
-tape_byte_counter:DS 1
-tape_input_polarity_previous: DS 1
-tape_input_pilot_tone_counter_QQQ: DS 1
+tape_byte_counter:                              DS 1
+tape_input_polarity_previous:                   DS 1
+tape_input_pilot_tone_counter_QQQ:              DS 1
 tape_input_read_byte:                           DS 1
 tape_input_delay_length:                        DS 1
 tape_error_flag:                                DS 1
 
+; @DX7_ROM_VARIABLE_NAME: M_PORTA_RATE_INCREMENT
 portamento_rate_scaled:                         DS 1
+
+; @DX7_ROM_VARIABLE_NAME: M_LEGATO_DIRECTION
+; The synth's current portamento direction.
+; * 0: Down.
+; * 1: Up.
+portamento_direction:                           DS 1
 
 pitch_bend_amount:                              DS 1
 pitch_bend_frequency:                           DS 2
@@ -93,10 +113,13 @@ lfo_delay_increment:                            DS 2
 lfo_mod_depth_pitch:                            DS 1
 lfo_mod_depth_amp:                              DS 1
 
+; @DX7_ROM_VARIABLE_NAME: M_LFO_DELAY_ACCUMULATOR
 lfo_delay_accumulator:                          DS 2
+; @DX7_ROM_VARIABLE_NAME: M_LFO_FADE_IN_SCALE_FACTOR
 ; The 'LFO delay fadein factor' variable is used to 'fade in' the LFO
 ; amplitude after the LFO delay has expired.
 lfo_delay_fadein_factor:                        DS 2
+; @DX7_ROM_VARIABLE_NAME: M_LFO_PHASE_ACCUMULATOR
 lfo_phase_accumulator:                          DS 2
 lfo_sample_and_hold_update_flag:                DS 1
 lfo_amplitude:                                  DS 1
@@ -116,26 +139,11 @@ lcd_print_number_divisor:                       DS 1
 ui_btn_function_19_patch_init_prompt:           DS 1
 
 ; Used to track the state of the 'Test Mode' button combination internally.
-test_mode_button_state:                         DS 1
+ui_test_mode_button_combo_state:                DS 1
 
+; @DX7_ROM_VARIABLE_NAME: M_MONO_ACTIVE_VOICE_COUNT
 ; The synth's current active voice count when in monophonic mode.
 active_voice_count:                             DS 1
-
-; The synth's current portamento direction.
-; * 0: Down.
-; * 1: Up.
-; This variable address is shared by the current test sub-stage.
-portamento_direction:                           DS 1
-; The MSB of the target portamento frequency.
-porta_current_target_freq:                      DS 1
-
-; In the original DX9 firmware, variables used in the test subroutines share
-; locations in memory with other variables. Presumably this is because they're
-; unused during the diagnostic routines.
-test_stage_current:                             EQU #active_voice_count
-test_stage_sub:                                 EQU #portamento_direction
-test_stage_sub_2:                               EQU #porta_current_target_freq
-test_button_input:                              EQU #patch_activate_operator_number
 
 midi_buffer_ptr_tx_write:                       DS 2
 midi_buffer_ptr_tx_read:                        DS 2
@@ -177,22 +185,33 @@ midi_sysex_rx_active_flag:                      DS 1
 
 ; This variable tracks the time between sending Active Sensing pulses if this
 ; feature has been enabled.
-active_sensing_tx_counter:                      DS 1
+midi_active_sensing_tx_counter:                 DS 1
 ; When this flag is cleared, an active sensing message can be transmitted.
-active_sensing_send_flag:                       DS 1
+midi_active_sensing_send_flag:                  DS 1
 ; Decides whether the active sensing counter is enabled.
-active_sensing_rx_counter_enabled:              DS 1
-active_sensing_rx_counter:                      DS 1
+midi_active_sensing_rx_counter_enabled:         DS 1
+midi_active_sensing_rx_counter:                 DS 1
 
 ; Whether the synth is currently in the middle of receiving, and processing
 ; a SysEx message.
 midi_sysex_receive_data_active:                 DS 1
 midi_error_code:                                DS 1
 
+; In the original DX9 firmware, variables used in the test subroutines share
+; locations in memory with other variables. Presumably this is because they're
+; unused during the diagnostic routines.
+test_stage_current:                             EQU #midi_sysex_substatus
+test_stage_sub:                                 EQU #midi_sysex_format_param_grp
+test_stage_sub_2:                               EQU #midi_sysex_byte_count_msb_param_number
+test_button_input:                              EQU #midi_sysex_byte_count_lsb_param_data
+
+; @DX7_ROM_VARIABLE_NAME: M_PORTA_UPDATE_VOICE_SWITCH
+; @TODO: Consider combining with the pitch EG/Modulation IRQ toggle.
 portamento_voice_toggle:                        DS 1
 
 ; These temporary variables are used in interrupt routines.
-interrupt_temp_registers:                       DS 16
+; @TODO: Improve documentation.
+interrupt_temp_registers:                       DS 18
 
     SEG.U ram_external
     ORG $800
@@ -205,9 +224,10 @@ midi_buffer_tx_end:                             EQU *
 midi_buffer_rx:                                 DS MIDI_BUFFER_RX_SIZE
 midi_buffer_rx_end:                             EQU *
 
+; @TODO: Is it possible to use one buffer for both sending, and receiving of
+; SysEx data? Is it possible for both to be used simultaneously?
 midi_buffer_sysex_tx_single:                    DS PATCH_SIZE_UNPACKED_DX7
 midi_buffer_sysex_tx_single_end:                EQU *
-
 midi_buffer_sysex_rx_single:                    DS PATCH_SIZE_UNPACKED_DX7
 
 midi_buffer_sysex_tx_bulk:                      DS PATCH_SIZE_PACKED_DX7
@@ -222,6 +242,7 @@ patch_buffer:                                   DS PATCH_BUFFER_SIZE_BYTES
 ; via MIDI/cassette tape. This can be loaded programmatically in the same way
 ; as a normal patch in the patch buffer, but is not accessible via the UI.
 patch_buffer_incoming:                          DS PATCH_SIZE_PACKED_DX7
+
 tape_patch_output_counter:                      DS 1
 tape_patch_checksum:                            DS 2
 
@@ -238,9 +259,12 @@ patch_edit_feedback:                            EQU (#patch_buffer_edit + PATCH_
 patch_edit_oscillator_sync:                     EQU (#patch_buffer_edit + PATCH_OSC_SYNC)
 
 patch_edit_lfo_speed:                           EQU (#patch_buffer_edit + PATCH_LFO_SPEED)
+; @DX7_ROM_VARIABLE_NAME: M_PATCH_BUFFER_EDIT_LFO_DELAY
 patch_edit_lfo_delay:                           EQU (#patch_buffer_edit + PATCH_LFO_DELAY)
 patch_edit_lfo_pitch_mod_depth:                 EQU (#patch_buffer_edit + PATCH_LFO_PITCH_MOD_DEPTH)
 patch_edit_lfo_amp_mod_depth:                   EQU (#patch_buffer_edit + PATCH_LFO_AMP_MOD_DEPTH)
+; @DX7_ROM_VARIABLE_NAME: M_PATCH_BUFFER_EDIT_LFO_SYNC
+patch_edit_lfo_sync:                            EQU (#patch_buffer_edit + PATCH_LFO_SYNC)
 patch_edit_lfo_waveform:                        EQU (#patch_buffer_edit + PATCH_LFO_WAVEFORM)
 patch_edit_lfo_pitch_mod_sens:                  EQU (#patch_buffer_edit + PATCH_LFO_PITCH_MOD_SENS)
 
@@ -250,7 +274,7 @@ patch_edit_key_transpose:                       EQU (#patch_buffer_edit + PATCH_
 
 patch_edit_name:                                EQU (#patch_buffer_edit + PATCH_PATCH_NAME)
 
-patch_edit_operator_status:                     EQU (#patch_buffer_edit + PATCH_OPERATOR_ON_OFF_STATUS)
+patch_edit_operator_status:                     DS 1
 
 ; This value is used as a 'null' edit parameter.
 ; When it is selected as the active 'Edit Parameter', any data input will have
@@ -261,31 +285,44 @@ null_edit_parameter:                            DS 1
 ; ==============================================================================
 ; Performance Parameters.
 ; ==============================================================================
+; @DX7_ROM_VARIABLE_NAME: M_MASTER_TUNE
+; The DX9 ROM stored this variable in a byte.
+; All use of this variable involved shifting it left twice to get its internal
+; representation. This was likely done so that it can be treated like any other
+; function parameter for the purposes of editing.
+; This has been changed back to the original DX7 implementation.
+master_tune:                                    DS 2
 
-; Unlike the DX7, which stores this variable in a WORD, all use of this
-; variable involves shifting it left twice to get its internal value.
-; This is likely done so that it can be treated like any other function
-; parameter for the purposes of editing.
-master_tune:                                    DS 1
-
+; @DX7_ROM_VARIABLE_NAME: M_MONO_POLY
 ; The synth's global polyphony setting:
 ; * 0: Polyphonic.
 ; * 1: Monophonic.
 mono_poly:                                      DS 1
 pitch_bend_range:                               DS 1
 
+; @TODO: Implement.
+pitch_bend_step:                                DS 1
+
+; @DX7_ROM_VARIABLE_NAME: M_PORTA_MODE
 ; Portamento Mode:
+; Monophonic Mode:
 ; * 0: Full-time.
 ; * 1: Fingered.
+; Polyphonic Mode:
+; * 0: Retain.
+; * 1: Follow.
 portamento_mode:                                DS 1
+
+; @DX7_ROM_VARIABLE_NAME: M_PORTA_GLISS_ENABLED
+portamento_glissando_enabled:                   DS 1
 
 portamento_time:                                DS 1
 mod_wheel_range:                                DS 1
-mod_wheel_assign:                               DS 1
+mod_wheel_pitch:                               DS 1
 mod_wheel_amp:                                  DS 1
 mod_wheel_eg_bias:                              DS 1
 breath_control_range:                           DS 1
-breath_control_assign:                          DS 1
+breath_control_pitch:                          DS 1
 breath_control_amp:                             DS 1
 breath_control_eg_bias:                         DS 1
 
@@ -299,12 +336,15 @@ tape_remote_output_polarity:                    DS 1
 ; This variable is referred to independently of the UI state when performing
 ; tape input operations.
 memory_protect:                                 DS 1
+
 tape_unknown_byte_15DC:                         DS 1
 tape_patch_index:                               DS 1
 
+; @DX7_ROM_VARIABLE_NAME: M_VOICE_PITCH_EG_CURR_STEP
 ; The current Pitch EG step for each of the synth's voices.
 pitch_eg_current_step:                          DS 16
 
+; @DX7_ROM_VARIABLE_NAME: M_VOICE_PITCH_EG_CURR_LEVEL
 ; The current Pitch EG frequency for each of the synth's voices.
 ; The default value for each of these 16 entries is 0x4000.
 ; This corresponds to a value of '50' in a patch's Pitch EG level stage.
@@ -314,6 +354,7 @@ pitch_eg_current_frequency:                     DS 32
 ; The code depends on these two arrays being in this sequential order.
 pitch_eg_parsed_rate:                           DS 4
 pitch_eg_parsed_level:                          DS 4
+; @DX7_ROM_VARIABLE_NAME: M_PATCH_PITCH_EG_VALUES_FINAL_LEVEL
 ; The final pitch EG frequency for the current patch.
 ; This doubles as the INITIAL pitch EG frequency.
 pitch_eg_parsed_level_final:                    EQU (#pitch_eg_parsed_level + 3)
@@ -331,6 +372,8 @@ patch_operator_velocity_sensitivity:            DS 12
 operator_keyboard_scaling:                      DS (6 * KEYBOARD_SCALE_CURVE_LENGTH)
 operator_keyboard_scaling_2:                    EQU (#operator_keyboard_scaling + KEYBOARD_SCALE_CURVE_LENGTH)
 
+; This array contains the final volume value for each operator for a voice.
+; This is the value that will be loaded to the EGS.
 operator_volume:                                DS 6
 
 ; This variable stores the synth's current UI mode, and memory protect state.
@@ -379,6 +422,11 @@ ui_btn_edit_10_sub_function:                    DS 1
 ; * 0: Detune
 ; * 1: Oscillator Sync
 ui_btn_edit_14_sub_function:                    DS 1
+
+; Function mode button 4 sub-function:
+; * 0: Portamento Mode
+; * 1: Glissando Enabled
+ui_btn_function_4_sub_function:                 DS 1
 
 ; Function mode button 6 sub-function:
 ; * 0: MIDI Channel
@@ -431,7 +479,7 @@ patch_index_current:                            DS 1
 patch_index_compare:                            DS 1
 
 lfo_waveform:                                   DS 1
-lfo_mod_sensitivity:                            DS 1
+lfo_pitch_mod_sensitivity:                      DS 1
 lfo_sample_hold_accumulator:                    DS 1
 
 led_contents:                                   DS 2
@@ -461,6 +509,36 @@ lcd_buffer_next:                                DS 32
 lcd_buffer_next_line_2:                         EQU (#lcd_buffer_next + 16)
 lcd_buffer_next_end:                            EQU *
 
+; The voice status array is used to store the current note, and voice status
+; for each of the synth's 16 voices.
+; Each entry is a two byte structure with the format:
+;  (Key_Number << 8) | Flags.
+; The flags field has two bits:
+;  * '0b10' : This voice is actively playing a note.
+;  * '0b1'  : This voice is being sustained.
+
+; The DX7, and DX9 ROMs differ here, in that the DX9 stores the log frequency
+; instead of the MIDI note number.
+; In the DX9 the most-significant 14 bits are the log frequency of the voice's
+; current note, and the 2 least-significant bits are a mask indicating the
+; voice's status.
+voice_status:                                   DS 32
+; @DX7_ROM_VARIABLE_NAME: M_VOICE_PITCH_TARGET
+; The 'target' frequency for each voice.
+; This is the target, final frequency for each voice's frequency transition
+; during portamento between two notes.
+voice_frequency_target:                         DS 32
+; @DX7_ROM_VARIABLE_NAME: M_VOICE_FREQ_PORTAMENTO
+; This buffer holds the current portamento frequency of the synth's 16 voices.
+; If portamento is currently active the individual voices will transition from
+; this current frequency towards their target frequency.
+; This frequency is set by the main 'Voice add' subroutines.
+voice_frequency_current_portamento:             DS 32
+; @DX7_ROM_VARIABLE_NAME: M_VOICE_FREQ_GLISSANDO
+; This buffer holds the current glissando frequency of the synth's 16 voices.
+; @TODO: Investigate using one buffer for both portamento/glissando.
+voice_frequency_current_glissando:              DS 32
+
 ; These temporary variables are used in various routines throughout the
 ; firmware, and are given appropriate contextual names in the routines where
 ; they are used, and are referenced in the re-definitions by this address.
@@ -469,37 +547,17 @@ lcd_buffer_next_end:                            EQU *
 ; Note: Also ensure that these variables are not used in subroutines that call
 ; one another. If these are used in such situations, ensure that they do not
 ; clobber eachother.
-temp_variables:                                 DS 12
+temp_variables:                                 DS 18
 
-; Since the voice buffers occupy a fixed position at the top of RAM so that
-; they lie adjacent to the EGS chip, the stack can be positioned in a way that
-; it occupies all of the free space left between the end of the defined
-; variables, and the start of the voice buffers.
-; This is likely what was done in the original DX9 ROM, hence the stack's
-; highly arbitrary size.
+; In the original DX9 ROM the voice buffers occupied a fixed space adjacent to
+; the EGS chip's registers. This was used for optimisations during the voice
+; subroutines. The stack was positioned in a way that occupied all of the free
+; space left between the end of the defined variables, and the start of these
+; voice buffers. This likely accounted for the stack's highly arbitrary size.
 ; I'm not sure what the ideal size for the stack is, however it can likely be
 ; much smaller than it is in both this ROM, and the original's size of '222'.
 ; The DX7's is even larger at '448'.
+; In this ROM, the stack occupies the remainder of free RAM.
 stack_bottom:                                   EQU *
 
-; @NOTE: These arrays cannot be moved.
-; Several pieces of code from the original DX9 binary are dependent upon them
-; being sequential, and placed exactly at the end of RAM, where they are
-; adjacent to the EGS registers.
-; e.g. The voice add/remove, and portamento routines.
-    ORG $17A0
-
-stack_top:                                      EQU * - 1
-
-; The voice status array is used to store the current note, and voice status
-; for each of the synth's 16 voices.
-; Each entry is a two byte structure.
-; The most-significant 14 bits are the logarithmic frequency of the voice's
-; current note, and the 2 least-significant bits are a mask indicating the
-; voice's status.
-voice_status:                                   DS 32
-; The 'target' frequency for each voice.
-; This is the target, final frequency for each voice's frequency transition
-; during portamento between two notes.
-voice_frequency_target:                         DS 32
-voice_frequency_current:                        DS 32
+stack_top:                                      EQU $17FF

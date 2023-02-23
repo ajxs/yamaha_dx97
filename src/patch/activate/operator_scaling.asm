@@ -23,7 +23,7 @@
 ; PATCH_ACTIVATE_OPERATOR_KEYBOARD_SCALING
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Loads the 'Keyboard Rate Scaling' value for the current operator, and combines
 ; it with the 'Amp Mod Sensitivity' value to create the 'combined' value
@@ -70,7 +70,7 @@ patch_activate_operator_keyboard_scaling:       SUBROUTINE
 ; PATCH_ACTIVATE_OPERATOR_PARSE_KEYBOARD_SCALING
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Parses the serialised keyboard scaling values, and constructs the operator
 ; keyboard scaling curve for the selected operator.
@@ -155,8 +155,8 @@ patch_activate_operator_parse_keyboard_scaling: SUBROUTINE
 
 .load_curve_right:
     STAB    .keyboard_scaling_polarity
-    LDAA     PATCH_OP_LVL_SCL_RT_CURVE,x
-    JSR      patch_get_pointer_to_scaling_curve_right
+    LDAA    PATCH_OP_LVL_SCL_RT_CURVE,x
+    JSR     patch_get_pointer_to_scaling_curve_right
     BEQ     .parse_operator_output_level
 
 ; Set bit 7 in the keyboard scaling polarity register if the right curve

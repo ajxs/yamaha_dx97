@@ -19,7 +19,7 @@
 ; ==============================================================================
 ; UI_BUTTON_CHECK_TEST_MODE_COMBINATION
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xE176
 ; DESCRIPTION:
 ; Tests whether the test mode button combination (Store + 10 + 20) are
 ; currently active.
@@ -33,7 +33,7 @@
 ; * ACCA, ACCB
 ;
 ; MEMORY MODIFIED:
-; * test_mode_button_state
+; * ui_test_mode_button_combo_state
 ;
 ; RETURNS:
 ; * ACCB: If the test mode button combination is active, the corresponding
@@ -52,7 +52,7 @@ ui_button_check_test_mode_combination:          SUBROUTINE
     CLRA
 
 .store_test_mode_button_state:
-    STAA    <test_mode_button_state
+    STAA    <ui_test_mode_button_combo_state
 
 .exit:
     RTS
@@ -69,7 +69,7 @@ ui_button_check_test_mode_combination:          SUBROUTINE
 ; If the triggering button press was 'button 20', test whether button 10 was
 ; previously pressed, and the first stage of the 'test button combination'
 ; has been assigned.
-    TST     test_mode_button_state
+    TST     ui_test_mode_button_combo_state
     BEQ     .exit
 
 ; Test whether the 'Store', and '10' buttons are currently being pressed.
@@ -82,7 +82,7 @@ ui_button_check_test_mode_combination:          SUBROUTINE
     BEQ     .reset_test_mode_button_state
 
 ; Set the UI Button State to display the Test Mode entry prompt.
-    CLR     test_mode_button_state
+    CLR     ui_test_mode_button_combo_state
     LDAB    #BUTTON_TEST_ENTRY_COMBO
     BRA     .exit
 

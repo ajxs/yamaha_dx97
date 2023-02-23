@@ -180,6 +180,7 @@ midi_rx_cc_5_portamento_time:                   SUBROUTINE
 ; MIDI_RX_CC_6_FUNCTION_DATA_INPUT
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Handles a MIDI Control Code event of type '6'.
 ; This is intended to be a 'Data Entry' event.
@@ -194,7 +195,7 @@ midi_rx_cc_5_portamento_time:                   SUBROUTINE
 ; * ACCA: The received MIDI data.
 ;
 ; REGISTERS MODIFIED:
-; * ACCB
+; * ACCA, ACCB
 ;
 ; ==============================================================================
 midi_rx_cc_6_function_data_input:               SUBROUTINE
@@ -202,7 +203,10 @@ midi_rx_cc_6_function_data_input:               SUBROUTINE
     CMPB    #BUTTON_FUNCTION_1
     BNE     .exit
 
-    STAA    master_tune
+    TAB
+    CLRA
+    LSLD
+    STD     master_tune
 
 .exit:
     RTS

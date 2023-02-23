@@ -28,8 +28,8 @@
 ; not been received.
 ;
 ; MEMORY MODIFIED:
-; * active_sensing_rx_counter
-; * active_sensing_rx_counter_enabled
+; * midi_active_sensing_rx_counter
+; * midi_active_sensing_rx_counter_enabled
 ;
 ; REGISTERS MODIFIED:
 ; * ACCA, ACCB
@@ -37,7 +37,7 @@
 ; ==============================================================================
 active_sensing_test_for_timeout:             SUBROUTINE
 ; Test whether the active sensing timeout is active. If not, exit.
-    TST     active_sensing_rx_counter_enabled
+    TST     midi_active_sensing_rx_counter_enabled
     BEQ     .exit
 
 ; Test whether the synth is currently receiving SysEx data. If so, exit.
@@ -47,18 +47,16 @@ active_sensing_test_for_timeout:             SUBROUTINE
 ; Increment the timeout counter.
 ; If this counter reaches 255, clear the active sensing flags, and reset
 ; all the synth's voice data.
-    INC     active_sensing_rx_counter
+    INC     midi_active_sensing_rx_counter
     LDAA    #254
-    CMPA    <active_sensing_rx_counter
+    CMPA    <midi_active_sensing_rx_counter
     BCC     .exit
 
     CLRA
-    STAA    <active_sensing_rx_counter_enabled
-    STAA    <active_sensing_rx_counter
+    STAA    <midi_active_sensing_rx_counter_enabled
+    STAA    <midi_active_sensing_rx_counter
 
-    JSR     voice_reset_egs
-    JSR     voice_reset_frequency_data
-    CLR     active_voice_count
+    JSR     voice_reset
 
 .exit:
     RTS
@@ -75,22 +73,22 @@ active_sensing_test_for_timeout:             SUBROUTINE
 ; then the flag to send an active sensing pulse is set.
 ;
 ; MEMORY MODIFIED:
-; * active_sensing_tx_counter
+; * midi_active_sensing_tx_counter
 ;
 ; REGISTERS MODIFIED:
 ; * ACCA, ACCB
 ;
 ; ==============================================================================
-active_sensing_update_counter:      SUBROUTINE
-    INC     active_sensing_tx_counter
+active_sensing_update_tx_counter:               SUBROUTINE
+    INC     midi_active_sensing_tx_counter
 
 ; Test whether this counter byte has reached 64.
 ; If so, clear.
-    TIMD   #%1000000, active_sensing_tx_counter
+    TIMD   #%1000000, midi_active_sensing_tx_counter
     BEQ     .exit
 
-    CLR     active_sensing_send_flag
-    CLR     active_sensing_tx_counter
+    CLR     midi_active_sensing_send_flag
+    CLR     midi_active_sensing_tx_counter
 
 .exit:
     RTS
@@ -154,6 +152,7 @@ handler_ocf_compare_mode_led_blink:             SUBROUTINE
 ; HANDLER_OCF
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Handles the OCF (Output Compare Counter) timer interrupt (IRQ2).
 ; This is where all of the synth's periodicly repeated functions are called.
@@ -167,48 +166,46 @@ handler_ocf_compare_mode_led_blink:             SUBROUTINE
 ; ==============================================================================
 handler_ocf:                                    SUBROUTINE
     CLR     timer_ctrl_status
-    CLI
+; Clear the OCF interrupt flag by reading from the timer control register.
+    LDAA    <timer_ctrl_status
 
 ; Reset the free running counter.
     LDX     #0
     STX     <free_running_counter
 
-; Toggle the flag to determine whether portamento, or pitch modulation are
-; updated in this interrupt. Refer to documentation in the variable definition
-; file `ram.asm`.
-    COM     pitch_eg_update_toggle
+    LDX     #3140
+    STX     <output_compare
+
+; Clear the interrupt bit in the condition code register.
+    CLI
+
+;    JSR     active_sensing_update_tx_counter
+;    JSR     active_sensing_test_for_timeout
+
+    JSR     lfo_process
+;    JSR     mod_amp_update
+;    JSR     voice_update_sustain_status
 
 ; @TODO: Ignore if MIDI messages are pending, like in DX7 firmware.
     JSR     portamento_process
 
-; @TODO: Create toggle for enabling active sensing, like in DX7 firwmare.
-    JSR     active_sensing_update_counter
-    JSR     active_sensing_test_for_timeout
+; Toggle the flag to determine whether portamento, or pitch modulation are
+; updated in this interrupt.
+; Refer to documentation in the variable definition file `ram.asm`.
+    COM     pitch_eg_update_toggle
+    BPL     .process_pitch_mod
 
-    JSR     pitch_bend_process
+    BRA     .process_pitch_modulation
 
-    JSR     lfo_process
-    JSR     mod_amp_update
-
-    TST     pitch_eg_update_toggle
-    BPL     .process_pitch_eg
-
-    JSR     voice_update_sustain_status
-    JSR     mod_pitch_update
-    JSR     handler_ocf_compare_mode_led_blink
-    BRA     .reset_timers_and_exit
-
-.process_pitch_eg:
+.process_pitch_mod:
     JSR     pitch_eg_process
+;    JSR     handler_ocf_compare_mode_led_blink
 
-.reset_timers_and_exit:
-; Clear the OCF interrupt flag by reading from the timer control register.
-    LDAA    <timer_ctrl_status
+.process_pitch_modulation:
+    JSR     pitch_bend_process
+    JSR     mod_pitch_update
 
-    LDX     #2500
-    STX     <output_compare
-
-    LDAA    #TIMER_CTRL_EOCI1
+    LDAA    #TIMER_CTRL_EOCI
     STAA    <timer_ctrl_status
 
     RTI

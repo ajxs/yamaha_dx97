@@ -11,7 +11,7 @@
 ; patch/serialise.asm
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Serialises a patch from the 'unpacked' edit buffer format to the 128 byte
 ; 'packed' format in the synth's internal memory.

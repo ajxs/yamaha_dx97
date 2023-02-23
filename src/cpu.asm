@@ -32,7 +32,7 @@ sci_ctrl_status:                    EQU $11
 sci_rx:                             EQU $12
 sci_tx:                             EQU $13
 
-TIMER_CTRL_EOCI1                    EQU 1 << 3
+TIMER_CTRL_EOCI                     EQU 1 << 3
 
 RATE_MODE_CTRL_CC0                  EQU 1 << 2
 RATE_MODE_CTRL_CC1                  EQU 1 << 3

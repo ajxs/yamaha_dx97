@@ -88,7 +88,7 @@ test_exit:                                      SUBROUTINE
     INS
 
 ; Re-enable the output-compare interrupt, and clear condition flags.
-    LDAA    #TIMER_CTRL_EOCI1
+    LDAA    #TIMER_CTRL_EOCI
     STAA    <timer_ctrl_status
 
     CLRA

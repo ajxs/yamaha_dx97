@@ -8,7 +8,7 @@
 ; (at your option) any later version.
 ;
 ; ==============================================================================
-; midi/transmit.asm
+; midi/tx.asm
 ; ==============================================================================
 ; DESCRIPTION:
 ; This file contains definitions, and code related to the sending of outgoing
@@ -21,6 +21,7 @@
 ; MIDI_TX_NOTE_ON
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Sends a 'Note On' MIDI event.
 ; Note: The DX9 transmits a fixed velocity on account of not having a velocity
@@ -41,7 +42,7 @@ midi_tx_note_on:                                SUBROUTINE
     JSR     midi_tx
 
 ; Send output MIDI velocity.
-    LDAA    #64
+    LDAA    <note_velocity
     JSR     midi_tx
 
     RTS
@@ -178,28 +179,6 @@ midi_tx_cc_increment_decrement:                 SUBROUTINE
     JSR     midi_tx_analog_input_event
     PULB
 
-    RTS
-
-
-; ==============================================================================
-; MIDI_TX_SYSEX_PROGRAM_CHANGE_CURRENT_PATCH
-; ==============================================================================
-; DESCRIPTION:
-; If SysEx is enabled, this subroutine sends a MIDI 'Program Change' event
-; with the currently selected patch index.
-;
-; ==============================================================================
-midi_sysex_tx_program_change_current_patch:     SUBROUTINE
-    TST     sys_info_avail
-    BNE     .exit
-
-    LDAA    #MIDI_STATUS_PROGRAM_CHANGE
-    JSR     midi_tx
-    LDAA    patch_index_current
-    ANDA    #$7F
-    JSR     midi_tx
-
-.exit:
     RTS
 
 

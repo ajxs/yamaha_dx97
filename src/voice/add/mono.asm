@@ -10,8 +10,19 @@
 ; ==============================================================================
 ; voice/add/mono.asm
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; @REMADE_FOR_6_OP
+; @TAKEN_FROM_DX7_FIRMWARE
+; DESCRIPTION:
+; This file contains the subroutines used for playing new notes when the
+; synth is in monophonic mode.
+;
+; ==============================================================================
+
+    .PROCESSOR HD6303
+
+; ==============================================================================
+; VOICE_ADD_MONO
+; ==============================================================================
+; @TAKEN_FROM_DX7_FIRMWARE
 ; DESCRIPTION:
 ; This subroutine handes 'adding' a new voice event when the synth is in
 ; monophonic mode.
@@ -30,91 +41,112 @@
 ; * voice_status
 ; * active_voice_count
 ; * portamento_direction
+; * note_number_previous
 ;
 ; REGISTERS MODIFIED:
 ; * ACCA, ACCB, IX
 ;
 ; ==============================================================================
-
-    .PROCESSOR HD6303
-
 voice_add_mono:                                 SUBROUTINE
     LDX     #voice_status
 
-; Test whether there are currently other active voices. This is relevant to
-; determine how the synth should handle portamento.
-; If there are no voices currently active, immediately add the new voice.
-    LDAA    <active_voice_count
-    BEQ     .add_new_voice
+; Test whether the active voice count is already at the maximum of 16.
+; If so, exit.
+    LDAB    <active_voice_count
+    CMPB    #16
+    BEQ     .exit
 
-; If there are currently 16 active voices, exit.
-    CMPA    #16
-    BEQ     .exit_no_voices_available
-
-; Loop through all the voices until a free entry is found.
     LDAB    #16
-.find_free_voice_loop:
-; Since the voice status format in 'Mono' mode clears a voice entry when it
-; is not active, test whether the MSB of each entry is 'zero' to determine
-; whether it is free.
-    TST     0,x
-    BEQ     .add_new_voice
 
+; In MONO mode, the active key event is CLEARED when removed.
+; This occurs in the VOICE_REMOVE subroutine.
+; This loop searches for a clear inactive voice status entry.
+.find_inactive_voice_loop:
+    TST     0,x
+    BEQ     .found_inactive_voice
+
+; Increment the voice status pointer.
     INX
     INX
     DECB
-    BNE     .find_free_voice_loop
+    BNE     .find_inactive_voice_loop
 
-.exit_no_voices_available:
-; If this point is reached, it means no free voice slot is available.
+; If this point is reached, it means no inactive voices have been found.
     RTS
 
-.add_new_voice:
-; Store the 14-bit pitch, and voice status in the free voice status entry.
-    LDD     <note_frequency
-    ORAB    #VOICE_STATUS_ACTIVE
+.found_inactive_voice:
+; Write ((NOTE_KEY << 8) & 2) to the first entry in the 'Voice Event'
+; buffer to indicate that this voice is actively playing this note.
+    LDAA    <note_number
+    LDAB    #VOICE_STATUS_ACTIVE
     STD     0,x
 
-; Reset LFO delay, and LFO fadein.
+; Increment the active voice count.
+    INC     active_voice_count
+    LDAA    <active_voice_count
+
+; If there's more than one active voice at this point, the existing
+; portamento needs to be taken into account.
+    CMPA    #1
+    BNE     voice_add_mono_multiple_voices
+
+; If there's only one active voice, initialise the LFO.
+; If the synth's LFO delay is not set to 0, reset the LFO delay accumulator.
     TST     patch_edit_lfo_delay
-    BEQ     .increment_voice_count
+    BEQ     .is_lfo_sync_enabled
 
     LDD     #0
     STD     <lfo_delay_accumulator
-    STD     <lfo_delay_fadein_factor
+    CLR     lfo_delay_fadein_factor
 
-.increment_voice_count:
-    LDX     #voice_status
-    LDAA    <active_voice_count
-    INCA
-    STAA    <active_voice_count
+.is_lfo_sync_enabled:
+; If 'LFO Key Sync' is enabled, reset the LFO phase accumulator to its
+; maximum positive value to synchronise with the 'Key On' event.
+    TST     patch_edit_lfo_sync
+    BEQ     .write_reset_key_event_to_egs
 
-; Check if there's more than one voice after incrementing the voice count.
-    CMPA    #1
-    BNE     voice_add_mono_multiple_active_voices
+    LDD     #$7FFF
+    STD     <lfo_phase_accumulator
 
-; This section covers the case where no other voice was active when this
-; new voice was added.
-; @TODO: Unsure why the 'Off' event is sent here.
-    LDAA    #EGS_VOICE_EVENT_OFF
-    STAA    egs_key_event
+.write_reset_key_event_to_egs:
+; The following section will send a 'Key Off' event to the EGS chip's
+; 'Key Event' register, prior to sending the new 'Key On' event.
+    LDAB    #EGS_VOICE_EVENT_OFF
+    STAB    egs_key_event
 
-; Save the new frequency to the 'Target Voice Frequency' buffer.
-    LDD     <note_frequency
-    STD     32,x
+; The voice's target frequency, and 'Previous Key' data is stored here.
+; If portamento is not currently active, the target frequency will be set a
+; second time, together with the voice frequency buffers specific to
+; portamento, and glissando.
+    BSR     voice_add_mono_store_key_and_frequency
 
-; Test whether the portamento mode is 'Fingered' or 'Full-Time'.
-; If 'Full-Time', don't update the 'Current' frequency, as the previous
-; could still be in transition.
+; Test whether the portamento rate is at its maximum (0xFF).
+    LDAA    <portamento_rate_scaled
+    CMPA    #$FF
+    BEQ     .no_portamento
+
+; Test whether the synth's portamento mode is 'Fingered', in which case
+; there won't be any portamento if there's a single voice.
     TST     portamento_mode
-    BEQ     .reset_pitch_eg_level
+    BEQ     .no_portamento
 
-    STD     64,x
+; Test whether the portamento pedal is active.
+    LDAA    <pedal_status_current
+    BITA    #PEDAL_INPUT_PORTA
+    BNE     .reset_pitch_eg_frequency
 
+.no_portamento:
+; If there's no portamento. The portamento and glissando frequency buffers
+; will be set to the same value as the current voice's target frequency.
+; The effect of this will be that there is no voice transition computed by
+; the 'portamento_process' subroutine, which is responsible for updating the
+; synth's voice frequency periodically.
+    BSR     voice_add_mono_clear_porta_frequency
+
+.reset_pitch_eg_frequency:
 ; Reset the current pitch EG level to its initial value.
 ; In the DX7, the final value, and the initial value are identical.
 ; So when adding a voice, the initial level is set to the final value.
-.reset_pitch_eg_level:
     LDAA    pitch_eg_parsed_level_final
     CLRB
     LSRD
@@ -123,82 +155,149 @@ voice_add_mono:                                 SUBROUTINE
 ; Reset the 'Current Pitch EG Step' for this voice.
     CLR     pitch_eg_current_step
 
+; Send the frequency, and amplitude information to the EGS registers,
+; then send a 'KEY ON' event for Voice #0.
     CLRA
     LDX     <note_frequency
     JSR     voice_add_operator_level_voice_frequency
 
-; Send the 'Voice On' event to the EGS chip.
     LDAA    #EGS_VOICE_EVENT_ON
     STAA    egs_key_event
 
+.exit:
     RTS
 
 
 ; ==============================================================================
-; VOICE_ADD_MONO_MULTIPLE_ACTIVE_VOICES
+; VOICE_ADD_MONO_MULTIPLE_VOICES
 ; ==============================================================================
+; @TAKEN_FROM_DX7_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
-; @TODO
+; Handles adding a new voice event when the synth is in monophonic mode, and
+; there is now more than one active voice.
+; This subroutine is responsible for parsing the legato direction, and setting
+; the voice frequency buffers accordingly.
+;
+; ARGUMENTS:
+; Registers:
+; * ACCA: The number of active voices.
+;
+; MEMORY MODIFIED:
+; * portamento_direction
+;
+; REGISTERS MODIFIED:
+; * ACCA, ACCB, IX
+;
 ; ==============================================================================
-voice_add_mono_multiple_active_voices:          SUBROUTINE
+voice_add_mono_multiple_voices:                 SUBROUTINE
     CMPA    #2
-    BNE     .more_than_two_voices_active
+    BNE     .above_two_voices
 
-    LDD     <note_frequency
-; IX  currently points at the Voice Status array.
-; Subtract the active voice's current note frequency from that of the new note.
-    SUBD    0,x
-
-; If the new note being added is higher than the previous active note, set
-; the portamento directon to '1'.
-    BCC     .portamento_direction_up
+; Compute the portamento direction by subtracting the last note key from
+; the new note.
+; If the carry flag is clear after this operation, it indicates that the
+; new note is higher than the last.
+    LDAA    <note_number
+    SUBA    <note_number_previous
+    BCC     .new_note_higher
 
     CLR     portamento_direction
-    BRA     .update_voice_target_frequencies
+    BRA     .update_last_note
 
-.portamento_direction_up:
+.new_note_higher:
     LDAA    #1
     STAA    <portamento_direction
 
-.update_voice_target_frequencies:
-; Update the voice target frequency, and the portamento target frequency.
-    LDD     <note_frequency
-    STAA    <porta_current_target_freq
-    STD     32,x
+.update_last_note:
+; The voice's target frequency, and 'Previous Key' data is stored here.
+; If portamento is not currently active, the target frequency will be set a
+; second time, together with the voice frequency buffers specific to
+; portamento, and glissando.
+    BSR     voice_add_mono_store_key_and_frequency
+
+; Test whether the portamento rate is at its maximum (0xFF).
+; If portamento rate is at maximum, ignore portamento. The voice's target
+; frequency is set here, and then the subroutine returns.
+    LDAA    <portamento_rate_scaled
+    CMPA    #$FF
+    BEQ     voice_add_mono_clear_porta_frequency
+
+; Test whether the synth's portamento mode set to 'Fingered'.
+    TST     portamento_mode
+    BEQ     .exit
+
+; Test whether the synth's portamento pedal is active.
+; If portamento is not active, clear the portamento and glissando target
+; frequencies here, by setting them to this voice's target frequency.
+    LDAA    <pedal_status_current
+    BITA    #PEDAL_INPUT_PORTA
+    BEQ     voice_add_mono_clear_porta_frequency
+
+.exit:
+    RTS
+
+.above_two_voices:
+; If there's more than two active voices, check the legato direction,
+; and then check whether the new note is further in that direction than the
+; previous. If so, the legato target note will need to be updated.
+    LDAA    <portamento_direction
+    BEQ     .is_new_note_lower
+
+; If the current legato direction is upwards, and the new note is HIGHER,
+; then update the stored 'Last Key Event'. Otherwise exit.
+    LDAA    <note_number
+    SUBA    <note_number_previous
+    BCS     .exit
+
+    BRA     .update_last_note
+
+.is_new_note_lower:
+; If the current legato direction is downwards, and the new note is LOWER,
+; then update the stored 'Last Key Event'. Otherwise exit.
+    LDAA    <note_number
+    SUBA    <note_number_previous
+    BCC     .exit
+
+    BRA     .update_last_note
+
+
+; ==============================================================================
+; VOICE_ADD_MONO_CLEAR_PORTA_FREQUENCY
+; ==============================================================================
+; @TAKEN_FROM_DX7_FIRMWARE
+; @PRIVATE
+; DESCRIPTION:
+; If there is no portamento, this subroutine sets the target frequency for
+; voice#0, then sets the same frequency in the associatged portamento, and
+; glissando frequency buffers. The effect of this is effectively disabling any
+; pitch transition for this voice.
+;
+; ==============================================================================
+voice_add_mono_clear_porta_frequency:           SUBROUTINE
+    LDD     voice_frequency_target
+    STD     voice_frequency_current_portamento
+    STD     voice_frequency_current_glissando
 
     RTS
 
-.more_than_two_voices_active:
-; The current section handles the case that there are more than two active
-; voices after incrementing the voice count.
-; Test the portamento direction, and the target frequency to determine
-; whether the newly added note overrides the previous target frequency.
 
-; Test the portamento direction. Branch if 'downwards'.
-    LDAA    <portamento_direction
-    BEQ     .more_than_two_voices_active_porta_down
+; ==============================================================================
+; VOICE_ADD_MONO_STORE_KEY_AND_FREQUENCY
+; ==============================================================================
+; @TAKEN_FROM_DX7_FIRMWARE
+; @PRIVATE
+; DESCRIPTION:
+; Stores the currently triggered key note in the register for the PREVIOUS
+; key note. This is used when adding a voice in monophonic mode.
+; This falls-through to set the target pitch for the first voice.
+;
+; ==============================================================================
+voice_add_mono_store_key_and_frequency:         SUBROUTINE
+    LDAA    <note_number
+    STAA    <note_number_previous
 
-    LDAA    <note_frequency
-    SUBA    <porta_current_target_freq
+    LDD     <note_frequency
+    STD     voice_frequency_target
 
-; If the carry bit is set, it indicates that the current portamento target
-; frequency is higher than the new note. In this case, don't update the
-; portamento target frequency.
-    BCS     .exit_frequency_not_updated
-    BRA     .update_voice_target_frequencies
-
-.more_than_two_voices_active_porta_down:
-    LDAA    <note_frequency
-    SUBA    <porta_current_target_freq
-
-; If the carry bit is clear, it indicates that the current portamento target
-; frequency is lower than the new note. In this case, don't update the
-; portamento target frequency.
-    BCC     .exit_frequency_not_updated
-    BRA     .update_voice_target_frequencies
-
-.exit_frequency_not_updated:
-; If this is reached, it indicates that (based upon the portamento direction)
-; the new note should not be set as the new portamento target because it is
-; either not higher, or lower than the current target.
     RTS

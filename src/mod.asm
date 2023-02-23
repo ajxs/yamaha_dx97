@@ -20,9 +20,9 @@
 ; ==============================================================================
 ; MOD_AMP_UPDATE
 ; ==============================================================================
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; @TODO
+;
 ; ==============================================================================
 mod_amp_update:                                 SUBROUTINE
 ; Scale the mod wheel input by its specified range.
@@ -128,17 +128,17 @@ loc_D701:
 
 .calculate_lfo_amp_mod:
     SUBA    <mod_amount_total
-; Invert LFO amplitude, then invert polarity?
+; @TODO: Invert LFO amplitude, then invert polarity?
     LDAB    <lfo_amplitude
     COMB
     EORB    #$80
     MUL
     ADDA    <mod_amount_total
-    BCC     .send_amp_mod_to_egs
+    BCC     .write_amp_mod_to_egs
 
     LDAA    #$FF
 
-.send_amp_mod_to_egs:
+.write_amp_mod_to_egs:
     COMA
     LDX     #table_egs_amp_mod_input
     TAB
@@ -203,7 +203,6 @@ table_egs_amp_mod_input:
 ; ==============================================================================
 ; MOD_PITCH_UPDATE
 ; ==============================================================================
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Calculates the final pitch modulation amount, and writes it to the
 ; associated EGS register.
@@ -214,7 +213,7 @@ mod_pitch_update:                               SUBROUTINE
 
 ; If the mod wheel is not assigned to any modulation destination, store '0' for
 ; the scaled mod wheel input.
-    TST     mod_wheel_assign
+    TST     mod_wheel_pitch
     BEQ     .store_scaled_mod_wheel_input
 
     LDAA    mod_wheel_range
@@ -225,7 +224,7 @@ mod_pitch_update:                               SUBROUTINE
 .store_scaled_mod_wheel_input:
     STAA    <mod_wheel_input_scaled
 
-    TST     breath_control_assign
+    TST     breath_control_pitch
     BEQ     .get_scaled_depth_factor
 
     LDAA    breath_control_range
@@ -259,7 +258,7 @@ mod_pitch_update:                               SUBROUTINE
 
 .scale_by_lfo_amplitude:
     PSHA
-    LDAA    lfo_mod_sensitivity
+    LDAA    lfo_pitch_mod_sensitivity
     LDAB    <lfo_amplitude
     BMI     .lfo_amplitude_negative
 

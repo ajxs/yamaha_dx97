@@ -20,7 +20,7 @@
 ; PATCH_VALIDATE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Validates the patch data currently loaded into the synth's 'Edit Buffer'.
 ; This subroutine iterates over all of the patch data, comparing it to a
@@ -55,7 +55,7 @@ patch_validate:                                 SUBROUTINE
 ; PATCH_VALIDATE_FIX_MAX_VALUES
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Validates patch data against a table of maximum values.
 ; If an individual byte of patch data exceeds the maximum as specified in the

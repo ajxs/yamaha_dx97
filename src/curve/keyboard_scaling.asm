@@ -1,4 +1,23 @@
 ; ==============================================================================
+; YAMAHA DX9/7 FIRMWARE
+; Copyright (C) 2022 AJXS (https://ajxs.me/)
+;
+; This program is free software: you can redistribute it and/or modify
+; it under the terms of the GNU General Public License as published by
+; the Free Software Foundation, either version 3 of the License, or
+; (at your option) any later version.
+;
+; ==============================================================================
+; voice/add.asm
+; ==============================================================================
+; DESCRIPTION:
+; This file contains the subroutines used to add a voice with a new note, in
+; response to an incoming 'Note On' MIDI message, or a key being pressed.
+; ==============================================================================
+
+    .PROCESSOR HD6303
+
+; ==============================================================================
 ; Exponential Keyboard Scaling Curve Table.
 ; Used when parsing the operator keyboard scaling.
 ; Length: 36.

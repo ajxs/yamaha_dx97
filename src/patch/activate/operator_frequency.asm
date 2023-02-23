@@ -23,7 +23,7 @@
 ; PATCH_ACTIVATE_OPERATOR_FREQUENCY
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Constructs the final frequency value for the specified operator, and loads it
 ; to the EGS chip.

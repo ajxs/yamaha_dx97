@@ -214,6 +214,7 @@ ui_yes_no_fn_btn_19:                            SUBROUTINE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
+; @TODO
 ;
 ; ==============================================================================
 ui_patch_init_recall:                           SUBROUTINE
@@ -261,7 +262,7 @@ ui_yes_no_test_entry:                           SUBROUTINE
     JSR     test_entry
 
 ui_test_entry_reload_patch_and_exit:
-    CLR     test_mode_button_state
+    CLR     ui_test_mode_button_combo_state
     JSR     ui_button_function_memory_select
     LDAB    patch_index_current
     JSR     patch_load_store_edit_buffer_to_compare

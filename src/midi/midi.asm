@@ -101,11 +101,8 @@ midi_init:                                      SUBROUTINE
 ;
 ; ==============================================================================
 midi_reset:                                     SUBROUTINE
-; Reset the voices on the EGS.
-    JSR     voice_reset_egs
-    JSR     voice_reset_frequency_data
-
-    CLR     active_voice_count
+; Reset the voices, and the EGS.
+    JSR     voice_reset
 
 ; Set the last received MIDI status to that of a 'SysEx End' message.
 ; This will cause a no-operation in the main executive loop's MIDI
@@ -171,7 +168,7 @@ midi_reset_timers:                              SUBROUTINE
     STX     <output_compare
 
 ; Enable output compare (OCF) interrupt.
-    LDAA    #TIMER_CTRL_EOCI1
+    LDAA    #TIMER_CTRL_EOCI
     STAA    <timer_ctrl_status
 
     RTS

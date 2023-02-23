@@ -452,6 +452,7 @@ midi_sysex_rx_force_message_end:
 ; =============================================================================
 ; MIDI_SYSEX_RX_BULK_DATA_STORE
 ; =============================================================================
+; @NEEDS_TO_BE_REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Stores incoming SysEx data for a bulk voice dump.
 ; Based upon whether this is a single voice, or a 32 voice bulk data dump,
@@ -558,7 +559,7 @@ midi_sysex_rx_bulk_data_store:                  SUBROUTINE
 ; MIDI_SYSEX_RX_BULK_DATA_FINALISE
 ; =============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Finalises the received SysEx bulk patch data.
 ; This subroutine validates the bulk data checksum, and initiates the
@@ -679,9 +680,7 @@ midi_sysex_rx_param_function_64_to_78:          SUBROUTINE
     CPX     #mono_poly
     BNE     .is_param_porta_time
 
-    JSR     voice_reset_egs
-    JSR     voice_reset_frequency_data
-    CLR     active_voice_count
+    JSR     voice_reset
     BRA     .update_ui_and_exit
 
 .is_param_porta_time:
@@ -750,7 +749,7 @@ midi_sysex_rx_param_function_button:            SUBROUTINE
 ; =============================================================================
 ; MIDI_SYSEX_RX_BULK_DATA_SERIALISE_INCOMING
 ; =============================================================================
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; This subroutine serialises patch data received via the SysEx 'single'
 ; patch method to the bulk 'packed' format, which will later be deserialised
@@ -953,134 +952,4 @@ _midi_sysex_rx_bulk_data_store_transpose:
     CLC
 
 .exit:
-    RTS
-
-
-; ==============================================================================
-; @TODO
-; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; DESCRIPTION:
-; @TODO
-;
-; ==============================================================================
-midi_sysex_rx_bulk_data_single_deserialise:     SUBROUTINE
-    LDAB    #6
-    PSHB
-    LDX     #midi_buffer_sysex_tx_bulk
-    STX     <memcpy_ptr_src
-    LDX     #midi_buffer_sysex_tx_single
-    STX     <memcpy_ptr_dest
-
-loc_F39E:
-    LDAB    #11
-    JSR     memcpy_store_dest_and_copy_accb_bytes
-    LDX     <memcpy_ptr_src
-    LDAA    0,x
-    TAB
-    ANDA    #3
-    LDX     <memcpy_ptr_dest
-    STAA    0,x
-    LSRB
-    LSRB
-    ANDB    #3
-    STAB    1,x
-    LDX     <memcpy_ptr_src
-    LDAA    1,x
-    TAB
-    ANDA    #7
-    LDX     <memcpy_ptr_dest
-    STAA    2,x
-    LSRB
-    LSRB
-    LSRB
-    ANDB    #$F
-    STAB    9,x
-    LDX     <memcpy_ptr_src
-    LDAA    2,x
-    TAB
-    ANDA    #3
-    LDX     <memcpy_ptr_dest
-    STAA    3,x
-    LSRB
-    LSRB
-    ANDB    #7
-    STAB    4,x
-    LDX     <memcpy_ptr_src
-    LDAA    3,x
-    LDX     <memcpy_ptr_dest
-    STAA    5,x
-    LDX     <memcpy_ptr_src
-    LDAA    4,x
-    TAB
-    ANDA    #1
-    LDX     <memcpy_ptr_dest
-    STAA    6,x
-    LSRB
-    ANDB    #$1F
-    LDX     <memcpy_ptr_dest
-    STAB    7,x
-    LDX     <memcpy_ptr_src
-    LDAA    5,x
-    LDX     <memcpy_ptr_dest
-    STAA    8,x
-    LDX     <memcpy_ptr_src
-    LDAB    #6
-    ABX
-    STX     <memcpy_ptr_src
-    LDX     <memcpy_ptr_dest
-    LDAB    #$A
-    ABX
-    STX     <memcpy_ptr_dest
-    PULB
-    DECB
-    BEQ     loc_F40F
-    PSHB
-    JMP     loc_F39E
-
-loc_F40F:
-    LDAB    #9
-    JSR     memcpy_store_dest_and_copy_accb_bytes
-    LDX     <memcpy_ptr_src
-    LDAA    0,x
-    INX
-    STX     <memcpy_ptr_src
-    TAB
-    ANDA    #7
-    LDX     <memcpy_ptr_dest
-    STAA    0,x
-    LSRB
-    LSRB
-    LSRB
-    ANDB    #1
-    STAB    1,x
-    INX
-    INX
-    STX     <memcpy_ptr_dest
-    LDAB    #4
-    JSR     memcpy_store_dest_and_copy_accb_bytes
-    LDX     <memcpy_ptr_src
-    LDAA    0,x
-    INX
-    STX     <memcpy_ptr_src
-    TAB
-    ANDA    #1
-    LDX     <memcpy_ptr_dest
-    STAA    0,x
-    TBA
-    LSRA
-    ANDA    #7
-    STAA    1,x
-    LSRB
-    LSRB
-    LSRB
-    LSRB
-    ANDB    #7
-    STAB    2,x
-    INX
-    INX
-    INX
-    STX     <memcpy_ptr_dest
-    LDAB    #$B
-    JSR     memcpy_store_dest_and_copy_accb_bytes
     RTS

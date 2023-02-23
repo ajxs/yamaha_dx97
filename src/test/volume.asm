@@ -10,6 +10,8 @@
 ; ==============================================================================
 ; test/volume.asm
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; This file contains the 'Volume' diagnostic test.
 ; It resets all the synth's voice params, then plays an A4 note.
@@ -28,9 +30,9 @@ test_volume:                                    SUBROUTINE
     JSR     test_lcd_set_write_pointer_to_line_2
     JSR     lcd_update
 
+    LDD     #$100
+    STD     master_tune
     JSR     patch_init_edit_buffer
-    LDAA    #64
-    STAA    master_tune
     JSR     patch_activate
 
     LDAB    #69

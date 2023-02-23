@@ -24,6 +24,7 @@
 ; ==============================================================================
 ; UI_BUTTON_NUMERIC
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xDF0C
 ; DESCRIPTION:
 ; Main user-interface handler subroutine for a front-panel button press.
 ; The buttons have already been assigned the appropriate codes by the main
@@ -51,7 +52,7 @@ ui_button_numeric:                              SUBROUTINE
     DC.B 4
     DC.B ui_button_edit_5 - *
     DC.B 5
-    DC.B ui_button_edit_6_7_8 - *
+    DC.B ui_store_last_button_and_load_max_value_jump - *
     DC.B 8
     DC.B ui_button_edit_9_pmd_amd - *
     DC.B 9
@@ -59,16 +60,18 @@ ui_button_numeric:                              SUBROUTINE
     DC.B 10
     DC.B ui_button_edit_11_operator_select - *
     DC.B 11
-    DC.B ui_button_edit_12_13 - *
+    DC.B ui_store_last_button_and_load_max_value_jump - *
     DC.B 13
     DC.B ui_button_edit_14 - *
     DC.B 14
     DC.B ui_button_edit_15_16_jump - *
     DC.B 16
-    DC.B ui_button_edit_12_13 - *
+    DC.B ui_store_last_button_and_load_max_value_jump - *
     DC.B 19
     DC.B ui_button_edit_20_jump - *
     DC.B 20
+    DC.B ui_button_function_4_jump - *
+    DC.B 24
     DC.B ui_button_function_set_active_parameter_jump - *
     DC.B 25
     DC.B ui_button_function_6_jump - *
@@ -89,7 +92,7 @@ ui_button_numeric:                              SUBROUTINE
 ; UI_BUTTON_EDIT_1_TO_4_OPERATOR_ENABLE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; @PRIVATE
 ; DESCRIPTION:
 ; Toggles the operator enable status of the synth's operators.
@@ -145,10 +148,12 @@ ui_button_edit_1_to_4_operator_enable:          SUBROUTINE
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE
 ; Operator Number Bitmask Table.
-; Contains bitmasks corresponding to the last 4 of the synth's six operators.
-; Used when enabling/disabling individual operators.
+; Contains bitmasks corresponding to each of the synth's six operators.
+; Used when selecting, or enabling/disabling individual operators.
 ; ==============================================================================
 table_operator_bitmask:
+    DC.B %100000
+    DC.B %10000
     DC.B %1000
     DC.B %100
     DC.B %10
@@ -159,7 +164,7 @@ table_operator_bitmask:
 ; UI_BUTTON_EDIT_11_OPERATOR_SELECT
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; @PRIVATE
 ; DESCRIPTION:
 ; Handles the front-panel numeric button 11 being pressed when the synth is
@@ -238,12 +243,12 @@ ui_button_edit_20_jump:                         SUBROUTINE
 ; UI_BUTTON_EDIT_15_16_JUMP
 ; ==============================================================================
 ui_button_edit_15_16_jump:                      SUBROUTINE
-    JMP     ui_button_edit_15_16_eg_stage
+    JMP     ui_button_edit_15_16_select_eg_stage
 
 ; ==============================================================================
 ; UI_BUTTON_EDIT_12_13_JUMP
 ; ==============================================================================
-ui_button_edit_12_13:                           SUBROUTINE
+ui_store_last_button_and_load_max_value_jump:  SUBROUTINE
     JMP     ui_store_last_button_and_load_max_value
 
 ; ==============================================================================
@@ -269,6 +274,12 @@ ui_button_function_7_jump:                      SUBROUTINE
 ; ==============================================================================
 ui_button_function_19_jump:                     SUBROUTINE
     JMP ui_button_function_19
+
+; ==============================================================================
+; UI_BUTTON_FUNCTION_4_JUMP
+; ==============================================================================
+ui_button_function_4_jump:                      SUBROUTINE
+    JMP ui_button_function_4
 
 ; ==============================================================================
 ; UI_BUTTON_FUNCTION_6_JUMP
@@ -305,12 +316,13 @@ ui_button_edit_5:                               SUBROUTINE
 .store_sub_function:
     STAB    ui_btn_numeric_last_pressed
     TST     ui_btn_edit_5_sub_function
-    BNE     .load_max_value
+    BNE     .alternative_function_selected
 
-    DECB
+    JMP     ui_load_max_value_from_button
 
-.load_max_value:
-    BRA     ui_button_edit_max_value_load_base
+.alternative_function_selected:
+    LDX     #max_value_feedback
+    JMP     ui_button_edit_get_active_parameter_address
 
 
 ; ==============================================================================
@@ -344,49 +356,9 @@ ui_button_edit_9_pmd_amd:                       SUBROUTINE
     CLR     ui_flag_disable_edit_btn_9_mode_select
     STAB    ui_btn_numeric_last_pressed
     TST     ui_btn_edit_9_sub_function
-    BEQ     ui_button_edit_max_value_load_base
+    BEQ     ui_load_max_value_from_button
 
     LDX     #max_value_lfo_pitch_mod_depth
-    BRA     ui_button_edit_get_active_parameter_address
-
-
-; ==============================================================================
-; UI_BUTTON_EDIT_6_7_8
-; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; @PRIVATE
-; DESCRIPTION:
-; Handles the numeric buttons 6,7,8 being pressed when in 'Edit Mode'.
-;
-; ==============================================================================
-ui_button_edit_6_7_8:                           SUBROUTINE
-    STAB    ui_btn_numeric_last_pressed
-; Falls-through below.
-
-; ==============================================================================
-; UI_BUTTON_EDIT_MAX_VALUE_LOAD_BASE
-; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; @PRIVATE
-; DESCRIPTION:
-; Loads the base offset of the currently selected 'edit parameter' based upon
-; the last front-panel button press.
-;
-; ARGUMENTS:
-; Registers:
-; * ACCB: The triggering front-panel numeric button number.
-;
-; REGISTERS MODIFIED:
-; * ACCB, IX
-;
-; ==============================================================================
-ui_button_edit_max_value_load_base:                SUBROUTINE
-    ASLB
-    LDX     #table_edit_param_max_values_button_offset
-
-; This has been changed from the original DX9 ROM functionality to avoid using
-; a potentially unnecessary label just to add the offset value to IX.
-    ABX
     BRA     ui_button_edit_get_active_parameter_address
 
 
@@ -409,7 +381,7 @@ ui_button_edit_10:                              SUBROUTINE
 .store_sub_function:
     STAB    ui_btn_numeric_last_pressed
     TST     ui_btn_edit_10_sub_function
-    BEQ     ui_button_edit_max_value_load_base
+    BEQ     ui_load_max_value_from_button
 
     LDX     #max_value_lfo_pitch_mod_sens
     BRA     ui_button_edit_get_active_parameter_address
@@ -444,6 +416,7 @@ ui_button_edit_14:                              SUBROUTINE
 ; UI_BUTTON_EDIT_20_KEY_TRANSPOSE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; @PRIVATE
 ; DESCRIPTION:
 ; Sets the 'Key Transpose Set' mode as being active, causing the next keypress
@@ -484,7 +457,7 @@ ui_button_edit_20_key_transpose:                SUBROUTINE
 
 ; Validate the current key transpose value.
     LDX     #patch_edit_key_transpose
-    LDAA    #24
+    LDAA    #48
     JMP     ui_check_edit_parameter_against_max_value
 
 
@@ -508,7 +481,7 @@ ui_button_edit_20_key_transpose:                SUBROUTINE
 ; * ACCA, ACCB, IX
 ;
 ; ==============================================================================
-ui_button_edit_15_16_eg_stage:                  SUBROUTINE
+ui_button_edit_15_16_select_eg_stage:           SUBROUTINE
 ; If the last pressed button was identical to the previous, then increment
 ; the currently selected EG stage.
     CMPB    ui_btn_numeric_last_pressed
@@ -553,8 +526,10 @@ ui_store_last_button_and_load_max_value:        SUBROUTINE
 ;
 ; ==============================================================================
 ui_load_max_value_from_button:                  SUBROUTINE
+; Subtract 4 on account of the edit button functions beginning at button 5.
+    SUBB    #4
     ASLB
-    LDX     #table_max_param_values_edit_button_offset
+    LDX     #table_max_param_values_edit_mode
     ABX
 ; Fall-through below.
 
@@ -562,7 +537,7 @@ ui_load_max_value_from_button:                  SUBROUTINE
 ; UI_BUTTON_EDIT_GET_ACTIVE_PARAMETER_ADDRESS
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Loads, and parses the entry in the edit parameter offset, and maximum value
 ; table, then stores the active parameter address, and maximum value.
@@ -615,7 +590,43 @@ ui_button_edit_get_active_parameter_address:    SUBROUTINE
 
 .store_param_pointer:
     STX     ui_active_param_address
-    BRA     ui_load_active_param_ptr_and_max_value
+    JMP     ui_load_active_param_ptr_and_max_value
+
+
+; ==============================================================================
+; UI_BUTTON_FUNCTION_4
+; ==============================================================================
+; @NEW_FUNCTIONALITY
+; DESCRIPTION:
+; Handles a press to button '4' when the synth is in function mode.
+; This routine cycles through the sub-functions associated with this button.
+; This is newly added functionality to facilitate enabling glissando.
+;
+; ARGUMENTS:
+; Registers:
+; * ACCB: The triggering front-panel numeric button number.
+;
+; MEMORY MODIFIED:
+; * ui_btn_function_4_sub_function
+;
+; REGISTERS MODIFIED:
+; * ACCA, ACCB, IX
+;
+; ==============================================================================
+ui_button_function_4:                           SUBROUTINE
+; If this button has been pressed twice in succession, cycle the sub-function.
+    CMPB    ui_btn_numeric_last_pressed
+    BNE     ui_button_function_set_active_parameter
+
+    TOGGLE_BUTTON_SUB_FUNCTION ui_btn_function_4_sub_function
+
+    TST     ui_btn_function_4_sub_function
+    BEQ     ui_button_function_set_active_parameter
+
+; Set the correct offset for loading the 'glissando_enabled' variable and
+; maximum value from the table.
+    LDAA    #42
+    BRA     ui_button_function_set_active_parameter
 
 
 ; ==============================================================================
@@ -698,6 +709,7 @@ ui_button_function_7:                           SUBROUTINE
 
     TOGGLE_BUTTON_SUB_FUNCTION ui_btn_function_7_sub_function
 
+    TBA
     BRA     ui_button_function_set_active_parameter
 
 
@@ -706,6 +718,7 @@ ui_button_function_7:                           SUBROUTINE
 ; ==============================================================================
 ; DESCRIPTION:
 ; Handles a press to button '19' when the synth is in function mode.
+; Thi
 ;
 ; ==============================================================================
 ui_button_function_19:                          SUBROUTINE
@@ -742,7 +755,7 @@ ui_button_function_20:                          SUBROUTINE
 ; Falls-through below.
 
 ; ==============================================================================
-; UI_BTN_FN_MODE_SET_ACTIVE_PARAM
+; UI_BTN_FUNCTION_SET_ACTIVE_PARAMETER
 ; ==============================================================================
 ; DESCRIPTION:
 ; This subroutine sets the currently selected 'Edit Parameter' and its
@@ -766,25 +779,12 @@ ui_button_function_set_active_parameter:        SUBROUTINE
 ; button codes beginning at '20'.
     SUBA    #20
 
-; Test whether the last button press was '23' (Button 4/ Porta Mode).
-; If the synth is in polyphonic mode, do not allow any editing of this
-; parameter, as there is only one portamento mode available.
-    CMPA    #(BUTTON_FUNCTION_4 - 20)
-    BNE     .get_active_parameter_ptr
+    STAB    ui_btn_numeric_last_pressed
 
-    TST     mono_poly
-    BNE     .get_active_parameter_ptr
-
-; Load the index for the 'Null' edit parameter.
-; @TODO
-    LDAA    #20
-
-.get_active_parameter_ptr:
 ; Multiply the index by 3, since each entry in this table is 3 bytes long.
 ; It has the format:
 ; - 'Pointer to edit parameter' (2 bytes)
 ; - 'Maximum Value' (1 byte)
-    STAB    ui_btn_numeric_last_pressed
     LDAB    #3
     MUL
 
@@ -834,18 +834,9 @@ ui_check_edit_parameter_against_max_value:      SUBROUTINE
 ; This is performed to allow remote control of a separate DX9.
     JMP     midi_sysex_tx_param_change
 
-; This hack was adapted from the original DX9 ROM.
-; I can't recall the original use of this offset.
-table_edit_param_max_values_button_offset:      EQU (#table_max_param_values_edit_mode - 6)
-
-; Since the edit mode front-panel buttons only start editing parameters at
-; button 5, and the two-byte entries in the table below are indexed by button
-; number, this pointer subtracts 8 to start from button 5.
-table_max_param_values_edit_button_offset:      EQU (#table_max_param_values_edit_mode - 8)
-
 ; ==============================================================================
 ; Edit mode parameter offset, and max value table.
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; This table contains an array of entries used to get a pointer to the
 ; currently selected 'Edit Mode' parameter, and its associated max value.
 ; The first byte of each entry is the offset of the parameter.
@@ -857,44 +848,51 @@ table_max_param_values_edit_button_offset:      EQU (#table_max_param_values_edi
 ; The second byte is the maximum value for this parameter.
 ; ==============================================================================
 table_max_param_values_edit_mode:
-    DC.B PATCH_ALGORITHM
+    DC.B PATCH_ALGORITHM                        ; Button 5.
     DC.B 31
-    DC.B PATCH_FEEDBACK
-    DC.B 7
-    DC.B PATCH_LFO_WAVEFORM
+    DC.B PATCH_LFO_WAVEFORM                     ; Button 6.
     DC.B 5
-    DC.B PATCH_LFO_SPEED
+    DC.B PATCH_LFO_SPEED                        ; Button 7.
     DC.B 99
-    DC.B PATCH_LFO_DELAY
+    DC.B PATCH_LFO_DELAY                        ; Button 8.
     DC.B 99
-    DC.B PATCH_LFO_AMP_MOD_DEPTH
+    DC.B PATCH_LFO_AMP_MOD_DEPTH                ; Button 9.
     DC.B 99
-    DC.B PATCH_OP_AMP_MOD_SENS
+    DC.B PATCH_OP_AMP_MOD_SENS                  ; Button 10.
     DC.B 3
-    DC.B PATCH_OP_FREQ_COARSE
+
+; Place a two byte 'gap' here to account for button 11, which does not load an
+; edit parameter.
+    DC.B 0
+    DC.B 0
+
+    DC.B PATCH_OP_FREQ_COARSE                   ; Button 12.
     DC.B 31
-    DC.B PATCH_OP_FREQ_FINE
+    DC.B PATCH_OP_FREQ_FINE                     ; Button 13.
     DC.B 99
-    DC.B PATCH_OP_DETUNE
+    DC.B PATCH_OP_DETUNE                        ; Button 14.
     DC.B 14
-    DC.B PATCH_PITCH_EG_R1
+    DC.B PATCH_OP_EG_RATE_1                     ; Button 15.
     DC.B 99
-    DC.B PATCH_PITCH_EG_L1
+    DC.B PATCH_OP_EG_LEVEL_1                    ; Button 16.
     DC.B 99
-    DC.B PATCH_OP_LVL_SCL_LT_DEPTH
+    DC.B PATCH_OP_LVL_SCL_LT_DEPTH              ; Button 17.
     DC.B 99
-    DC.B PATCH_OP_LVL_SCL_RT_DEPTH
+    DC.B PATCH_OP_LVL_SCL_RT_DEPTH              ; Button 18.
     DC.B 99
-    DC.B PATCH_OP_OUTPUT_LEVEL
+    DC.B PATCH_OP_OUTPUT_LEVEL                  ; Button 19.
     DC.B 99
-max_value_oscillator_sync:
+max_value_oscillator_sync:                      ; Button 14 - Sub Function 1.
     DC.B PATCH_OSC_SYNC
     DC.B 1
-max_value_lfo_pitch_mod_depth:
+max_value_lfo_pitch_mod_depth:                  ; Button 9 - Sub Function 1.
     DC.B PATCH_LFO_PITCH_MOD_DEPTH
     DC.B 99
-max_value_lfo_pitch_mod_sens:
+max_value_lfo_pitch_mod_sens:                   ; Button 10 - Sub Function 1.
     DC.B PATCH_LFO_PITCH_MOD_SENS
+    DC.B 7
+max_value_feedback:                             ; Button 5 - Sub Function 1.
+    DC.B PATCH_FEEDBACK
     DC.B 7
 
 ; ==============================================================================
@@ -904,6 +902,9 @@ max_value_lfo_pitch_mod_sens:
 ; This table is used by the UI button functions.
 ; ==============================================================================
 table_max_parameter_values_function_mode:
+; @NOTE: The 'Master Tune' setting can't actually be adjusted in the
+; associated subroutine. It is checked for in the 'input_button_yes_no'
+; subroutine, which restricts its use.
     DC.W master_tune
     DC.B 127
     DC.W mono_poly
@@ -926,7 +927,7 @@ table_max_parameter_values_function_mode:
     DC.B 1
     DC.W mod_wheel_range
     DC.B 99
-    DC.W mod_wheel_assign
+    DC.W mod_wheel_pitch
     DC.B 1
     DC.W mod_wheel_amp
     DC.B 1
@@ -934,7 +935,7 @@ table_max_parameter_values_function_mode:
     DC.B 1
     DC.W breath_control_range
     DC.B 99
-    DC.W breath_control_assign
+    DC.W breath_control_pitch
     DC.B 1
     DC.W breath_control_amp
     DC.B 1
@@ -947,4 +948,6 @@ table_max_parameter_values_function_mode:
     DC.W null_edit_parameter
     DC.B 1
     DC.W sys_info_avail
+    DC.B 1
+    DC.W portamento_glissando_enabled
     DC.B 1

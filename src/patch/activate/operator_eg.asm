@@ -22,7 +22,7 @@
 ;
 ; ==============================================================================
 patch_activate_operator_eg_rate:                SUBROUTINE
-    LDX     #patch_buffer_edit + PATCH_OP_EG_RATE_1
+    LDX     #patch_buffer_edit
     LDAB    <patch_activate_operator_offset
     ABX
     STX     <copy_ptr_src
@@ -69,7 +69,7 @@ patch_activate_operator_eg_rate:                SUBROUTINE
 ; PATCH_ACTIVATE_OPERATOR_EG_LEVEL
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; @TODO
 ;
@@ -98,8 +98,8 @@ patch_activate_operator_eg_level:               SUBROUTINE
 .parsed_operator_eg_levels:                     EQU #temp_variables + 4
 
 ; ==============================================================================
-    LDX     patch_activate_operator_offset
-    LDAB    #PATCH_OP_EG_LEVEL_4
+    LDX     #(patch_buffer_edit + PATCH_OP_EG_LEVEL_4)
+    LDAB    <patch_activate_operator_offset
     ABX
     STX     .operator_eg_level_pointer
 

@@ -38,8 +38,8 @@ VOICE_STATUS_ACTIVE:                            EQU %10
 ; These signals are sent to the 'EGS Key Event' register to activate, or
 ; deactivate a specific voice.
 ; ==============================================================================
-EGS_VOICE_EVENT_ON:                             EQU 1
-EGS_VOICE_EVENT_OFF:                            EQU 2
+EGS_VOICE_EVENT_ON:                             EQU %1
+EGS_VOICE_EVENT_OFF:                            EQU %10
 
 
 ; ==============================================================================
@@ -131,7 +131,7 @@ voice_convert_midi_note_to_log_freq:            SUBROUTINE
 ; VOICE_UDPATE_SUSTAIN_STATUS
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Tests to see whether the status of the sustain pedal has transition from
 ; active to inactive. If this is the case, this subroutine tests all voices to
@@ -154,26 +154,27 @@ voice_update_sustain_status:                    SUBROUTINE
 ; Mask the sustain pedal status.
     LDAA    <pedal_status_current
     ANDA    #PEDAL_INPUT_SUSTAIN
+    PSHA
 
 ; Invert the sustain pedal status, and perform a logical AND between the
 ; inverted updated status, and the previous.
 ; If the result is 1 it indicates that the sustain pedal status has changed
 ; from an 'On' state, to an 'Off' state.
-    PSHA
     COMA
     ANDA    <sustain_status
-    BEQ     .exit
+    BEQ     .save_sustain_status_and_exit
 
-; Update each voice in the EGS to disable sustain.
+; Deactivate each voice in the EGS to disable sustain.
     LDX     #voice_status
     LDAB    #EGS_VOICE_EVENT_OFF
 
 ; Test each voice to determine if they are marked as being sustained.
 ; If so, update the voice status array, and send the voice event signal to
 ; the EGS turn the voice off.
-.test_voice_loop:
+.test_for_sustained_voices_loop:
     TIMX    #VOICE_STATUS_SUSTAIN, 1
     BEQ     .increment_loop_counter
+
     STAB    egs_key_event
     DELAY_SHORT
 
@@ -199,9 +200,9 @@ voice_update_sustain_status:                    SUBROUTINE
 ; four to increment the voice number.
     ADDB    #4
     CMPB    #66
-    BNE     .test_voice_loop
+    BNE     .test_for_sustained_voices_loop
 
-.exit:
+.save_sustain_status_and_exit:
     PULA
     STAA    <sustain_status
 

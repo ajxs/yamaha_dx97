@@ -19,7 +19,7 @@
 ; =============================================================================
 ; MIDI_SYSEX_RX_PARAM_VOICE_PROCESS
 ; =============================================================================
-; @REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Processes incoming SysEx voice parameter data.
 ; This subroutine is responsible for storing the incoming data.

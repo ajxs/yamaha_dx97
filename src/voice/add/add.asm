@@ -20,6 +20,7 @@
 ; ==============================================================================
 ; VOICE_ADD
 ; ==============================================================================
+; @TAKEN_FROM_DX7_FIRMWARE
 ; DESCRIPTION:
 ; This subroutine is the main entry point to 'adding' a new voice event.
 ; It is effectively the entry point to actually playing a note over one of the
@@ -35,6 +36,14 @@
 ;
 ; ==============================================================================
 voice_add:                                      SUBROUTINE
+; The note number is stored here so that the interface of this function
+; matches that of the DX9.
+; The DX9 code stores the MSB of the logarithmic frequency in the voice status
+; array, as opposed to the DX7, which uses the MIDI note number.
+; The DX7 stores the MIDI note number _without_ the key transpose value added.
+; This shouldn't cause any problems as long as it is consistent.
+    STAB    <note_number
+
 ; Add the current transpose value, and subtract 24,  to take into account
 ; that it has a -24 - 24 range.
     ADDB    patch_edit_key_transpose
@@ -61,7 +70,7 @@ voice_add:                                      SUBROUTINE
 ; ==============================================================================
 ; VOICE_ADD_OPERATOR_LEVEL_VOICE_FREQUENCY
 ; ==============================================================================
-; @REMADE_FOR_6_OP
+; @TAKEN_FROM_DX7_FIRMWARE
 ; DESCRIPTION:
 ; Loads the operator scaling, and frequency for a new note to the EGS chip.
 ; Tests whether the current portamento settings mean the new note frequency
@@ -77,22 +86,31 @@ voice_add_operator_level_voice_frequency:       SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
-.new_voice_frequency:                           EQU #temp_variables
-.new_voice_number:                              EQU #(temp_variables + 2)
-.operator_index:                                EQU #(temp_variables + 3)
-.operator_velocity_sens_pointer                 EQU #(temp_variables + 4)
-.operator_volume_pointer                        EQU #(temp_variables + 6)
-.operator_status                                EQU #(temp_variables + 8)
+; @WARNING: These temporary variable definitions are shared across all of the
+; 'Voice Add' subroutines.
+.voice_frequency_target_ptr:                    EQU #temp_variables
+.voice_status_ptr:                              EQU #temp_variables + 2
+.operator_sensitivity_ptr:                      EQU #temp_variables + 4
+.operator_volume_ptr:                           EQU #temp_variables + 6
+.voice_frequency_current:                       EQU #temp_variables + 8
+.voice_frequency_new:                           EQU #temp_variables + 10
+.voice_index:                                   EQU #temp_variables + 12
+.voice_current:                                 EQU #temp_variables + 13
+.find_inactive_voice_loop_index:                EQU #temp_variables + 14
+.voice_buffer_offset:                           EQU #temp_variables + 15
+.operator_status:                               EQU #temp_variables + 16
+.operator_loop_index:                           EQU #temp_variables + 17
+
 ; ==============================================================================
-    STX     .new_voice_frequency
-    STAA    .new_voice_number
+    STX     .voice_frequency_new
+    STAA    .voice_current
 
 ; Setup pointers.
     LDX     #patch_operator_velocity_sensitivity
-    STX     .operator_velocity_sens_pointer
+    STX     .operator_sensitivity_ptr
 
     LDX     #operator_volume
-    STX     .operator_volume_pointer
+    STX     .operator_volume_ptr
 
 ; Load the 'Operator Volume Velocity Scale Factor' value into ACCB.
 ; This value is used to scale the operator volume according to the
@@ -100,6 +118,7 @@ voice_add_operator_level_voice_frequency:       SUBROUTINE
     LDAB    <note_velocity
     LSRB
     LSRB
+
     LDX     #table_operator_velocity_scale
     ABX
     LDAB    0,x
@@ -107,47 +126,46 @@ voice_add_operator_level_voice_frequency:       SUBROUTINE
 ; Use this scaling factor to scale the output volume of each of the
 ; synth's six operators.
     LDAA    #6
-    STAA    .operator_index
+    STAA    .operator_loop_index
 
-.get_operator_volume_loop:
-    LDX     .operator_velocity_sens_pointer
+.calculate_operator_volume_loop:
+    LDX     .operator_sensitivity_ptr
     PSHB
 
-; Multiply the lower byte of the 'Op Key Sens' value with the velocity
-; sensitivity scale factor in ACCB, and then add the higher byte of the
-; 'Op Key Sens' back to this value.
+; Multiply the lower byte of the 'Op Key Sens' value with the log table value
+; in B, and then add the higher byte of the 'Op Key Sens' back to this value.
     LDAA    1,x
     MUL
     ADDA    0,x
 
 ; If this value overflows, clamp at 0xFF.
-    BCC     .increment_operator_velocity_sens_pointer
+    BCC     .increment_operator_sensitivity_ptr
     LDAA    #$FF
 
-.increment_operator_velocity_sens_pointer:
+.increment_operator_sensitivity_ptr:
     INX
     INX
-    STX     .operator_velocity_sens_pointer
+    STX     .operator_sensitivity_ptr
 
 ; Store the operator volume.
-    LDX     .operator_volume_pointer
+    LDX     .operator_volume_ptr
     STAA    0,x
     INX
-    STX     .operator_volume_pointer
+    STX     .operator_volume_ptr
 
-    PULB
 ; Decrement the loop index.
-    DEC     .operator_index
-    BNE     .get_operator_volume_loop
+    PULB
+    DEC     .operator_loop_index
+    BNE     .calculate_operator_volume_loop
 
-    CLR     .operator_index
+    CLR     .operator_loop_index
     LDAA    patch_edit_operator_status
     STAA    .operator_status
 
+.write_operator_volume_data_loop:
 ; Logically shift the 'Operator On/Off' register value right with each
 ; iteration. This loads the previous bit 0 into the carry flag, which is
 ; then checked to determined whether the operator is enabled, or disabled.
-.check_operator_enabled_loop:
     LSR     .operator_status
     BCS     .apply_keyboard_scaling
 
@@ -155,15 +173,15 @@ voice_add_operator_level_voice_frequency:       SUBROUTINE
     BRA     .clear_operator_volume
 
 .apply_keyboard_scaling:
-; Load the current operator's keyboard scaling curve into IX.
-    LDAB    .operator_index
+    LDAB    .operator_loop_index
     LDAA    #KEYBOARD_SCALE_CURVE_LENGTH
     MUL
+
     LDX     #operator_keyboard_scaling
     ABX
 
 ; Use the MSB of the note pitch as an index into the keyboard scaling curve.
-    LDAB    .new_voice_frequency
+    LDAB    .voice_frequency_new
     LSRB
     LSRB
     ABX
@@ -172,43 +190,42 @@ voice_add_operator_level_voice_frequency:       SUBROUTINE
 ; Add the operator scaling value to the logarithmic operator volume value.
 ; Clamp the resulting value at 0xFF.
     LDX     #operator_volume
-    LDAB    .operator_index
+    LDAB    .operator_loop_index
     ABX
     ADDA    0,x
-    BCC     .get_egs_register_index
+    BCC     .get_egs_operator_volume_register_index
 
 .clear_operator_volume:
     LDAA    #$FF
 
-.get_egs_register_index:
+.get_egs_operator_volume_register_index:
 ; Calculate the index into the EGS' 'Operator Levels' register.
 ; This register is 96 bytes long, arranged in the format of:
 ;   Operator[number][voice].
 ; The index is calculated by: (Current Operator * 16 + Current Voice).
     PSHA
     LDAA    #16
-    LDAB    .operator_index
+    LDAB    .operator_loop_index
     MUL
-    ADDB    .new_voice_number
+    ADDB    .voice_current
     LDX     #egs_operator_level
     ABX
-
     PULA
 
 ; If the resulting amplitude value is less than 4, clamp at 4.
     CMPA    #3
     BHI     .write_operator_data_to_egs
+
     LDAA    #4
 
 .write_operator_data_to_egs:
     STAA    0,x
 
 ; Increment loop index.
-    INC     .operator_index
-
-    LDAA    .operator_index
+    INC     .operator_loop_index
+    LDAA    .operator_loop_index
     CMPA    #6
-    BNE     .check_operator_enabled_loop
+    BNE     .write_operator_volume_data_loop
 
 ; If the portamento rate is instantaneous, then write the pitch value to
 ; the EGS, and exit.
@@ -219,25 +236,28 @@ voice_add_operator_level_voice_frequency:       SUBROUTINE
 ; Check if the synth is in monophonic mode. If it is, then perform an
 ; additional check to determine the portamento mode.
     LDAA    mono_poly
-    BEQ     .is_porta_pedal_active
+    BEQ     .is_portamento_pedal_active
 
 ; If the synth is monophonic, and in 'Fingered' portamento mode, load the
 ; pitch value for the current voice immediately.
     LDAA    portamento_mode
     BEQ     voice_add_load_frequency_to_egs
 
-.is_porta_pedal_active:
+.is_portamento_pedal_active:
 ; If the portamento pedal is active, exit.
 ; Otherwise this routine falls-through below to 'load pitch'.
     LDAA    pedal_status_current
     BITA    #PEDAL_INPUT_PORTA
     BEQ     voice_add_load_frequency_to_egs
 
+.exit:
     RTS
+
 
 ; ==============================================================================
 ; VOICE_ADD_LOAD_FREQUENCY_TO_EGS
 ; ==============================================================================
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; This function calculates the final current frequency value for the current
 ; voice, and loads it to the appropriate register in the EGS chip.
@@ -249,17 +269,21 @@ voice_add_load_frequency_to_egs:                SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
-.new_voice_frequency:                           EQU #temp_variables
-.new_voice_number:                              EQU #(temp_variables + 2)
-.master_tune                                    EQU #(temp_variables + 9)
-; ==============================================================================
-    CLRA
-    LDAB    master_tune
-    LSLD
-    LSLD
-    STD     .master_tune
+.voice_frequency_target_ptr:                    EQU #temp_variables
+.voice_status_ptr:                              EQU #temp_variables + 2
+.operator_sensitivity_ptr:                      EQU #temp_variables + 4
+.operator_volume_ptr:                           EQU #temp_variables + 6
+.voice_frequency_current:                       EQU #temp_variables + 8
+.voice_frequency_new:                           EQU #temp_variables + 10
+.voice_index:                                   EQU #temp_variables + 12
+.voice_current:                                 EQU #temp_variables + 13
+.find_inactive_voice_loop_index:                EQU #temp_variables + 14
+.voice_buffer_offset:                           EQU #temp_variables + 15
+.operator_status:                               EQU #temp_variables + 16
+.operator_loop_index:                           EQU #temp_variables + 17
 
-    LDAB    .new_voice_number
+; ==============================================================================
+    LDAB    .voice_current
     ASLB
 
 ; Load the voice's current pitch EG level, and add this to the voice's
@@ -267,30 +291,26 @@ voice_add_load_frequency_to_egs:                SUBROUTINE
     LDX     #pitch_eg_current_frequency
     ABX
     LDD     0,x
-    ADDD    .new_voice_frequency
+    ADDD    .voice_frequency_new
     SUBD    #$1BA8
 
 ; Clamp the frequency value to a minimum of zero.
 ; If it is below this minumum value, set to zero.
-; If the current vaue of ACCD > 0, branch.
+; If the current vaue of D > 0x1BA8, branch.
     BCC     .add_master_tune
 
     LDD     #0
 
 .add_master_tune:
-    ADDD    .master_tune
-
-; Temporarily store the LSB.
+    ADDD    master_tune
     PSHB
 
 ; Write the frequency value to the EGS chip.
     LDX     #egs_voice_frequency
-    LDAB    .new_voice_number
+    LDAB    .voice_current
     ASLB
     ABX
     STAA    0,x
-
-; Store previously saved LSB.
     PULB
     STAB    1,x
 

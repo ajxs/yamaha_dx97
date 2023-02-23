@@ -44,18 +44,22 @@ main_process_events:                            SUBROUTINE
 .reload_patch:
     JSR     patch_activate
 
+; In the original DX9 firmware, this was not reset when the patch was reloaded.
+; This line prevents activation happening twice in the main loop.
+    CLR     main_patch_event_flag
+
 .send_remote_signal:
 ; @TODO: Why is this done here?
 ; Possibly this is ideally performed a certain number of cycles _before_ the
 ; MIDI processing occurs?
     JSR     tape_remote_output_signal
 
-    TST     active_sensing_send_flag
+    TST     midi_active_sensing_send_flag
     BNE     .exit
 
     JSR     midi_tx_active_sensing
     LDAA    #$FF
-    STAA    <active_sensing_send_flag
+    STAA    <midi_active_sensing_send_flag
 
 .exit:
     RTS

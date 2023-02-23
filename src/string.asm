@@ -76,6 +76,9 @@ str_freq_fine:                          DC "F FINE"
                                         DC.B PRINT_PARAM_FUNCTION_OSC_FREQ
 
 str_function_control:                   DC "FUNCTION CONTROL", 0
+str_glissando:                          DC "GLISSANDO"
+                                        DC.B PRINT_PARAM_FUNCTION_BOOLEAN
+
 str_lfo_name_triangle:                  DC "TRIANGLE", 0
 str_lfo_name_saw_down:                  DC "SAW DWN", 0
 str_lfo_name_saw_up:                    DC "SAW UP", 0
@@ -174,6 +177,11 @@ str_porta_full_time:                    DC "FULL TIME "
 str_porta_fingered:                     DC "FINGERED "
                                         DC.B STR_FRAGMENT_OFFSET_PORTA, 0
 
+str_porta_retain:                       DC.B STR_FRAGMENT_SUS_KEY
+                                        DC "RETAIN", 0
+str_porta_follow:                       DC.B STR_FRAGMENT_SUS_KEY
+                                        DC "FOLLOW", 0
+
 str_porta_time:                         DC.B STR_FRAGMENT_OFFSET_PORTA
                                         DC.B $20 ; Space
                                         DC "TIME"
@@ -253,7 +261,7 @@ str_fragment_select:                    DC "SELECT", 0
 str_fragment_store:                     DC "STORE", 0
 str_fragment_tune:                      DC "TUNE", 0
 str_fragment_wheel:                     DC "WHEEL ", 0
-
+str_fragment_sus_key:                   DC "SUS-KEY P ", 0
 
 STR_FRAGMENT_OFFSET_ALG                 EQU (str_fragment_alg - #string_fragment_offset_start)
 STR_FRAGMENT_OFFSET_AMP                 EQU (str_fragment_amp - #string_fragment_offset_start)
@@ -274,3 +282,4 @@ STR_FRAGMENT_OFFSET_SELECT              EQU (str_fragment_select - #string_fragm
 STR_FRAGMENT_OFFSET_STORE               EQU (str_fragment_store - #string_fragment_offset_start)
 STR_FRAGMENT_OFFSET_TUNE                EQU (str_fragment_tune - #string_fragment_offset_start)
 STR_FRAGMENT_OFFSET_WHEEL               EQU (str_fragment_wheel - #string_fragment_offset_start)
+STR_FRAGMENT_SUS_KEY                    EQU (str_fragment_sus_key - #string_fragment_offset_start)

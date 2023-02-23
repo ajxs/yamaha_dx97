@@ -407,15 +407,15 @@ midi_process_status_message:                    SUBROUTINE
     CMPA    #MIDI_STATUS_SYSEX_END
     BCS     .store_message_type
 
-.store_message_type:
-    STAA    midi_last_command_received
-    CLR     midi_rx_data_count
-
 ; The original DX9 firmware handled active sensing differently.
 ; Refer to the documentation on the 'midi_rx_active_sensing' function.
 ; This is handled here on account of active sensing not requiring any data.
     CMPA    #MIDI_STATUS_ACTIVE_SENSING
     BEQ     midi_rx_active_sensing
+
+.store_message_type:
+    STAA    midi_last_command_received
+    CLR     midi_rx_data_count
 
 ; Return back to process any further incoming data in the buffer.
     JMP     midi_process_incoming_data
@@ -446,8 +446,8 @@ midi_process_status_message:                    SUBROUTINE
 ; * ACCA: The received MIDI data.
 ;
 ; MEMORY MODIFIED:
-; * active_sensing_rx_counter_enabled
-; * active_sensing_rx_counter
+; * midi_active_sensing_rx_counter_enabled
+; * midi_active_sensing_rx_counter
 ;
 ; REGISTERS MODIFIED:
 ; * ACCA
@@ -455,8 +455,8 @@ midi_process_status_message:                    SUBROUTINE
 ; ==============================================================================
 midi_rx_active_sensing:                         SUBROUTINE
     LDAA    #1
-    STAA    <active_sensing_rx_counter_enabled
+    STAA    <midi_active_sensing_rx_counter_enabled
     CLRA
-    STAA    <active_sensing_rx_counter
+    STAA    <midi_active_sensing_rx_counter
 
     RTS
