@@ -19,8 +19,10 @@
 ; ==============================================================================
 ; TEST_RAM
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
-; @TODO
+; Tests the synth's internal RAM to diagnose any errors.
+;
 ; ==============================================================================
 test_ram:                                       SUBROUTINE
     LDAB    <test_stage_sub
@@ -44,9 +46,10 @@ test_ram:                                       SUBROUTINE
 ; ==============================================================================
 ; TEST_RAM_INIT
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
-; @TODO
-; Sets the test sub stage to '1'.
+; Sets the test sub stage to '1', and prints the diagnostic test title.
 ;
 ; ==============================================================================
 test_ram_init:                                  SUBROUTINE
@@ -55,6 +58,8 @@ test_ram_init:                                  SUBROUTINE
     LDX     #str_push_1_button
     JSR     test_lcd_set_write_pointer_to_line_2
     JSR     lcd_update
+
+; This variable is used to store the test result.
     CLR     test_stage_sub_2
 
     LDAB    #1
@@ -64,11 +69,13 @@ test_ram_init:                                  SUBROUTINE
 
 
 ; ==============================================================================
-; @TODO
+; TEST_RAM_STAGE_1_WAIT_FOR_BUTTON
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
-; @TODO
-; Is this waiting for a button press?
+; Waits for the user to press the '1' button to initiate the test.
+;
 ; ==============================================================================
 test_ram_stage_1_wait_for_button:               SUBROUTINE
     JSR     input_read_front_panel
@@ -82,11 +89,25 @@ test_ram_stage_1_wait_for_button:               SUBROUTINE
     RTS
 
 
+RAM_TEST_END_ADDRESS:                           EQU $1800
+
 ; ==============================================================================
-; @TODO
+; TEST_RAM_STAGE_2
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
-; @TODO
+; This stage performs the actual RAM tests.
+; It tests writing the preset bit patterns 0xAA, and 0x55 to the first 2Kb of
+; external RAM. It then backs up the higher 2Kb of RAM, and performs the same
+; tests there, before restoring it.
+; Refer to: https://stackoverflow.com/a/43924054/5931673
+; Unlike the original RAM tests, which preserve the voice buffers, this
+; has been changed to perform the tests across the full range of memory.
+; This has been done because the stack now occupies the highest addresses in
+; RAM, like in the DX7. The tests need to include this region to back up the
+; stack to avoid clobbering it, and causing a crash.
 ; ==============================================================================
 test_ram_stage_2:                               SUBROUTINE
     JSR     lcd_clear_line_2
@@ -94,115 +115,116 @@ test_ram_stage_2:                               SUBROUTINE
     JSR     lcd_strcpy
     JSR     lcd_update
 
-; Clear all RAM?
-; RAM start.
+; Clear the first 2Kb of RAM.
     LDX     #external_ram_start
     CLRA
     CLRB
-
-loc_FC68:
+.clear_ram_loop:
     STD     0,x
     INX
     INX
     CPX     #$1000
-    BNE     loc_FC68
+    BNE     .clear_ram_loop
 
-    LDX     #$800
-    LDAA    #$55 ; 'U'
-
-loc_FC76:
+; Write 0x55 to the first 2Kb of RAM.
+    LDX     #external_ram_start
+    LDAA    #$55
+.write_test_1_loop:
     CMPB    0,x
-    BNE     loc_FC99
+    BNE     .test_error_low_address
 
     STAA    0,x
     CMPA    0,x
-    BNE     loc_FC99
+    BNE     .test_error_low_address
 
     INX
     CPX     #$1000
-    BNE     loc_FC76
+    BNE     .write_test_1_loop
 
-    LDX     #$800
+; Write 0xAA to the first 2Kb of RAM.
+    LDX     #external_ram_start
     LDAA    #$AA
-
-loc_FC8B:
+.write_test_2_loop:
     STAA    0,x
     CMPA    0,x
-    BNE     loc_FC99
+    BNE     .test_error_low_address
 
     INX
     CPX     #$1000
-    BNE     loc_FC8B
+    BNE     .write_test_2_loop
 
-    BRA     loc_FC9D
+    BRA     .backup_high_ram
 
-loc_FC99:
+.test_error_low_address:
     LDAA    #1
     STAA    <test_stage_sub_2
 
-loc_FC9D:
+.backup_high_ram:
+; The following section copies all RAM from 0x1000-0x1800 to 0x800-0x1000.
     LDX     #$1000
 
-loc_FCA0:
+.copy_ram_loop_1:
     LDD     0,x
     XGDX
-    SUBD    #2048
+    SUBD    #$800
     XGDX
     STD     0,x
     XGDX
-    ADDD    #2050
+    ADDD    #$802
     XGDX
-    CPX     #$17A0
-    BNE     loc_FCA0
+    CPX     #RAM_TEST_END_ADDRESS
+    BNE     .copy_ram_loop_1
 
+; This section clears all RAM from 0x1000 to 0x1800.
     LDX     #$1000
     CLRA
     CLRB
-
-loc_DC.B8:
+.clear_high_ram_loop:
     STD     0,x
     INX
     INX
-    CPX     #$17A0
-    BNE     loc_DC.B8
+    CPX     #RAM_TEST_END_ADDRESS
+    BNE     .clear_high_ram_loop
 
+; The following section writes 0x55 to the first byte in each word.
     LDX     #$1000
-    LDAA    #$55 ; 'U'
-
-loc_DC6:
+    LDAA    #$55
+.write_test_3_loop:
     CMPB    0,x
-    BNE     loc_FCE9
+    BNE     .test_error_high_address
 
     STAA    0,x
     CMPA    0,x
-    BNE     loc_FCE9
+    BNE     .test_error_high_address
 
     INX
-    CPX     #$17A0
-    BNE     loc_DC6
+    CPX     #RAM_TEST_END_ADDRESS
+    BNE     .write_test_3_loop
 
+; The following section writes 0xAA to the first byte in each word.
     LDX     #$1000
     LDAA    #$AA
-
-loc_FCDB:
+.write_test_4_loop:
     STAA    0,x
     CMPA    0,x
-    BNE     loc_FCE9
+    BNE     .test_error_high_address
 
     INX
-    CPX     #$17A0
-    BNE     loc_FCDB
+    CPX     #RAM_TEST_END_ADDRESS
+    BNE     .write_test_4_loop
 
-    BRA     loc_FCED
+    BRA     .restore_high_ram
 
-loc_FCE9:
+.test_error_high_address:
     LDAA    #2
     ORAA    <test_stage_sub_2
 
-loc_FCED:
+.restore_high_ram:
+; The following section restores all the backed-up RAM from 0x800-0x1000 back
+; to 0x1000-0x1800.
     LDX     #$800
 
-loc_FCF0:
+.copy_ram_loop_2:
     LDD     0,x
     XGDX
     ADDD    #$800
@@ -212,7 +234,7 @@ loc_FCF0:
     SUBD    #$7FE
     XGDX
     CPX     #$1000
-    BNE     loc_FCF0
+    BNE     .copy_ram_loop_2
 
     LDAB    #3
     STAB    <test_stage_sub
@@ -221,41 +243,48 @@ loc_FCF0:
 
 
 ; ==============================================================================
-; @TODO
+; TEST_RAM_STAGE_3
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
-; @TODO
+; Prints the results of the diagnostic test.
+; A result of '1' indicates an error in the low 2Kb, a result of '2' indicates
+; an error in the higher 2Kb.
 ;
 ; ==============================================================================
 test_ram_stage_3:                               SUBROUTINE
     JSR     lcd_clear_line_2
-    LDAA    <test_stage_sub_2
-    ANDA    #3
-    BEQ     loc_FD30
 
-    LDX     #str_error_ram ; "ERROR RAM"
+; If this value is '0', the test results are okay.
+    LDAA    <test_stage_sub_2
+    ANDA    #%11
+    BEQ     .print_result_ok
+
+    LDX     #str_error_ram
     JSR     lcd_strcpy
+
     LDAA    <test_stage_sub_2
     ANDA    #1
-    BEQ     loc_FD20
+    BEQ     .is_error_in_high_address
 
     JSR     lcd_print_number_single_digit
 
-loc_FD20:
+.is_error_in_high_address:
     LDAA    <test_stage_sub_2
-    ANDA    #2
-    BEQ     loc_FD29
+    ANDA    #%10
+    BEQ     .update_lcd_and_exit
 
     JSR     lcd_print_number_single_digit
 
-loc_FD29:
+.update_lcd_and_exit:
     JSR     lcd_update
     CLRB
     STAB    <test_stage_sub
 
     RTS
 
-loc_FD30:
-    LDX     #str_ok ; "OK!"
+.print_result_ok:
+    LDX     #str_ok
     JSR     lcd_strcpy
-    BRA     loc_FD29
+    BRA     .update_lcd_and_exit
