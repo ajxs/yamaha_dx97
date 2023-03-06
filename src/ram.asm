@@ -20,6 +20,7 @@
     .PROCESSOR HD6303
 
 ; These buffer sizes match those in the stock DX9 firmware.
+; @TODO: Change these to match the size in the DX7 firmware.
 MIDI_BUFFER_TX_SIZE:                            EQU 682
 MIDI_BUFFER_RX_SIZE:                            EQU 800
 

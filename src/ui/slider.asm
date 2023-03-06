@@ -41,6 +41,8 @@ ui_slider:                                      SUBROUTINE
 ; This tests if the currently selected edit parameter is an 'Edit Mode'
 ; parameter, as opposed to a 'Function Mode' one. Since the function mode
 ; parameter addresses are higher than the null value address.
+; The purpose of this check is so that function parameters can be edited while
+; the synth is in 'Compare Mode', but not edit parameters.
     LDX     ui_active_param_address
     CPX     #null_edit_parameter
     BCS     .exit

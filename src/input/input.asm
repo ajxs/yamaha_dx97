@@ -138,7 +138,6 @@ input_slider:                                   SUBROUTINE
 ; INPUT_BUTTON_YES_NO
 ; ==============================================================================
 ; @PRIVATE
-; @NEEDS_TESTING
 ; DESCRIPTION:
 ; The main input handler for when the front-panel 'Yes', or 'No' buttons are
 ; pressed.

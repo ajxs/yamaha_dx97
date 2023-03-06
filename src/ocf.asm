@@ -179,12 +179,12 @@ handler_ocf:                                    SUBROUTINE
 ; Clear the interrupt bit in the condition code register.
     CLI
 
-;    JSR     active_sensing_update_tx_counter
-;    JSR     active_sensing_test_for_timeout
+    JSR     active_sensing_update_tx_counter
+    JSR     active_sensing_test_for_timeout
 
     JSR     lfo_process
-;    JSR     mod_amp_update
-;    JSR     voice_update_sustain_status
+    JSR     mod_amp_update
+    JSR     voice_update_sustain_status
 
 ; @TODO: Ignore if MIDI messages are pending, like in DX7 firmware.
     JSR     portamento_process
@@ -199,7 +199,7 @@ handler_ocf:                                    SUBROUTINE
 
 .process_pitch_mod:
     JSR     pitch_eg_process
-;    JSR     handler_ocf_compare_mode_led_blink
+    JSR     handler_ocf_compare_mode_led_blink
 
 .process_pitch_modulation:
     JSR     pitch_bend_process
