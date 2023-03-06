@@ -100,18 +100,18 @@ portamento_process:                             SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
-.pitch_eg_frequency_current_ptr:                EQU #interrupt_temp_registers
-.voice_frequency_portamento_ptr:                EQU #interrupt_temp_registers + 2
-.voice_frequency_glissando_ptr:                 EQU #interrupt_temp_registers + 4
-.voice_frequency_target_ptr:                    EQU #interrupt_temp_registers + 6
-.egs_voice_frequency_ptr:                       EQU #interrupt_temp_registers + 8
-.voice_final_portamento_frequency:              EQU #interrupt_temp_registers + 10
-.voice_current_glissando_frequency:             EQU #interrupt_temp_registers + 12
-.voice_loop_index:                              EQU #interrupt_temp_registers + 14
+.pitch_eg_frequency_current_ptr:                EQU #interrupt_temp_variables
+.voice_frequency_portamento_ptr:                EQU #interrupt_temp_variables + 2
+.voice_frequency_glissando_ptr:                 EQU #interrupt_temp_variables + 4
+.voice_frequency_target_ptr:                    EQU #interrupt_temp_variables + 6
+.egs_voice_frequency_ptr:                       EQU #interrupt_temp_variables + 8
+.voice_final_portamento_frequency:              EQU #interrupt_temp_variables + 10
+.voice_current_glissando_frequency:             EQU #interrupt_temp_variables + 12
+.voice_loop_index:                              EQU #interrupt_temp_variables + 14
 ; These two variables double as both the portamento increment/decrement, and
 ; the 'next' portamento frequency written to the voice registers.
-.portamento_frequency_decrement                 EQU #interrupt_temp_registers + 15
-.portamento_frequency_next_lsb:                 EQU #interrupt_temp_registers + 16
+.portamento_frequency_decrement                 EQU #interrupt_temp_variables + 15
+.portamento_frequency_next_lsb:                 EQU #interrupt_temp_variables + 16
 
 ; ==============================================================================
 ; This flag acts as a 'toggle' switch to control which voices are processed.
@@ -119,7 +119,6 @@ portamento_process:                             SUBROUTINE
 ; If this flag is not set, process voices 0-7, then set the flag.
 ; ACCB is used as an index into the 32 byte voice buffers, so setting
 ; it to '16' will start the processing at voice 8.
-; @TODO: Eliminate unnecessary 'TST' instruction.
     COM     portamento_voice_toggle
     BPL     .process_voices_8_to_15
 

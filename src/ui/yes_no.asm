@@ -35,7 +35,6 @@
 ; opposed to an edit parameter that requires incrementing or decrementing.
 ; This is used by the calling function to determine whether it should
 ; fall-through to the increment/decrement routine.
-; @TODO: Confirm?
 ;
 ; ==============================================================================
 ui_yes_no:                                      SUBROUTINE

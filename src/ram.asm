@@ -43,10 +43,8 @@ memcpy_ptr_src:                                 DS 2
 memcpy_ptr_dest:                                DS 2
 
 key_switch_scan_input:                          DS 4
-; @DX7_ROM_VARIABLE_NAME: M_PEDAL_INPUT_STATUS
 pedal_status_current:                           DS 1
 pedal_status_previous:                          DS 1
-; @DX7_ROM_VARIABLE_NAME: M_MONO_SUSTAIN_PEDAL_ACTIVE
 sustain_status:                                 DS 1
 
 ; This variable address is shared by the test 'read button input' function.
@@ -63,14 +61,12 @@ key_transpose_set_mode_active:                  DS 1
 
 keyboard_last_scanned_values:                   DS 12
 
-; @DX7_ROM_VARIABLE_NAME: M_NOTE_KEY
 ; This variable stores the number of the last incoming note received via MIDI.
 ; It also stores the last scanned key, and pending key event.
 ; If this value is 0xFF, it indicates there is no key event pending.
 ; If bit 7 of this byte is set, it indicates that this note event is a
 ; 'Key Down' event originating from the keyboard, otherwise it is a 'Key Up'.
 note_number:                                    DS 1
-; @DX7_ROM_VARIABLE_NAME: M_NOTE_VEL
 note_velocity:                                  DS 1
 
 ; This variable stores the previous played note.
@@ -79,7 +75,6 @@ note_velocity:                                  DS 1
 ; released, this will be the note that the portamento will transition towards.
 note_number_previous:                           DS 1
 
-; @DX7_ROM_VARIABLE_NAME: M_KEY_FREQ
 ; This is the base logarithmic frequency of the current note, before the
 ; current pitch EG level is added.
 note_frequency:                                 DS 2
@@ -97,10 +92,8 @@ tape_input_read_byte:                           DS 1
 tape_input_delay_length:                        DS 1
 tape_error_flag:                                DS 1
 
-; @DX7_ROM_VARIABLE_NAME: M_PORTA_RATE_INCREMENT
 portamento_rate_scaled:                         DS 1
 
-; @DX7_ROM_VARIABLE_NAME: M_LEGATO_DIRECTION
 ; The synth's current portamento direction.
 ; * 0: Down.
 ; * 1: Up.
@@ -114,13 +107,10 @@ lfo_delay_increment:                            DS 2
 lfo_mod_depth_pitch:                            DS 1
 lfo_mod_depth_amp:                              DS 1
 
-; @DX7_ROM_VARIABLE_NAME: M_LFO_DELAY_ACCUMULATOR
 lfo_delay_accumulator:                          DS 2
-; @DX7_ROM_VARIABLE_NAME: M_LFO_FADE_IN_SCALE_FACTOR
 ; The 'LFO delay fadein factor' variable is used to 'fade in' the LFO
 ; amplitude after the LFO delay has expired.
 lfo_delay_fadein_factor:                        DS 2
-; @DX7_ROM_VARIABLE_NAME: M_LFO_PHASE_ACCUMULATOR
 lfo_phase_accumulator:                          DS 2
 lfo_sample_and_hold_update_flag:                DS 1
 lfo_amplitude:                                  DS 1
@@ -142,7 +132,6 @@ ui_btn_function_19_patch_init_prompt:           DS 1
 ; Used to track the state of the 'Test Mode' button combination internally.
 ui_test_mode_button_combo_state:                DS 1
 
-; @DX7_ROM_VARIABLE_NAME: M_MONO_ACTIVE_VOICE_COUNT
 ; The synth's current active voice count when in monophonic mode.
 active_voice_count:                             DS 1
 
@@ -206,13 +195,12 @@ test_stage_sub:                                 EQU #midi_sysex_format_param_grp
 test_stage_sub_2:                               EQU #midi_sysex_byte_count_msb_param_number
 test_button_input:                              EQU #midi_sysex_byte_count_lsb_param_data
 
-; @DX7_ROM_VARIABLE_NAME: M_PORTA_UPDATE_VOICE_SWITCH
 ; @TODO: Consider combining with the pitch EG/Modulation IRQ toggle.
 portamento_voice_toggle:                        DS 1
 
-; These temporary variables are used in interrupt routines.
-; @TODO: Improve documentation.
-interrupt_temp_registers:                       DS 18
+; Temporary variables used in the various interrupt routines.
+; Refer to the documentation of 'temp_variables'.
+interrupt_temp_variables:                       DS 18
 
     SEG.U ram_external
     ORG $800
@@ -260,11 +248,9 @@ patch_edit_feedback:                            EQU (#patch_buffer_edit + PATCH_
 patch_edit_oscillator_sync:                     EQU (#patch_buffer_edit + PATCH_OSC_SYNC)
 
 patch_edit_lfo_speed:                           EQU (#patch_buffer_edit + PATCH_LFO_SPEED)
-; @DX7_ROM_VARIABLE_NAME: M_PATCH_BUFFER_EDIT_LFO_DELAY
 patch_edit_lfo_delay:                           EQU (#patch_buffer_edit + PATCH_LFO_DELAY)
 patch_edit_lfo_pitch_mod_depth:                 EQU (#patch_buffer_edit + PATCH_LFO_PITCH_MOD_DEPTH)
 patch_edit_lfo_amp_mod_depth:                   EQU (#patch_buffer_edit + PATCH_LFO_AMP_MOD_DEPTH)
-; @DX7_ROM_VARIABLE_NAME: M_PATCH_BUFFER_EDIT_LFO_SYNC
 patch_edit_lfo_sync:                            EQU (#patch_buffer_edit + PATCH_LFO_SYNC)
 patch_edit_lfo_waveform:                        EQU (#patch_buffer_edit + PATCH_LFO_WAVEFORM)
 patch_edit_lfo_pitch_mod_sens:                  EQU (#patch_buffer_edit + PATCH_LFO_PITCH_MOD_SENS)
@@ -286,7 +272,6 @@ null_edit_parameter:                            DS 1
 ; ==============================================================================
 ; Performance Parameters.
 ; ==============================================================================
-; @DX7_ROM_VARIABLE_NAME: M_MASTER_TUNE
 ; The DX9 ROM stored this variable in a byte.
 ; All use of this variable involved shifting it left twice to get its internal
 ; representation. This was likely done so that it can be treated like any other
@@ -294,7 +279,6 @@ null_edit_parameter:                            DS 1
 ; This has been changed back to the original DX7 implementation.
 master_tune:                                    DS 2
 
-; @DX7_ROM_VARIABLE_NAME: M_MONO_POLY
 ; The synth's global polyphony setting:
 ; * 0: Polyphonic.
 ; * 1: Monophonic.
@@ -304,7 +288,6 @@ pitch_bend_range:                               DS 1
 ; @TODO: Implement.
 pitch_bend_step:                                DS 1
 
-; @DX7_ROM_VARIABLE_NAME: M_PORTA_MODE
 ; Portamento Mode:
 ; Monophonic Mode:
 ; * 0: Full-time.
@@ -314,7 +297,6 @@ pitch_bend_step:                                DS 1
 ; * 1: Follow.
 portamento_mode:                                DS 1
 
-; @DX7_ROM_VARIABLE_NAME: M_PORTA_GLISS_ENABLED
 portamento_glissando_enabled:                   DS 1
 
 portamento_time:                                DS 1
@@ -341,11 +323,9 @@ memory_protect:                                 DS 1
 tape_unknown_byte_15DC:                         DS 1
 tape_patch_index:                               DS 1
 
-; @DX7_ROM_VARIABLE_NAME: M_VOICE_PITCH_EG_CURR_STEP
 ; The current Pitch EG step for each of the synth's voices.
 pitch_eg_current_step:                          DS 16
 
-; @DX7_ROM_VARIABLE_NAME: M_VOICE_PITCH_EG_CURR_LEVEL
 ; The current Pitch EG frequency for each of the synth's voices.
 ; The default value for each of these 16 entries is 0x4000.
 ; This corresponds to a value of '50' in a patch's Pitch EG level stage.
@@ -355,7 +335,6 @@ pitch_eg_current_frequency:                     DS 32
 ; The code depends on these two arrays being in this sequential order.
 pitch_eg_parsed_rate:                           DS 4
 pitch_eg_parsed_level:                          DS 4
-; @DX7_ROM_VARIABLE_NAME: M_PATCH_PITCH_EG_VALUES_FINAL_LEVEL
 ; The final pitch EG frequency for the current patch.
 ; This doubles as the INITIAL pitch EG frequency.
 pitch_eg_parsed_level_final:                    EQU (#pitch_eg_parsed_level + 3)
@@ -524,18 +503,15 @@ lcd_buffer_next_end:                            EQU *
 ; current note, and the 2 least-significant bits are a mask indicating the
 ; voice's status.
 voice_status:                                   DS 32
-; @DX7_ROM_VARIABLE_NAME: M_VOICE_PITCH_TARGET
 ; The 'target' frequency for each voice.
 ; This is the target, final frequency for each voice's frequency transition
 ; during portamento between two notes.
 voice_frequency_target:                         DS 32
-; @DX7_ROM_VARIABLE_NAME: M_VOICE_FREQ_PORTAMENTO
 ; This buffer holds the current portamento frequency of the synth's 16 voices.
 ; If portamento is currently active the individual voices will transition from
 ; this current frequency towards their target frequency.
 ; This frequency is set by the main 'Voice add' subroutines.
 voice_frequency_current_portamento:             DS 32
-; @DX7_ROM_VARIABLE_NAME: M_VOICE_FREQ_GLISSANDO
 ; This buffer holds the current glissando frequency of the synth's 16 voices.
 ; @TODO: Investigate using one buffer for both portamento/glissando.
 voice_frequency_current_glissando:              DS 32

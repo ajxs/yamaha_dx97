@@ -22,7 +22,6 @@
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE:0xE616
 ; DESCRIPTION:
-; @TODO
 ; Processes the pitch EG for all voices.
 ; This subroutine loads the levels of each of the synth's 16 voices, testing
 ; whether each of them is above, or below the final level for its current
@@ -34,11 +33,11 @@ pitch_eg_process:                               SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
-.pitch_eg_voice_freq_pointer:                   EQU #interrupt_temp_registers
-.pitch_eg_voice_step_pointer:                   EQU #interrupt_temp_registers + 2
-.pitch_eg_next_frequency:                       EQU #interrupt_temp_registers + 4
-.pitch_eg_increment:                            EQU #interrupt_temp_registers + 6
-.pitch_eg_voice_index:                          EQU #interrupt_temp_registers + 8
+.pitch_eg_voice_freq_pointer:                   EQU #interrupt_temp_variables
+.pitch_eg_voice_step_pointer:                   EQU #interrupt_temp_variables + 2
+.pitch_eg_next_frequency:                       EQU #interrupt_temp_variables + 4
+.pitch_eg_increment:                            EQU #interrupt_temp_variables + 6
+.pitch_eg_voice_index:                          EQU #interrupt_temp_variables + 8
 
 ; ==============================================================================
     LDX     #pitch_eg_current_frequency

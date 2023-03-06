@@ -140,7 +140,6 @@ midi_process_data_message:                      SUBROUTINE
     LSRB
     ANDB    #%111
 
-; @TODO: If space runs out, consider reverting to using the jumpoff routine.
 ; Use the masked status byte as an index into this table of MIDI function
 ; pointers, then jump to the relevant function.
     LDX     #table_midi_function_pointers

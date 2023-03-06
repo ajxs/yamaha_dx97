@@ -20,7 +20,7 @@
 ; PATCH_LOAD
 ; ==============================================================================
 ; DESCRIPTION:
-; @TODO
+; Loads a patch. This subroutine is initiated from a front-panel key press.
 ; Initiates deserialisation of a patch from the synth's internal memory into
 ; the synth's edit buffer.
 ;

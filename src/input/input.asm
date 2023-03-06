@@ -325,7 +325,7 @@ input_button_numeric_edit_mode:                 SUBROUTINE
 ;
 ; ==============================================================================
 input_button_numeric_play_mode:                 SUBROUTINE
-; If the numeric button is higher than the modified patch count, exit.
+; If the numeric button is higher than the patch count, exit.
     CMPB    #PATCH_BUFFER_COUNT
     BCC     .exit
 
