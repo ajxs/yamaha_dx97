@@ -37,6 +37,7 @@
     INCLUDE "src/lfo.asm"
     INCLUDE "src/input/front_panel.asm"
     INCLUDE "src/input/input.asm"
+    INCLUDE "src/log.asm"
     INCLUDE "src/midi/midi.asm"
     INCLUDE "src/midi/process.asm"
     INCLUDE "src/midi/control_code.asm"
@@ -98,8 +99,6 @@
     INCLUDE "src/voice/remove/poly.asm"
     INCLUDE "src/voice/reset.asm"
     INCLUDE "src/voice/voice.asm"
-    INCLUDE "src/curve/log.asm"
-    INCLUDE "src/curve/keyboard_scaling.asm"
 
 ; The 'ROM' diagnostic test performs a checksum of the ROM.
 ; It loops over each byte in the ROM in 256 byte blocks, adding the value of
