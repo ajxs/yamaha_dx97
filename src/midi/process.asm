@@ -257,16 +257,64 @@ midi_rx_note_on:                                SUBROUTINE
     TSTA
     BEQ     midi_rx_note_off_process
 
+; Translate the incoming MIDI velocity to its internal representation.
+    TAB
+    LSRB
+    LSRB
+    LDX     #table_midi_velocity
+    ABX
+    LDAA    0,x
+    STAA    note_velocity
+
 ; Load the necessary data, and jump to the subroutine to add a new voice with
 ; the specified note.
     LDAB    midi_rx_first_data_byte
     STAB    note_number
-    STAA    note_velocity
+
     JSR     voice_add
 
 .midi_rx_note_on_incomplete:
     STAA    midi_rx_first_data_byte
     RTS
+
+; ==============================================================================
+; MIDI Velocity Table.
+; This table is used to translate between the incoming MIDI velocity value
+; (0..127) and the synth's internal note velocity value.
+; ==============================================================================
+table_midi_velocity:
+    DC.B $6E
+    DC.B $64
+    DC.B $5A
+    DC.B $55
+    DC.B $50
+    DC.B $4B
+    DC.B $46
+    DC.B $41
+    DC.B $3A
+    DC.B $36
+    DC.B $32
+    DC.B $2E
+    DC.B $2A
+    DC.B $26
+    DC.B $22
+    DC.B $1E
+    DC.B $1C
+    DC.B $1A
+    DC.B $18
+    DC.B $16
+    DC.B $14
+    DC.B $12
+    DC.B $10
+    DC.B $E
+    DC.B $C
+    DC.B $A
+    DC.B 8
+    DC.B 6
+    DC.B 4
+    DC.B 2
+    DC.B 1
+    DC.B 0
 
 
 ; ==============================================================================

@@ -132,8 +132,9 @@ voice_add_operator_level_voice_frequency:       SUBROUTINE
     LDX     .operator_sensitivity_ptr
     PSHB
 
-; Multiply the lower byte of the 'Op Key Sens' value with the log table value
-; in B, and then add the higher byte of the 'Op Key Sens' back to this value.
+; Multiply the lower byte of the 'Op Key Sens' value with the velocity scale
+; value in B, and then add the higher byte of the 'Op Key Sens' back to
+; this value.
     LDAA    1,x
     MUL
     ADDA    0,x
@@ -320,7 +321,7 @@ voice_add_load_frequency_to_egs:                SUBROUTINE
 ; ==============================================================================
 ; Velocity to operator volume mapping table.
 ; Used when scaling an operator's amplitude value according to its volume.
-; Length: 32.
+; Length: 31.
 ; ==============================================================================
 table_operator_velocity_scale:
     DC.B 4

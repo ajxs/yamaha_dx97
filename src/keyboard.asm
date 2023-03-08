@@ -52,7 +52,7 @@ keyboard_scan:                                  SUBROUTINE
     ORAB    #KEY_SWITCH_SCAN_DRIVER_SOURCE_KEYBOARD
     STAB    .keyboard_scan_current_key
 
-; Iterate over each key .
+; Iterate over each key.
 .scan_key_loop:
     LDAB    .keyboard_scan_current_key
     STAB    <io_port_1_data
@@ -116,7 +116,12 @@ keyboard_scan:                                  SUBROUTINE
     STAA    0,x
 
 ; Set the note velocity of a keypress to its maximum.
-    LDAA    #127
+; @NOTE: Internally a value of '0' represents the maximum velocity.
+; Refer to the 'table_midi_velocity' table used to translate between an
+; incoming MIDI 'Note On' message's velocity, and the synth's internal
+; representation.
+; Also refer to the 'voice_add_operator_level_voice_frequency' method.
+    LDAA    #0
     STAA    <note_velocity
 
 .exit:

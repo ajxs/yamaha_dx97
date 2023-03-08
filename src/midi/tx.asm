@@ -24,8 +24,7 @@
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Sends a 'Note On' MIDI event.
-; Note: The DX9 transmits a fixed velocity on account of not having a velocity
-; sensitive keyboard.
+; @NOTE: The output note velocity is always set to the maximum.
 ;
 ; ARGUMENTS:
 ; Registers:
@@ -42,7 +41,7 @@ midi_tx_note_on:                                SUBROUTINE
     JSR     midi_tx
 
 ; Send output MIDI velocity.
-    LDAA    <note_velocity
+    LDAA    #127
     JSR     midi_tx
 
     RTS
@@ -70,6 +69,8 @@ midi_tx_note_off:                               SUBROUTINE
     JSR     midi_tx
     TBA
     JSR     midi_tx
+
+; Send output MIDI velocity.
     CLRA
     JSR     midi_tx
 
