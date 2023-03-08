@@ -270,7 +270,7 @@ midi_sysex_tx_bulk_data_single_voice:           SUBROUTINE
 
     JSR     patch_get_ptr_to_current
     STX     memcpy_ptr_src
-    LDX     #midi_buffer_sysex_tx_single
+    LDX     #midi_buffer_sysex_tx
     JSR     patch_deserialise
 
     JSR     midi_sysex_tx_bulk_data_single_voice_send
@@ -312,7 +312,7 @@ midi_sysex_tx_recalled_patch:                   SUBROUTINE
 
     LDX     #patch_buffer_compare
     STX     <memcpy_ptr_src
-    LDX     #midi_buffer_sysex_tx_single
+    LDX     #midi_buffer_sysex_tx
     JSR     patch_deserialise
 
     JSR     midi_sysex_tx_bulk_data_single_voice_send
@@ -338,7 +338,7 @@ midi_sysex_tx_bulk_data_send_init_voice:        SUBROUTINE
 
     LDX     #patch_buffer_init_voice
     STX     <memcpy_ptr_src
-    LDX     #midi_buffer_sysex_tx_single
+    LDX     #midi_buffer_sysex_tx
     JSR     patch_deserialise
 
     JSR     midi_sysex_tx_bulk_data_single_voice_send
@@ -374,13 +374,13 @@ midi_sysex_tx_bulk_data_32_voices:              SUBROUTINE
     STX     <memcpy_ptr_src
 
 ; Load the destination buffer adress, and number of bytes to copy.
-    LDX     #midi_buffer_sysex_tx_bulk
+    LDX     #midi_buffer_sysex_tx
     LDAB    PATCH_SIZE_PACKED_DX7
 
 ; Copy to the temporary SysEx buffer, then send.
     JSR     memcpy_store_dest_and_copy_accb_bytes
 
-    SYSEX_SEND_BUFFER midi_buffer_sysex_tx_bulk, PATCH_SIZE_PACKED_DX7
+    SYSEX_SEND_BUFFER midi_buffer_sysex_tx, PATCH_SIZE_PACKED_DX7
 
 ; Increment the patch number.
     LDAB    <midi_sysex_patch_number
@@ -422,7 +422,7 @@ midi_sysex_tx_bulk_data_single_voice_send:      SUBROUTINE
 
     CLR     midi_sysex_tx_checksum
 
-    SYSEX_SEND_BUFFER midi_buffer_sysex_tx_single, PATCH_SIZE_UNPACKED_DX7
+    SYSEX_SEND_BUFFER midi_buffer_sysex_tx, PATCH_SIZE_UNPACKED_DX7
 
 ; Send checksum.
     NEGB

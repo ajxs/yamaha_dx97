@@ -171,25 +171,6 @@ patch_activate_mode_algorithm_feedback:         SUBROUTINE
 
 
 ; ==============================================================================
-; @TODO: Remove
-; Algorithm Conversion Table
-; This table is used to convert algorithms between the DX9 format, and the
-; original DX7 format used in SysEx transmission, and in patch activation.
-; Each index contains the DX7/OPS algorithm corresponding to the index
-; number's algorithm on the DX9.
-; ==============================================================================
-table_algorithm_conversion:
-    DC.B 0
-    DC.B 13
-    DC.B 7
-    DC.B 6
-    DC.B 4
-    DC.B 21
-    DC.B 30
-    DC.B 31
-
-
-; ==============================================================================
 ; PATCH_ACTIVATE_OPERATOR_DETUNE
 ; ==============================================================================
 ; @CHANGED_FOR_6_OP

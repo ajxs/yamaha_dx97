@@ -72,8 +72,9 @@ patch_activate_parse_lfo_speed:                 SUBROUTINE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
-; @TODO
 ; Processes the patch's LFO delay value to compute the LFO delay increment.
+; This subroutine is not well understood. It seems to include some fairly
+; arbitrary arithmetic to derive the final value.
 ;
 ; ARGUMENTS:
 ; Registers:

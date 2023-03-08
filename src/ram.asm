@@ -19,10 +19,11 @@
 
     .PROCESSOR HD6303
 
-; These buffer sizes match those in the stock DX9 firmware.
-; @TODO: Change these to match the size in the DX7 firmware.
-MIDI_BUFFER_TX_SIZE:                            EQU 682
-MIDI_BUFFER_RX_SIZE:                            EQU 800
+; These buffer sizes have been made much smaller than those in the original
+; DX9 firmware (682, and 800, respectively).
+; The sizes in this ROM are larger than in the DX7 (180, and 380).
+MIDI_BUFFER_TX_SIZE:                            EQU 400
+MIDI_BUFFER_RX_SIZE:                            EQU 600
 
 PATCH_SIZE_PACKED_DX9:                          EQU 64
 PATCH_SIZE_PACKED_DX7:                          EQU 128
@@ -30,7 +31,7 @@ PATCH_SIZE_PACKED_DX7:                          EQU 128
 PATCH_SIZE_UNPACKED_DX9:                        EQU 69
 PATCH_SIZE_UNPACKED_DX7:                        EQU 155
 
-PATCH_BUFFER_COUNT:                             EQU 4
+PATCH_BUFFER_COUNT:                             EQU 10
 PATCH_BUFFER_SIZE_BYTES:                        EQU PATCH_BUFFER_COUNT * PATCH_SIZE_PACKED_DX7
 
 KEYBOARD_SCALE_CURVE_LENGTH                     EQU 43
@@ -82,7 +83,9 @@ note_frequency_low:                             EQU (#note_frequency + 1)
 
 note_frequency_previous:                        DS 2
 
-; @TODO: ...
+; This variable stores the index of the _next_ voice to be added.
+; This is persisted across 'voice_add' calls so that the next available voice
+; can be found quicker.
 voice_add_index:                                DS 1
 
 tape_byte_counter:                              DS 1
@@ -215,13 +218,8 @@ midi_buffer_rx_end:                             EQU *
 
 ; @TODO: Is it possible to use one buffer for both sending, and receiving of
 ; SysEx data? Is it possible for both to be used simultaneously?
-midi_buffer_sysex_tx_single:                    DS PATCH_SIZE_UNPACKED_DX7
-midi_buffer_sysex_tx_single_end:                EQU *
-midi_buffer_sysex_rx_single:                    DS PATCH_SIZE_UNPACKED_DX7
-
-midi_buffer_sysex_tx_bulk:                      DS PATCH_SIZE_PACKED_DX7
-midi_buffer_sysex_rx_bulk:                      DS PATCH_SIZE_PACKED_DX7
-midi_buffer_sysex_rx_bulk_end:                  EQU *
+midi_buffer_sysex_tx:                           DS PATCH_SIZE_UNPACKED_DX7
+midi_buffer_sysex_rx:                           DS PATCH_SIZE_UNPACKED_DX7
 
 midi_channel_rx:                                DS 1
 midi_channel_tx:                                DS 1
@@ -532,8 +530,7 @@ temp_variables:                                 DS 18
 ; space left between the end of the defined variables, and the start of these
 ; voice buffers. This likely accounted for the stack's highly arbitrary size.
 ; I'm not sure what the ideal size for the stack is, however it can likely be
-; much smaller than it is in both this ROM, and the original's size of '222'.
-; The DX7's is even larger at '448'.
+; much smaller than it is in both the original DX9 (222), and the DX7 (448).
 ; In this ROM, the stack occupies the remainder of free RAM.
 stack_bottom:                                   EQU *
 

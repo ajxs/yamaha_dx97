@@ -201,7 +201,7 @@ str_tape_verify:                        DC "VERIFY TAPE ?", 0
 str_tape_load:                          DC "LOAD FROM TAPE ?", 0
 str_tape_single:                        DC "LOAD SINGLE ?", 0
 str_tape_remote:                        DC "TAPE REMOTE", 0
-str_test_mode_entry:                    DC "TEST MODE ENTRY  ARE YOU SURE ? ", 0
+str_test_mode_entry:                    DC " V1.0 7-Mar-23  Test Entry ? ", 0
 
 str_voice_init:                         DC "VOICE INIT ?", 0
 str_welcome_message:                    DC "* YAMAHA DX9/7 *https://ajxs.me ", 0

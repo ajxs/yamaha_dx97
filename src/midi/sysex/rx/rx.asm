@@ -183,7 +183,6 @@ midi_sysex_rx_substatus_param:                  SUBROUTINE
     INC     midi_rx_data_count
     BRA     .exit
 
-; @TODO: Fix this label reference.
 midi_sysex_substatus_invalid:
     LDAA    #MIDI_STATUS_SYSEX_END
     STAA    <midi_last_command_received
@@ -452,6 +451,7 @@ midi_sysex_rx_force_message_end:
 ; =============================================================================
 ; MIDI_SYSEX_RX_BULK_DATA_STORE
 ; =============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
 ; @NEEDS_TO_BE_REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Stores incoming SysEx data for a bulk voice dump.
@@ -473,18 +473,18 @@ midi_sysex_rx_bulk_data_store:                  SUBROUTINE
     LDAB    #1
     STAB    <midi_sysex_rx_active_flag
 
-; Test whether we're storing the bulk data for a single voice, or 32.
-    TST     midi_sysex_format_type
-    BNE     .store_32_voices
-
 ; Load the received SysEx data count, and use this value as an index into
 ; the incoming SysEx bulk data temporary buffer.
 ; Subtract 5 to take into account the size of the SysEx header, which is
 ; not stored.
     LDAB    <midi_rx_data_count
     SUBB    #5
-    LDX     #midi_buffer_sysex_rx_single
+    LDX     #midi_buffer_sysex_rx
     ABX
+
+; Test whether we're storing the bulk data for a single voice, or 32.
+    TST     midi_sysex_format_type
+    BNE     .store_32_voices
 
 ; Store the incoming data.
     STAA    0,x
@@ -497,15 +497,6 @@ midi_sysex_rx_bulk_data_store:                  SUBROUTINE
     INCREMENT_BYTE_COUNT_AND_RETURN
 
 .store_32_voices:
-; Load the received SysEx data count, and use this value as an index into
-; the incoming SysEx bulk data temporary buffer.
-; Subtract 5 to take into account the size of the SysEx header, which is
-; not stored.
-    LDAB    <midi_rx_data_count
-    SUBB    #5
-    LDX     #midi_buffer_sysex_rx_bulk
-    ABX
-
 ; Store the incoming data.
     STAA    0,x
 
@@ -526,7 +517,6 @@ midi_sysex_rx_bulk_data_store:                  SUBROUTINE
 
 .process_patch:
 ; Deserialise the newly received patch into the synth's patch memory.
-; This converts it from the serialised DX7 format into the DX9 format.
     JSR     midi_sysex_rx_bulk_data_deserialise
 
 ; Increment the received patch index.
@@ -754,10 +744,14 @@ midi_sysex_rx_param_function_button:            SUBROUTINE
 ; This subroutine serialises patch data received via the SysEx 'single'
 ; patch method to the bulk 'packed' format, which will later be deserialised
 ; into the patch edit buffer.
+; The reason this is used instead of just deserialising straight from the
+; the SysEx buffer into the edit buffer is so that the regular patch loading
+; methods can be used to store the previous patch to the compare buffer, and
+; correctly set the patch indexes.
 ;
 ; =============================================================================
 midi_sysex_rx_bulk_data_serialise_incoming:
-    LDX     #midi_buffer_sysex_rx_single
+    LDX     #midi_buffer_sysex_rx
     STX     <memcpy_ptr_src
 
     LDX     #patch_buffer_incoming
@@ -770,30 +764,29 @@ midi_sysex_rx_bulk_data_serialise_incoming:
 ; MIDI_SYSEX_RX_BULK_DATA_DESERIALISE
 ; =============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
-; Deserialises, and converts a DX7 bulk packed patch (128 bytes) received via
-; SysEx into the equivalent DX9 format (64 bytes).
+; Deserialises a patch from the incoming SysEx buffer to its final destination
+; in the synth's memory.
 ;
 ; ARGUMENTS:
 ; Memory:
 ; * midi_sysex_rx_bulk_patch_index: The patch index to deserialise the incoming
 ;    patch into.
 ;
-; RETURNS:
-; The carry bit is set in the case of a failure in the conversion process.
-;
 ; =============================================================================
 midi_sysex_rx_bulk_data_deserialise:            SUBROUTINE
-    LDX     #midi_buffer_sysex_rx_bulk
+    LDX     #midi_buffer_sysex_rx
     STX     <memcpy_ptr_src
 
-; Ensure patch number is less than, or equal to the size of the patch buffer.
-; A value equal to the patch count will write the patch into the tape buffer.
+; Ensure patch index is less than, or equal to the size of the patch buffer.
+; A value equal to the patch count will write the patch into the incoming
+; patch buffer.
     LDAA    <midi_sysex_rx_bulk_patch_index
     CMPA    #PATCH_BUFFER_COUNT
     BLS     .get_patch_buffer_pointer
 
+; If the index is above the maximum, store it in the incoming patch buffer.
     LDAA    #PATCH_BUFFER_COUNT
 
 .get_patch_buffer_pointer:
@@ -803,153 +796,8 @@ midi_sysex_rx_bulk_data_deserialise:            SUBROUTINE
     ADDD    #patch_buffer
     STD     <memcpy_ptr_dest
 
-; The following section of code converts the incoming DX7 algorithm
-; number into its equivalent for the DX9.
-; First the incoming algorithm number is loaded into ACCA.
-    LDAA    midi_buffer_sysex_rx_bulk + PATCH_PACKED_ALGORITHM
-    CLRB
-
-; This table acts as a translation between the DX7 voice parameter offsets,
-; and those of the DX9.
-; Load this translation table, and iterate over it until the specified
-; DX7 algorithm is found. The index into the table will be the corresponding
-; DX9 algorithm.
-    LDX     #table_algorithm_conversion
-
-.deserialise_algorithm_loop:
-    CMPA    0,x
-    BEQ     .deserialise_algorithm_found
-
-; Increment the pointer, and the index.
-; If the end of the table is reached without the algorithm being found,
-; set the carry flag and exit.
-    INX
-    INCB
-    CMPB    #8
-    BCS     .deserialise_algorithm_loop
-
-; If the correct algorithm cannot be found, set the carry flag to
-; indicate the error state, and exit.
-    SEC
-    BRA     .exit
-
-.deserialise_algorithm_found:
-; If the corresponding algorithm has been found, store this value directly
-; in the incoming SysEx data buffer.
-    LDX     <memcpy_ptr_dest
-    STAB    $38,x
-
-; Deserialise each operator.
-    LDAB    #4
-
-_midi_sysex_rx_bulk_data_deserialise_operator_loop:
-    PSHB
-
-; Copy first 8 bytes (Operator EG).
-    LDAB    #8
-    JSR     memcpy_store_dest_and_copy_accb_bytes
-    STX     <memcpy_ptr_dest
-    LDX     <memcpy_ptr_src
-
-; Load breakpoint right depth, and store.
-    LDAA    2,x
-    LDX     <memcpy_ptr_dest
-    STAA    0,x
-    LDX     <memcpy_ptr_src
-
-; Load oscillator rate scale.
-    LDAA    4,x
-    ANDA    #%111
-
-; Load amp modulation sensitivity.
-    LDAB    5,x
-    ANDB    #%11
-
-; Shift and combine, then store.
-    ASLB
-    ASLB
-    ASLB
-    ABA
-    LDX     <memcpy_ptr_dest
-    STAA    1,x
-
-; Load output level, and coarse frequency, then store.
-    LDX     <memcpy_ptr_src
-    LDD     6,x
-    LSRB
-    LDX     <memcpy_ptr_dest
-    STD     2,x
-
-; Load fine frequency.
-    LDX     <memcpy_ptr_src
-    LDAA    8,x
-
-; Load oscillator detune.
-    LDAB    4,x
-    LSRB
-    LSRB
-    LSRB
-    LDX     <memcpy_ptr_dest
-    STD     4,x
-
-; Increment the operator read pointer by 9.
-    LDX     <memcpy_ptr_src
-    LDAB    #9
-    ABX
-    STX     <memcpy_ptr_src
-
-; Increment the operator write pointer by 6.
-    LDX     <memcpy_ptr_dest
-    LDAB    #6
-    ABX
-    PULB
-
-; Decrement the operator index.
-    DECB
-    BNE     _midi_sysex_rx_bulk_data_deserialise_operator_loop
-
-; Skip over copying the algorithm, since it has already been converted.
-    INX
-    STX     <memcpy_ptr_dest
-
-; Increment read pointer by 43 bytes.
-; The read pointer is now at byte 111.
-    LDX     <memcpy_ptr_src
-    LDAB    #43
-    ABX
-    STX     <memcpy_ptr_src
-
-; Copy the next 5 bytes.
-    LDX     <memcpy_ptr_dest
-    LDAB    #5
-    JSR     memcpy_store_dest_and_copy_accb_bytes
-    STX     <memcpy_ptr_dest
-
-; Copy LFO Pitch Mod Sensitivity, and LFO wave.
-; Shift right to remove the LFO sync setting.
-    LDX     <memcpy_ptr_src
-    LDD     0,x
-    LSRA
-
-; Ensure the key transpose setting is between 12, and 24.
-    SUBB    #12
-    BCC     _midi_rx_sysex_bulk_data_is_tranpose_above_24
-
-    CLRB
-
-_midi_rx_sysex_bulk_data_is_tranpose_above_24:
-    CMPB    #24
-    BCS     _midi_sysex_rx_bulk_data_store_transpose
-
-    LDAA    #24
-
-; Store the key transpose value.
-; Clear the carry bit to indicate the patch has been successfully parsed.
-
-_midi_sysex_rx_bulk_data_store_transpose:
-    LDX     <memcpy_ptr_dest
-    STD     0,x
-    CLC
+    LDAB    #PATCH_SIZE_PACKED_DX7
+    JSR     memcpy
 
 .exit:
     RTS
