@@ -244,9 +244,14 @@ loc_EBE8:
 
 ; Wait for 'Remote' button 10.
     CMPB    #INPUT_BUTTON_10
-    BEQ     loc_EC60
+    BNE     .test_for_no_button
+
+    JMP     loc_EC60
+
+.test_for_no_button:
     CMPB    #INPUT_BUTTON_NO
     BEQ     loc_EBF5
+
     BRA     loc_EBF8
 
 loc_EBF5:
@@ -255,9 +260,11 @@ loc_EBF5:
 loc_EBF8:
     CMPB    #INPUT_BUTTON_YES
     BNE     loc_EBE8
+
     LDAA    memory_protect
     TSTA
     BNE     loc_EC66
+
     LDX     #(lcd_buffer_next+$1A)
     LDAA    #$14
     LDAB    #6
@@ -267,6 +274,7 @@ loc_EC09:
     INX
     DECB
     BNE     loc_EC09
+
     JSR     lcd_update
     JSR     tape_remote_output_high
     CLR     tape_error_flag
@@ -291,8 +299,26 @@ loc_EC1C:
     SUBD    tape_patch_checksum
     BNE     loc_EC99
 
-    LDAA    tape_patch_index
-    JSR     patch_copy_from_tape_buffer
+; Set up the source, and destination pointers for patch conversion.
+    LDX     #patch_buffer_incoming
+    STX     <memcpy_ptr_src
+
+; Ensure the incoming patch index is below, or equal to the number of patches.
+; An effect of this is that the patches that 'overflow' the reduced number of
+; patches stored will just be stored in the 'incoming' buffer.
+    LDAB    tape_patch_index
+    CMPB    #PATCH_BUFFER_COUNT
+    BCS     .store_destination_pointer
+
+    LDAB    #PATCH_BUFFER_COUNT
+
+.store_destination_pointer:
+    JSR     patch_get_ptr
+    STX     <memcpy_ptr_dest
+
+; Convert the patch from the serialised DX9 format to the DX7 format.
+    JSR     patch_convert_from_dx9_format
+
     LDAA    tape_patch_index
     INCA
     STAA    tape_patch_index
@@ -302,7 +328,8 @@ loc_EC1C:
     JSR     tape_remote_output_low
     CLI
     JSR     ui_button_function_memory_select
-    LDAB    #$13
+
+    LDAB    #0
     JSR     patch_load_store_edit_buffer_to_compare
     JMP     ui_print_update_led_and_menu
 
@@ -356,6 +383,7 @@ loc_ECAA:
     JSR     input_read_front_panel
     TSTB
     BEQ     loc_ECAA
+
     JMP     tape_input_all
 
 

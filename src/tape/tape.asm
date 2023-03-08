@@ -205,30 +205,6 @@ str_function_control_verify:            DC "FUNCTION CONTROLVERIFY COMPLETED", 0
 
 
 ; ==============================================================================
-; PATCH_COPY_TO_TAPE_BUFFER
-; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
-; DESCRIPTION:
-; Copies a patch from the synth's internal memory into the temporary tape
-; buffer, prior to being output via the cassette interface.
-;
-; ARGUMENTS:
-; Registers:
-; * ACCA: The patch number to copy, indexed from 0.
-;
-; ==============================================================================
-patch_copy_to_tape_buffer:
-    LDAB    #64
-    MUL
-    ADDD    #patch_buffer
-    STD     <copy_ptr_src
-    LDX     #patch_buffer_incoming
-    STX     <copy_ptr_dest
-    BRA     patch_copy
-
-
-; ==============================================================================
 ; PATCH_COPY_FROM_TAPE_BUFFER
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
@@ -245,15 +221,14 @@ patch_copy_to_tape_buffer:
 patch_copy_from_tape_buffer:                    SUBROUTINE
     LDX     #patch_buffer_incoming
     STX     <copy_ptr_src
-    LDAB    #64
+    LDAB    #PATCH_SIZE_PACKED_DX7
     MUL
     ADDD    #patch_buffer
     STD     <copy_ptr_dest
-; @TODO: This branch statement can likely be removed.
-    BRA     *+2
+; Falls-through below.
 
-patch_copy:
-    LDAB    #32
+patch_copy:                                     SUBROUTINE
+    LDAB    #64
     STAB    <copy_counter
 
 .copy_word_loop:

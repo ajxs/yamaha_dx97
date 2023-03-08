@@ -54,6 +54,8 @@
     INCLUDE "src/patch/activate/operator_scaling.asm"
     INCLUDE "src/patch/activate/pitch_eg.asm"
     INCLUDE "src/patch/activate/lfo.asm"
+    INCLUDE "src/patch/convert/from_dx9.asm"
+    INCLUDE "src/patch/convert/to_dx9.asm"
     INCLUDE "src/patch/deserialise.asm"
     INCLUDE "src/patch/initialise.asm"
     INCLUDE "src/patch/load.asm"

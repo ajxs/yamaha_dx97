@@ -19,7 +19,8 @@
 ; ==============================================================================
 ; TAPE_OUTPUT_PATCH
 ; ==============================================================================
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
 ; DESCRIPTION:
 ; Outputs a single patch from the temporary tape output buffer via the synth's
 ; cassette interface.
@@ -323,10 +324,15 @@ tape_exit:                                      SUBROUTINE
 ; TAPE_OUTPUT_ALL
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Outputs all the synth's internal patch memory over the synth's cassette
 ; interface.
+; @NOTE: The cassette interface uses the existing DX9 format.
+; Patches output over the cassette interface are first converted to the
+; original DX9 format prior to being output.
 ;
+; ARGUMENTS:
 ; Memory:
 ; * ui_btn_function_7_sub_function: Determines whether this function will
 ;    begin verification of the tape data, or will begin patch output.
@@ -396,7 +402,7 @@ tape_output_all:                                SUBROUTINE
 .wait_for_abort_loop:
 ; If the 'No' button is pressed, abort.
     TIMD   #KEY_SWITCH_LINE_0_BUTTON_NO, key_switch_scan_driver_input
-    BNE     tape_exit
+    BNE     .exit
 
     DEX
     BNE     .wait_for_abort_loop
@@ -417,23 +423,34 @@ tape_output_all:                                SUBROUTINE
     JSR     lcd_print_number_three_digits
     JSR     lcd_update
 
-    LDAA    tape_patch_output_counter
-    JSR     patch_copy_to_tape_buffer
+; Set up the source, and destination pointers for patch conversion.
+    LDAB    tape_patch_output_counter
+    JSR     patch_get_ptr
+    STX     <memcpy_ptr_src
+
+    LDX     #patch_buffer_incoming
+    STX     <memcpy_ptr_dest
+
+; Convert the patch from the serialised DX7 format to the DX9 format.
+    JSR     patch_convert_to_dx9_format
+
     JSR     tape_calculate_patch_checksum
     STD     tape_patch_checksum
     JSR     tape_output_patch
 
 ; If any error occurred, exit.
     TST     tape_error_flag
-    BNE     tape_exit
+    BNE     .exit
 
     LDAA    tape_patch_output_counter
     INCA
     STAA    tape_patch_output_counter
-    CMPA    #20
+    CMPA    #PATCH_BUFFER_COUNT
     BNE     .patch_output_loop
 
 ; If the output process is finished, proceed to verification.
     JSR     tape_remote_output_low
     BRA     tape_verify
 
+.exit:
+    JMP     tape_exit

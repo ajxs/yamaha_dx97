@@ -82,7 +82,7 @@ FN_PARAM_PORTAMENTO_MODE                        EQU 3
 FN_PARAM_PORTAMENTO_GLISS                       EQU 4
 FN_PARAM_PORTAMENTO_TIME                        EQU 5
 FN_PARAM_MOD_WHEEL_RANGE                        EQU 6
-FN_PARAM_mod_wheel_pitch                       EQU 7
+FN_PARAM_MOD_WHEEL_PITCH                        EQU 7
 FN_PARAM_FOOT_CONTROL_RANGE                     EQU 8
 FN_PARAM_FOOT_CONTROL_ASSIGN                    EQU 9
 FN_PARAM_BREATH_CONT_RANGE                      EQU 10
@@ -91,6 +91,8 @@ FN_PARAM_AFTERTOUCH_RANGE                       EQU 12
 FN_PARAM_AFTERTOUCH_ASSIGN                      EQU 13
 
 PATCH_PACKED_ALGORITHM                          EQU 110
+
+PATCH_DX9_PACKED_ALGORITHM                      EQU 56
 
 ; The patch number of the incoming patch buffer.
 PATCH_INCOMING_BUFFER_NUMBER                    EQU PATCH_BUFFER_COUNT
@@ -316,7 +318,8 @@ patch_set_new_index_and_copy_edit_to_compare:   SUBROUTINE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
-; @TODO
+; Recalls a patch from the 'Patch Compare' buffer.
+; This routine is called from the UI function mode menu.
 ;
 ; ==============================================================================
 patch_edit_recall:                              SUBROUTINE
