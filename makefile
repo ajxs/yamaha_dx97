@@ -27,17 +27,8 @@ dev: ${BUILD_DIR}
 ${BUILD_DIR}:
 	mkdir -p ${BUILD_DIR}
 
-flash: ${BIN_OUTPUT}
-	python3 ${FLASH_BIN} -mem 27128 -spi y -auto y ${BIN_OUTPUT} /dev/ttyUSB0
-
-flash_original:
-	python3 ${FLASH_BIN} -mem 27128 -spi y -auto y ./original_rom.hex /dev/ttyUSB0
-
 burn: ${BIN_OUTPUT}
 	minipro -p "${EPROM_TYPE}" -w ${BIN_OUTPUT}
-
-burn_original:
-	minipro -p "${EPROM_TYPE}" -w etc/original_rom.hex
 
 burn_pin_test:
 	minipro -p "${EPROM_TYPE}" --pin_check
