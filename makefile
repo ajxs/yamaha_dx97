@@ -40,4 +40,4 @@ clean:
 	rm -rf ${BUILD_DIR}
 
 lint:
-	./lint_all_files
+	./etc/lint_all_files

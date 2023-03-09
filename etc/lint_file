@@ -6,6 +6,7 @@ it into the final output.
 """
 
 import getopt
+import os
 import re
 import sys
 
@@ -61,7 +62,9 @@ def lint_file():
     """
 
     try:
-        with open(INPUT_FILE, 'r') as input_file:
+        full_file_path = f"{os.getcwd()}/{INPUT_FILE}"
+
+        with open(full_file_path, 'r') as input_file:
             # The current line number.
             line_number = 1
             # The total number of errors encountered.

@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+files="$(find ./src -type f -name "*.asm")"
+current_directory=$(dirname ${0})
+
+for filename in ${files}
+do
+	echo "LINTING '${filename}'"
+	${current_directory}/./lint_file --input_file ${filename} --fix
+	echo ""
+done

@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-
-files="$(find ./src -type f -name "*.asm")"
-
-for filename in ${files}
-do
-	echo "LINTING \'${filename}\'"
-	./lint_file --input_file ${filename} --fix
-done
