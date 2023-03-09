@@ -178,15 +178,9 @@ handler_reset_validate_parameters:              SUBROUTINE
 ; Validate the pitch-bend range.
     LDAA    #13
     CMPA    pitch_bend_range
-    BHI     .validate_pitch_bend_step
-
-    CLR     pitch_bend_range
-
-.validate_pitch_bend_step:
-    CMPA    pitch_bend_step
     BHI     .validate_midi_rx_channel
 
-    CLR     pitch_bend_step
+    CLR     pitch_bend_range
 
 .validate_midi_rx_channel:
 ; Ensure that the MIDI RX channel is valid.

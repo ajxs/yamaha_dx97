@@ -52,8 +52,8 @@ sustain_status:                                 DS 1
 patch_activate_operator_number:                 DS 1
 patch_activate_operator_offset:                 DS 1
 
-; @TODO: What are these variables? They can probably be removed.
-; Deprecate these in future in place of temporary variables.
+; These variables are used in places where the memcpy pointers are already
+; used, such as tape patch serialisation routines.
 copy_ptr_src:                                   DS 2
 copy_ptr_dest:                                  DS 2
 copy_counter:                                   DS 1
@@ -282,9 +282,6 @@ master_tune:                                    DS 2
 ; * 1: Monophonic.
 mono_poly:                                      DS 1
 pitch_bend_range:                               DS 1
-
-; @TODO: Implement.
-pitch_bend_step:                                DS 1
 
 ; Portamento Mode:
 ; Monophonic Mode:

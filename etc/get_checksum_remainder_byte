@@ -1,0 +1,25 @@
+#!/usr/bin/env python3
+
+"""
+The 'ROM' diagnostic test performs a checksum of the ROM.
+It loops over each byte in the ROM in 256 byte blocks, adding the value of
+each byte to a total checksum byte. This checksum is expected to add up, with
+integer overflow, to '0'. There is an byte placed in the ROM in an arbitrary
+position between the end of the code, and the vector table with the 'remainder'
+value that will cause the ROM  checksum to total to '0'.
+To calculate this value for the ROM, set this value to '0', build the ROM,
+then run this script to generate the remainder byte.
+"""
+
+ROM_PATH = "../build/yamaha_dx97.bin"
+
+with open(ROM_PATH, mode="rb") as rom_binary:
+    checksum = 0
+
+    for index in range(16384):
+        byte = rom_binary.read(1)
+        byte_value = int.from_bytes(byte, byteorder='little', signed=False)
+
+        checksum = (checksum + byte_value) & 0xFF
+
+    print(256 - checksum)

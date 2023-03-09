@@ -75,21 +75,6 @@ PATCH_PATCH_NAME                                EQU 145
 PATCH_OPERATOR_ON_OFF_STATUS                    EQU 155
 
 
-FN_PARAM_MONO_POLY_MODE                         EQU 0
-FN_PARAM_PITCH_BEND_RANGE                       EQU 1
-FN_PARAM_PITCH_BEND_STEP                        EQU 2
-FN_PARAM_PORTAMENTO_MODE                        EQU 3
-FN_PARAM_PORTAMENTO_GLISS                       EQU 4
-FN_PARAM_PORTAMENTO_TIME                        EQU 5
-FN_PARAM_MOD_WHEEL_RANGE                        EQU 6
-FN_PARAM_MOD_WHEEL_PITCH                        EQU 7
-FN_PARAM_FOOT_CONTROL_RANGE                     EQU 8
-FN_PARAM_FOOT_CONTROL_ASSIGN                    EQU 9
-FN_PARAM_BREATH_CONT_RANGE                      EQU 10
-FN_PARAM_BREATH_CONT_ASSIGN                     EQU 11
-FN_PARAM_AFTERTOUCH_RANGE                       EQU 12
-FN_PARAM_AFTERTOUCH_ASSIGN                      EQU 13
-
 PATCH_PACKED_ALGORITHM                          EQU 110
 
 PATCH_DX9_PACKED_ALGORITHM                      EQU 56
