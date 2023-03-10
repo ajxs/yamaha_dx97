@@ -4,7 +4,7 @@
 
 This is an alternate firmware ROM for the Yamaha DX9 synthesiser. Its aim is to make the DX9's functionality more closely match that of the DX7 by restoring features that were intentionally restricted in the firmware, such as increasing the operator count to six, and adding a pitch envelope generator. This ROM makes the synth properly patch-compatible with the DX7.
 
-New Features:
+### New Features:
 * Makes the DX9 able to play DX7 patches.
 * Restores the use of all six operators.
 * The synth is now sensitive to velocity of incoming MIDI notes.
@@ -12,6 +12,8 @@ New Features:
 * Implements DX7 style operator scaling.
 * Implements DX7 style portamento/glissando.
 
+### Known Issues
+* In some cases pitch-bend input is updated at a slightly lower frequency than in the original ROM. If the pitch bend wheel is moved quickly this can result in a noticeable gradation in pitch transition. This is due to the pitch-bend input being processed as part of the main periodic timer interrupt. In the original DX7 pitch-bend input is read by the sub-cpu, and the input is parsed in the firmware only when updated. In the DX9 the pitch-bend's analog input is wired directly to the CPU's I/O ports, and is parsed periodically as part of the OCF interrupt routine. In time this routine may be further optimised to mitigate this issue.
 
 ## What is the current status of the ROM?
 
