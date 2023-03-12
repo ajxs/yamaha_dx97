@@ -14,6 +14,7 @@
 ; This is the full 'unity build' (https://en.wikipedia.org/wiki/Unity_build)
 ; file containing the Yamaha DX9/7 firmware ROM.
 ; This file is assembled into the full ROM image.
+; @NOTE: The individual file paths are relative to the makefile.
 ; ==============================================================================
 
     .PROCESSOR HD6303
@@ -28,7 +29,6 @@
 
     INCLUDE "src/adc.asm"
     INCLUDE "src/delay.asm"
-    INCLUDE "src/dev.asm"
     INCLUDE "src/event.asm"
     INCLUDE "src/jumpoff.asm"
     INCLUDE "src/keyboard.asm"

@@ -204,6 +204,74 @@ handler_reset_validate_parameters:              SUBROUTINE
 .exit
     RTS
 
+; ==============================================================================
+; HANDLER_RESET_TEST_FOR_PARAMETER_RESET
+; ==============================================================================
+; @PRIVATE
+; DESCRIPTION:
+; Tests whether the 'Function' button is currently being pressed. If so, all of
+; the synth's voice, and performance parameters are reset.
+; This is useful for when the addresses of variables in RAM have been changed,
+; and the voice, and performance parameters end up filled with random data.
+;
+; ==============================================================================
+handler_reset_test_for_parameter_reset:         SUBROUTINE
+; Read the status of the 'Function' button.
+    LDAA    <io_port_1_data
+    ANDA    #%11110000
+    STAA    <io_port_1_data
+
+    DELAY_SINGLE
+    LDAA    <key_switch_scan_driver_input
+    ANDA    #KEY_SWITCH_LINE_0_BUTTON_FUNCTION
+    BEQ     .exit
+
+; Reset master tune and performance parameters.
+    LDD     #$100
+    STD     master_tune
+
+    LDAA    #0
+    STAA    midi_channel_rx
+
+; Reset the UI mode to 'Function'.
+    CLR     ui_mode_memory_protect_state
+
+    CLR     memory_protect
+
+    LDAA    #1
+    STAA    sys_info_avail
+
+    LDAA    #$80
+    STAA    patch_index_current
+
+    CLR     patch_compare_mode_active
+
+; Reset performance parameters.
+    CLR     mono_poly
+
+; Set the portamento time to instantaneous.
+; The internal scaled rate will be calculated when the patch is 'activated'.
+    CLR     portamento_time
+    CLR     portamento_mode
+    CLR     portamento_glissando_enabled
+
+    CLR     mod_wheel_range
+    CLR     mod_wheel_pitch
+    CLR     mod_wheel_amp
+    CLR     mod_wheel_eg_bias
+
+    CLR     breath_control_range
+    CLR     breath_control_pitch
+    CLR     breath_control_amp
+    CLR     breath_control_eg_bias
+
+; Initialise the patch edit buffer.
+; This will be 'activated' immediately after.
+    JSR     patch_init_edit_buffer
+
+.exit:
+    RTS
+
 
 ; ==============================================================================
 ; HANDLER_RESET
@@ -296,6 +364,11 @@ handler_reset:                                  SUBROUTINE
 ; Reset the EGS, and the internal voice frequency buffers.
     JSR     voice_reset
 
+; Test for the 'Function' button being pressed.
+; This will trigger a reset of the synth's parameters.
+    JSR     handler_reset_test_for_parameter_reset
+
+.activate_patch:
 ; Reload of all patch data to the EGS chip.
 ; This is necessary here since no data is currently loaded.
     JSR     patch_activate
@@ -315,8 +388,6 @@ handler_reset:                                  SUBROUTINE
     STD     <free_running_counter
     LDD     #2500
     STD     <output_compare
-
-    JSR     developer_reset_parameters
 
 ; Enable the output-compare interrupt, and clear condition flags.
     LDAA    #TIMER_CTRL_EOCI

@@ -172,8 +172,6 @@ str_p_bend_range:                       DC "P BEND "
                                         DC.B STR_FRAGMENT_OFFSET_RANGE
                                         DC.B PRINT_PARAM_FUNCTION_NUMERIC
 
-str_param_reset:                        DC "PARAMETERS RESET", 0
-
 str_porta_full_time:                    DC "FULL TIME "
                                         DC.B STR_FRAGMENT_OFFSET_PORTA, 0
 str_porta_fingered:                     DC "FINGERED "

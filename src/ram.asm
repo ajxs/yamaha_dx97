@@ -322,8 +322,12 @@ tape_patch_index:                               DS 1
 pitch_eg_current_step:                          DS 16
 
 ; The current Pitch EG frequency for each of the synth's voices.
-; The default value for each of these 16 entries is 0x4000.
-; This corresponds to a value of '50' in a patch's Pitch EG level stage.
+; The default value for each of these 16 entries is 0x4000. Since the pitch
+; EG range is +-4 octaves, and in the EGS frequency registers each octave is
+; represented by a logarithmic value of 0x1000, this represents the middle of
+; that 8 octave range.
+; This default value corresponds to a value of '50' in a patch's Pitch EG
+; level.
 pitch_eg_current_frequency:                     DS 32
 
 ; @TODO: Document this.

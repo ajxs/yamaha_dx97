@@ -222,6 +222,4 @@ adc_process:                                    SUBROUTINE
     DECB
     ANDB    #%11
     STAB    analog_input_source_next
-    JSR     adc_set_source
-
-    RTS
+    JMP     adc_set_source
