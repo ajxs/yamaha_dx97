@@ -173,3 +173,28 @@ voice_reset_egs_send_event_for_all_voices:      SUBROUTINE
     BNE     .send_event_for_all_voices_loop
 
     RTS
+
+
+; ==============================================================================
+; VOICE_RESET_PITCH_EG_CURRENT_FREQUENCY
+; ==============================================================================
+; DESCRIPTION:
+; Reset the current pitch EG frequency offset for all 16 voices to 0x4000.
+; This is the middle point in the EG level.
+;
+; ==============================================================================
+voice_reset_pitch_eg_current_frequency:         SUBROUTINE
+; Reset the current pitch EG frequency offset for all 16 voices to 0x4000.
+    LDAB    #16
+    LDX     #pitch_eg_current_frequency
+
+.reset_pitch_eg_loop:
+    LDAA    #64
+    STAA    0,x
+    INX
+    CLR     0,x
+    INX
+    DECB
+    BNE     .reset_pitch_eg_loop
+
+    RTS
