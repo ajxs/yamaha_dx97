@@ -70,6 +70,8 @@ ui_button_numeric:                              SUBROUTINE
     DC.B 19
     DC.B ui_button_edit_20_jump - *
     DC.B 20
+    DC.B ui_button_function_set_active_parameter_jump - *
+    DC.B 23
     DC.B ui_button_function_4_jump - *
     DC.B 24
     DC.B ui_button_function_set_active_parameter_jump - *
@@ -344,7 +346,7 @@ ui_button_edit_9_pmd_amd:                       SUBROUTINE
 ; @TODO: Verify why this check is performed.
 ; Ordinarily this scenario should be unreachable.
     LDAA    ui_mode_memory_protect_state
-    CMPA    #UI_MODE_MEMORY_SELECT
+    CMPA    #UI_MODE_PLAY
     BEQ     .set_edit_parameter_address
 
     TST     ui_flag_disable_edit_btn_9_mode_select

@@ -97,7 +97,7 @@ ui_yes_no_fn_btn_6:                             SUBROUTINE
     CMPA    #INPUT_BUTTON_YES
     BNE     .exit
 
-    JSR     midi_sysex_tx_bulk_data_32_voices
+    JSR     midi_sysex_tx_bulk_data_all_patches
 
 .exit:
     SEC
@@ -262,7 +262,7 @@ ui_yes_no_test_entry:                           SUBROUTINE
 
 ui_test_entry_reload_patch_and_exit:
     CLR     ui_test_mode_button_combo_state
-    JSR     ui_button_function_memory_select
+    JSR     ui_button_function_play
     LDAB    patch_index_current
     JSR     patch_load_store_edit_buffer_to_compare
     SEC

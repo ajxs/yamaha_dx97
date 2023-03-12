@@ -296,11 +296,11 @@ portamento_glissando_enabled:                   DS 1
 
 portamento_time:                                DS 1
 mod_wheel_range:                                DS 1
-mod_wheel_pitch:                               DS 1
+mod_wheel_pitch:                                DS 1
 mod_wheel_amp:                                  DS 1
 mod_wheel_eg_bias:                              DS 1
 breath_control_range:                           DS 1
-breath_control_pitch:                          DS 1
+breath_control_pitch:                           DS 1
 breath_control_amp:                             DS 1
 breath_control_eg_bias:                         DS 1
 

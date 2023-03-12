@@ -327,7 +327,7 @@ loc_EC1C:
 
     JSR     tape_remote_output_low
     CLI
-    JSR     ui_button_function_memory_select
+    JSR     ui_button_function_play
 
     LDAB    #0
     JSR     patch_load_store_edit_buffer_to_compare
@@ -521,7 +521,7 @@ loc_ED63:
     CLR     patch_compare_mode_active
 
 ; Trigger the 'Memory' button press?
-    LDAB    #INPUT_BUTTON_MEMORY
+    LDAB    #INPUT_BUTTON_PLAY
     JSR     main_input_handler_process_button
     LDAA    #EVENT_HALT_VOICES_RELOAD_PATCH
     STAA    main_patch_event_flag

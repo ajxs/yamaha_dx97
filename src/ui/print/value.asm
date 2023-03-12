@@ -68,12 +68,11 @@ ui_print_param_value_equals_and_load_value:     SUBROUTINE
 ui_print_param_value_separator_character:       SUBROUTINE
     LDX     #(lcd_buffer_next + 28)
 
-ui_print_character:
+ui_print_separator_and_load_active_param:
     STAA    0,x
     INX
     STX     <memcpy_ptr_dest
 
-ui_load_active_param_value:
     LDX     ui_active_param_address
     LDAA    0,x
 
@@ -134,7 +133,7 @@ ui_print_parameter_value_on_off:                SUBROUTINE
 ui_print_parameter_value_osc_freq:              SUBROUTINE
     LDAA    #'=
     LDX     #(lcd_buffer_next + 24)
-    JSR     ui_print_character
+    JSR     ui_print_separator_and_load_active_param
     LDAA    operator_selected_src
     BITA    #1
     BEQ     loc_E639
@@ -317,6 +316,7 @@ ui_print_parameter_value_battery_voltage:       SUBROUTINE
 ; UI_PRINT_PARAMETER_VALUE_MONO_POLY
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; @PRIVATE
 ; DESCRIPTION:
 ; Prints the synth's polyphony setting to the LCD screen.
@@ -326,7 +326,7 @@ ui_print_parameter_value_battery_voltage:       SUBROUTINE
 ;
 ; ==============================================================================
 ui_print_parameter_value_mono_poly:             SUBROUTINE
-    JSR     ui_load_active_param_value
+    LDAA    mono_poly
     LDX     #str_mode_mono
     TSTA
     BNE     ui_lcd_copy_and_update
@@ -367,7 +367,8 @@ ui_lcd_copy_and_update:
 ;
 ; ==============================================================================
 ui_print_parameter_value_portamento_mode:       SUBROUTINE
-    JSR     ui_load_active_param_value
+    LDAA    portamento_mode
+
     TST     mono_poly
     BNE     .synth_is_mono
 
@@ -402,7 +403,7 @@ ui_print_parameter_value_portamento_mode:       SUBROUTINE
 ui_print_parameter_value_lfo:                   SUBROUTINE
     LDAA    #':
     LDX     #(lcd_buffer_next + 24)
-    JSR     ui_print_character
+    JSR     ui_print_separator_and_load_active_param
     CMPA    #6
     BCS     .print_lfo_wave_name
 
@@ -425,9 +426,10 @@ table_str_lfo_names:
     DC.W str_lfo_name_sample_hold
 
 ; ==============================================================================
-; UI_PRINT_PARAMETER_VALUE_AVAIL_UNAVAIL
+; UI_PRINT_PARAMETER_VALUE_SYS_INFO
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; @PRIVATE
 ; DESCRIPTION:
 ; Prints the value of the SysEx 'Sys Info Avail' setting.
@@ -436,8 +438,9 @@ table_str_lfo_names:
 ; * IX
 ;
 ; ==============================================================================
-ui_print_parameter_value_avail_unavail:         SUBROUTINE
-    JSR     ui_load_active_param_value
+ui_print_parameter_value_sys_info:              SUBROUTINE
+    LDAA    sys_info_avail
+
     LDX     #str_sys_info_unavail + 2
     TSTA
     BNE     ui_lcd_copy_and_update

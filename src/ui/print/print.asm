@@ -49,7 +49,7 @@ ui_print:                                       SUBROUTINE
 ; ==============================================================================
     DC.B ui_print_function_mode - *
     DC.B ui_print_edit_mode - *
-    DC.B ui_print_memory_select_mode - *
+    DC.B ui_print_play_mode - *
     DC.B .exit - *
 
 ; ==============================================================================
@@ -304,13 +304,13 @@ ui_print_function_mode:                         SUBROUTINE
 
 
 ; ==============================================================================
-; MENU_MEMORY_SELECT
+; UI_PRINT_PLAY_MODE
 ; ==============================================================================
 ; DESCRIPTION:
-; Prints the main user-interface when the synth is in 'Memory Select Mode'.
+; Prints the main user-interface when the synth is in 'Play Mode'.
 ;
 ; ==============================================================================
-ui_print_memory_select_mode:                    SUBROUTINE
+ui_print_play_mode:                             SUBROUTINE
     LDX     #str_memory_select
     JSR     lcd_strcpy
 ; Falls-through to print menu.
@@ -600,7 +600,7 @@ table_menu_print_parameter_functions:
     DC.W ui_print_parameter_value_mono_poly
     DC.W ui_print_parameter_value_portamento_mode
     DC.W ui_print_parameter_value_lfo
-    DC.W ui_print_parameter_value_avail_unavail
+    DC.W ui_print_parameter_value_sys_info
     DC.W ui_print_parameter_value_midi_channel
 
 ; ==============================================================================

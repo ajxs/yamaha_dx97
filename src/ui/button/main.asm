@@ -44,6 +44,8 @@ ui_button_main:                                 SUBROUTINE
     ANDA    #%11
     BEQ     .clamp_index
 
+; @TODO: What is this UI mode?
+; This does not seem to be reachable.
     CMPA    #UI_MODE_UNKNOWN
     BEQ     .clamp_index
 
@@ -72,7 +74,7 @@ ui_button_main:                                 SUBROUTINE
     DC.B .exit - *
     DC.B .exit - *
     DC.B ui_button_function_edit - *
-    DC.B ui_button_function_memory_select - *
+    DC.B ui_button_function_play - *
 
 ; ==============================================================================
 ; UI Input Main Button Handlers: Memory Protect Disabled.
@@ -81,7 +83,7 @@ ui_button_main:                                 SUBROUTINE
     DC.B ui_memory_protect_state_clear - *
     DC.B ui_button_edit_function - *
     DC.B ui_patch_compare_toggle - *
-    DC.B ui_button_edit_memory_select - *
+    DC.B ui_button_edit_play - *
 
 ; ==============================================================================
 ; UI Input Main Button Handlers: Memory Protect Enabled.
@@ -158,17 +160,17 @@ ui_mode_edit:                                   SUBROUTINE
 
 
 ; ==============================================================================
-; UI_BUTTON_FUNCTION_MEMORY_SELECT
+; UI_BUTTON_FUNCTION_PLAY
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; @PRIVATE
 ; DESCRIPTION:
-; Handles a 'Memory Select' keypress while the UI is in 'Function' mode.
+; Handles a 'Play' keypress while the UI is in 'Function' mode.
 ;
 ; ==============================================================================
-ui_button_function_memory_select:               SUBROUTINE
+ui_button_function_play:                        SUBROUTINE
     JSR     ui_button_function_save_previous
-    JMP     ui_button_memory_select
+    JMP     ui_button_play
 
 
 ; ==============================================================================
@@ -283,29 +285,29 @@ loc_DE9E:
 
 
 ; ==============================================================================
-; UI_BUTTON_EDIT_MEMORY_SELECT
+; UI_BUTTON_EDIT_PLAY
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; @PRIVATE
 ; DESCRIPTION:
-; @TODO
+; Handles a 'Play' keypress while the UI is in 'Edit' mode.
 ;
 ; ==============================================================================
-ui_button_edit_memory_select:                   SUBROUTINE
+ui_button_edit_play:                            SUBROUTINE
     JSR     ui_button_edit_save_previous
 ; Falls-through below.
 
 ; ==============================================================================
-; UI_BUTTON_MEMORY_SELECT
+; UI_BUTTON_PLAY
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; @PRIVATE
 ; DESCRIPTION:
-; @TODO
+; Sets the synth's user interface to 'Play' mode.
 ;
 ; ==============================================================================
-ui_button_memory_select:                        SUBROUTINE
-    LDAA    #UI_MODE_MEMORY_SELECT
+ui_button_play:                                 SUBROUTINE
+    LDAA    #UI_MODE_PLAY
     STAA    ui_mode_memory_protect_state
     RESET_OPERATOR_STATUS
 
