@@ -21,7 +21,7 @@
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE:0xE176
 ; DESCRIPTION:
-; Tests whether the test mode button combination (Store + 10 + 20) are
+; Tests whether the test mode button combination (Function + 10 + 20) are
 ; currently active.
 ;
 ; ARGUMENTS:
@@ -58,7 +58,7 @@ ui_button_check_test_mode_combination:          SUBROUTINE
     RTS
 
 .button_10_is_down:
-    JSR     ui_button_check_test_mode_button_store
+    JSR     ui_button_check_test_mode_button_function
     TSTA
     BEQ     .reset_test_mode_button_state
 
@@ -73,7 +73,7 @@ ui_button_check_test_mode_combination:          SUBROUTINE
     BEQ     .exit
 
 ; Test whether the 'Store', and '10' buttons are currently being pressed.
-    JSR     ui_button_check_test_mode_button_store
+    JSR     ui_button_check_test_mode_button_function
     TSTA
     BEQ     .reset_test_mode_button_state
 
@@ -88,29 +88,29 @@ ui_button_check_test_mode_combination:          SUBROUTINE
 
 
 ; ==============================================================================
-; UI_BUTTON_CHECK_TEST_MODE_BUTTON_STORE
+; UI_BUTTON_CHECK_TEST_MODE_BUTTON_FUNCTION
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; @PRIVATE
 ; DESCRIPTION:
-; Tests whether the 'Store' button is currently being pressed, as part of
+; Tests whether the 'Function' button is currently being pressed, as part of
 ; testing the test mode button combination.
 ;
 ; REGISTERS MODIFIED:
 ; * ACCA
 ;
 ; RETURNS:
-; * ACCA: The state of the 'Store' button.
+; * ACCA: The state of the 'Function' button.
 ;
 ; ==============================================================================
-ui_button_check_test_mode_button_store:         SUBROUTINE
+ui_button_check_test_mode_button_function:      SUBROUTINE
     LDAA    <io_port_1_data
     ANDA    #%11110000
     STAA    <io_port_1_data
 
     DELAY_SINGLE
     LDAA    <key_switch_scan_driver_input
-    ANDA    #KEY_SWITCH_LINE_0_BUTTON_STORE
+    ANDA    #KEY_SWITCH_LINE_0_BUTTON_FUNCTION
 
     RTS
 
