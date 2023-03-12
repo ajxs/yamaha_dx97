@@ -212,22 +212,24 @@ ui_print_edit_mode:                             SUBROUTINE
 
     LDAB    ui_btn_numeric_last_pressed
     CMPB    #BUTTON_EDIT_10_MOD_SENS
-    BNE     .is_last_button_12
+    BNE     .was_last_button_below_12
 
     TST     ui_btn_edit_10_sub_function
     BEQ     .print_selected_operator
 
-.is_last_button_12:
+.was_last_button_below_12:
     CMPB    #BUTTON_EDIT_12_OSC_FREQ_COARSE
     BCS     ui_print_parameter
 
     CMPB    #BUTTON_EDIT_14_DETUNE_SYNC
-    BNE     .is_last_button_20
+    BNE     .was_last_button_in_function_mode
 
     TST     ui_btn_edit_14_sub_function
     BNE     ui_print_parameter
 
-.is_last_button_20:
+.was_last_button_in_function_mode:
+; If the carry flag is clear, it means that the last button press registered
+; was in function mode.
     CMPB    #BUTTON_EDIT_20_KEY_TRANSPOSE
     BCC     ui_print_parameter
 
@@ -279,7 +281,7 @@ ui_print_function_mode:                         SUBROUTINE
 ; If the 'TEST MODE ENTRY' prompt is active, print this message and exit.
     CMPB    #BUTTON_TEST_ENTRY_COMBO
     BNE     .print_header
-    LDX     #str_test_mode_entry
+    LDX     #str_test_mode_prompt
     JSR     lcd_strcpy
     JMP     lcd_update
 
@@ -565,7 +567,15 @@ table_menu_parameter_names:
     DC.W str_breath_eg_b
     DC.W str_edit_recall
     DC.W str_mem_protect
-    DC.W str_test_mode_entry
+; @NOTE: The original ROM had the full test prompt string pointer here.
+; This string is 32 characters long. If this was reached, it would overflow the
+; LCD buffer, and clobber the adjacent memory. This was the bottom of the stack,
+; so it was highly unlikely to cause any issues. In this ROM that isn't the
+; case, so it has been changed to print only the second line of the test entry
+; prompt.
+    DC.W str_test_mode_prompt_line_2
+
+; Sub-function parameter name strings.
     DC.W str_osc_key_sync
     DC.W str_lfo_pm_depth
     DC.W str_mod_sens_p
