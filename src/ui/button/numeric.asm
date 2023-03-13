@@ -143,9 +143,8 @@ ui_button_edit_1_to_4_operator_enable:          SUBROUTINE
 .exit:
     LDAA    #EVENT_RELOAD_PATCH
     STAA    main_patch_event_flag
-    JSR     midi_sysex_tx_param_change_operator_enable
+    JMP     midi_sysex_tx_param_change_operator_enable
 
-    RTS
 
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE
@@ -311,11 +310,11 @@ ui_button_function_6_jump:                      SUBROUTINE
 ui_button_edit_5:                               SUBROUTINE
 ; If this button has been pressed twice in succession, cycle the sub-function.
     CMPB    ui_btn_numeric_last_pressed
-    BNE     .store_sub_function
+    BNE     .store_last_button_pressed
 
     TOGGLE_BUTTON_SUB_FUNCTION ui_btn_edit_5_sub_function
 
-.store_sub_function:
+.store_last_button_pressed:
     STAB    ui_btn_numeric_last_pressed
     TST     ui_btn_edit_5_sub_function
     BNE     .alternative_function_selected
@@ -376,11 +375,11 @@ ui_button_edit_9_pmd_amd:                       SUBROUTINE
 ui_button_edit_10:                              SUBROUTINE
 ; If this button has been pressed twice in succession, cycle the sub-function.
     CMPB    ui_btn_numeric_last_pressed
-    BNE     .store_sub_function
+    BNE     .store_last_button_pressed
 
     TOGGLE_BUTTON_SUB_FUNCTION ui_btn_edit_10_sub_function
 
-.store_sub_function:
+.store_last_button_pressed:
     STAB    ui_btn_numeric_last_pressed
     TST     ui_btn_edit_10_sub_function
     BEQ     ui_load_max_value_from_button
@@ -401,11 +400,11 @@ ui_button_edit_10:                              SUBROUTINE
 ui_button_edit_14:                              SUBROUTINE
 ; If this button has been pressed twice in succession, cycle the sub-function.
     CMPB    ui_btn_numeric_last_pressed
-    BNE     .store_sub_function
+    BNE     .store_last_button_pressed
 
     TOGGLE_BUTTON_SUB_FUNCTION ui_btn_edit_14_sub_function
 
-.store_sub_function:
+.store_last_button_pressed:
     STAB    ui_btn_numeric_last_pressed
     TST     ui_btn_edit_14_sub_function
     BEQ     ui_load_max_value_from_button
@@ -621,6 +620,8 @@ ui_button_function_4:                           SUBROUTINE
     BNE     ui_button_function_set_active_parameter
 
     TOGGLE_BUTTON_SUB_FUNCTION ui_btn_function_4_sub_function
+
+    TBA
 
     TST     ui_btn_function_4_sub_function
     BEQ     ui_button_function_set_active_parameter
