@@ -70,6 +70,49 @@ ui_print:                                       SUBROUTINE
 .exit:
     RTS
 
+; ==============================================================================
+; UI_PRINT_PLAY_MODE
+; ==============================================================================
+; @NEW_FUNCTIONALITY
+; DESCRIPTION:
+; Prints the main user-interface when the synth is in 'Play Mode'.
+; In the original DX9 firmware, this originally showed the 'Function' mode
+; user interface, while displaying the 'Memory Select' title.
+; This has been changed to more closely match the 'Play' mode of the DX7.
+;
+; ==============================================================================
+ui_print_play_mode:                             SUBROUTINE
+    JSR     lcd_clear
+
+    LDX     #str_memory_select
+    JSR     lcd_strcpy
+
+    LDX     #lcd_buffer_next_line_2
+    STX     <memcpy_ptr_dest
+
+    LDX     #str_int
+    JSR     lcd_strcpy
+
+; Load the current patch index, and test whether it is currently set to 0x80,
+; indicating the initialised patch buffer is active.
+    LDAA    patch_index_current
+    CMPA    #$80
+    BNE     .print_patch_number
+
+; Load 0xFF into ACCA, so when it is incremented it will overflow back to '0'.
+    LDAA    #$FF
+
+.print_patch_number:
+    INCA
+    JSR     lcd_print_number_two_digits
+
+; Print the name of the patch in the edit buffer.
+    LDX     #(lcd_buffer_next_line_2 + 6)
+    STX     <memcpy_ptr_dest
+
+; This subroutine calls the 'lcd_update' function
+    JMP     patch_print_current_name
+
 
 ; ==============================================================================
 ; UI_PRINT_MEMORY_STORE_MODE
@@ -302,18 +345,6 @@ ui_print_function_mode:                         SUBROUTINE
     JSR     lcd_strcpy
     JMP     lcd_update
 
-
-; ==============================================================================
-; UI_PRINT_PLAY_MODE
-; ==============================================================================
-; DESCRIPTION:
-; Prints the main user-interface when the synth is in 'Play Mode'.
-;
-; ==============================================================================
-ui_print_play_mode:                             SUBROUTINE
-    LDX     #str_memory_select
-    JSR     lcd_strcpy
-; Falls-through to print menu.
 
 ; ==============================================================================
 ; UI_PRINT_PARAMETER

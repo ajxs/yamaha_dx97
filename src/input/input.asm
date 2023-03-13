@@ -122,6 +122,10 @@ main_input_handler_dispatch:
 ;
 ; ==============================================================================
 input_slider:                                   SUBROUTINE
+; Exit if the synth is in 'Play' mode.
+    CMPA    #UI_MODE_PLAY
+    BEQ     .exit
+
 ; Check if the current UI sate is in 'Store' mode. If so, exit.
     ANDA    #%1100
     BNE     .exit
@@ -150,6 +154,10 @@ input_slider:                                   SUBROUTINE
 ;
 ; ==============================================================================
 input_button_yes_no:                            SUBROUTINE
+; Exit if the synth is in 'Play' mode.
+    CMPA    #UI_MODE_PLAY
+    BEQ     .exit
+
 ; Check if the current UI sate is in 'Store' mode. If so, exit.
     ANDA    #%1100
     BNE     .exit
@@ -201,7 +209,7 @@ input_button_yes_no:                            SUBROUTINE
 ;          - 1: ???
 ;          - 2: "FUNCTION"
 ;          - 3: "EDIT"
-;          - 4: "MEMORY "
+;          - 4: "PLAY "
 ;
 ; ==============================================================================
 input_button_main:                              SUBROUTINE

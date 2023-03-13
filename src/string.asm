@@ -79,6 +79,8 @@ str_function_control:                   DC "FUNCTION CONTROL", 0
 str_glissando:                          DC "GLISSANDO"
                                         DC.B PRINT_PARAM_FUNCTION_BOOLEAN
 
+str_int:                                DC "INT", 0
+
 str_lfo_name_triangle:                  DC "TRIANGLE", 0
 str_lfo_name_saw_down:                  DC "SAW DWN", 0
 str_lfo_name_saw_up:                    DC "SAW UP", 0

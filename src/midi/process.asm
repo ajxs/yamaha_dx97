@@ -362,7 +362,7 @@ midi_rx_program_change:                         SUBROUTINE
 .is_synth_in_play_mode:
 ; Test whether the synth is in 'Play/Memory Select' mode. If not, exit.
     LDAB    ui_mode_memory_protect_state
-    CMPB    #UI_MODE_MEMORY_SELECT
+    CMPB    #UI_MODE_PLAY
     BNE     .exit
 
     CLR     main_patch_event_flag
