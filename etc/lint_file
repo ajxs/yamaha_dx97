@@ -25,6 +25,18 @@ LOCAL_LABEL_PREFIX = "."
 FIX_ERRORS = False
 
 
+def parse_instruction(line):
+    """
+    Parses an individual line of source code, to find any instruction it contains.
+    """
+
+    instruction_match = re.match(r"    (\w+).*", line)
+    if instruction_match:
+        return instruction_match.group(1)
+
+    return None
+
+
 def lint_line(line):
     """
     Processes an individual line of source code, checking for formatting errors.
@@ -70,9 +82,24 @@ def lint_file():
             # All unfixable errors encountered will be aggregated in this list.
             errors = []
 
+            last_instruction = None
+
             output_lines = []
             source_lines = input_file.readlines()
+
             for source_line in source_lines:
+                # Test for redundant adjacent JSR/RTS combinations.
+                current_instruction = parse_instruction(source_line)
+                if current_instruction == "RTS" and last_instruction == "JSR":
+                    errors.append({
+                        "error": "Potentially unnecessary 'JSR' call before RTS",
+                        "line_number": line_number,
+                        "fixed": False
+                    })
+
+                if current_instruction:
+                    last_instruction = current_instruction
+
                 (lint_result, lint_error, replacement) = lint_line(source_line)
                 if lint_result:
                     output_lines.append(source_line)
@@ -125,7 +152,7 @@ def lint_file():
 def print_usage():
     """Prints script usage to STDOUT."""
 
-    print("Usage: lint_source --input_file <string>")
+    print("Usage: lint_file --input_file <string>")
 
 
 if __name__ == "__main__":
