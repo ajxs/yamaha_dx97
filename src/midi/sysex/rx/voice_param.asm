@@ -38,12 +38,12 @@ midi_sysex_rx_param_voice_process:              SUBROUTINE
     CMPA    #0
     BEQ     .set_parameter
 
-; If this value is not one, it indicates a value over 255, which is invalid.
+; If this value is not zero, or one, it indicates an invalid value over 255.
     CMPA    #1
     BNE     .exit
 
-; Set this bit to combine the values.
-    ORAB    1 << 7
+; Set the MSB to create the final offset.
+    ORAB    #(1 << 7)
 
 .set_parameter:
     LDAA    <midi_sysex_byte_count_lsb_param_data

@@ -127,8 +127,8 @@ midi_sysex_rx_substatus:                        SUBROUTINE
     STAA    <midi_sysex_substatus
 
 ; Jump-off based on the substatus, which occupies bit 4-7.
-; If this is 0, it will be below 10, on account of the MIDI channel.
-; If it is 1, it will be below 20.
+; If this is '0', it will be below 0x10, on account of the MIDI channel.
+; If it is '1', it will be below 0x20.
 ; Anything else is invalid.
     TAB
     JSR     jumpoff
@@ -249,7 +249,7 @@ midi_sysex_rx_process_received_data:            SUBROUTINE
     CMPB    #MIDI_SYSEX_SUBSTATUS_PARAM_CHANGE
     BCS     midi_sysex_rx_process_data_msg
 
-; Handle 'Parameter Change' SYSEX message.
+; Handle 'Parameter Change' SysEx message.
     LDAB    <midi_sysex_format_param_grp
 
 ; Shift the 'Parameter Group' field right twice to mask it, then jump.
