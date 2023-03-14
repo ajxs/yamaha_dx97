@@ -268,6 +268,28 @@ midi_tx:                                        SUBROUTINE
 ; ==============================================================================
 midi_tx_active_sensing:                         SUBROUTINE
     LDAA    #MIDI_STATUS_ACTIVE_SENSING
+    JMP     midi_tx
+
+
+; ==============================================================================
+; MIDI_TX_PROGRAM_CHANGE_CURRENT_PATCH
+; ==============================================================================
+; DESCRIPTION:
+; If SysEx is enabled, this subroutine sends a MIDI 'Program Change' event
+; with the currently selected patch index.
+; This subroutine is initiated from a front-panel key press.
+;
+; ==============================================================================
+midi_tx_program_change_current_patch:           SUBROUTINE
+    TST     sys_info_avail
+    BNE     .exit
+
+    LDAA    #MIDI_STATUS_PROGRAM_CHANGE
     JSR     midi_tx
 
+    LDAA    patch_index_current
+    ANDA    #$7F
+    JMP     midi_tx
+
+.exit:
     RTS

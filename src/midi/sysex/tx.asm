@@ -42,6 +42,23 @@
     .ENDM
 
 
+
+; ==============================================================================
+; Sends the parameter change SysEx header.
+;
+; REGISTERS MODIFIED:
+; * ACCA
+;
+; ==============================================================================
+    .MACRO SYSEX_SEND_HEADER_PARAM_CHANGE
+        LDAA    #MIDI_STATUS_SYSEX_START
+        JSR     midi_tx
+        LDAA    #MIDI_MANUFACTURER_ID_YAMAHA
+        JSR     midi_tx
+        LDAA    #MIDI_SYSEX_SUBSTATUS_PARAM_CHANGE
+    .ENDM
+
+
 ; ==============================================================================
 ; Sends a specified buffer via SysEx.
 ;
@@ -112,13 +129,7 @@ midi_sysex_tx_param_change:                     SUBROUTINE
     TST     patch_compare_mode_active
     BNE     .exit
 
-; Send the parameter change sysex header.
-    LDAA    #MIDI_STATUS_SYSEX_START
-    JSR     midi_tx
-    LDAA    #MIDI_MANUFACTURER_ID_YAMAHA
-    JSR     midi_tx
-    LDAA    #MIDI_SYSEX_SUBSTATUS_PARAM_CHANGE
-    JSR     midi_tx
+    SYSEX_SEND_HEADER_PARAM_CHANGE
 
 ; Get the relative offset of the currently selected edit parameter.
     LDD     ui_active_param_address
@@ -146,12 +157,7 @@ midi_sysex_tx_param_change:                     SUBROUTINE
     CPX     #sys_info_avail
     BCC     .exit
 
-    LDAA    #MIDI_STATUS_SYSEX_START
-    JSR     midi_tx
-    LDAA    #MIDI_MANUFACTURER_ID_YAMAHA
-    JSR     midi_tx
-    LDAA    #MIDI_SYSEX_SUBSTATUS_PARAM_CHANGE
-    JSR     midi_tx
+    SYSEX_SEND_HEADER_PARAM_CHANGE
 
 ; Get the function parameter number by loading the address of the parameter
 ; from the pointer, then subtracting the 'master_tune' address.
@@ -171,6 +177,9 @@ midi_sysex_tx_param_change:                     SUBROUTINE
     LDAA    0,x
     ANDA    #$7F
     JSR     midi_tx
+
+    LDAA    #MIDI_STATUS_SYSEX_END
+    JMP     midi_tx
 
 .exit:
     RTS
@@ -193,20 +202,19 @@ midi_sysex_tx_param_change_operator_enable:     SUBROUTINE
     TST     sys_info_avail
     BEQ     .exit
 
+    SYSEX_SEND_HEADER_PARAM_CHANGE
+
 ; Send the SysEx parameter number associated with the operator enable status.
 ; In this case '155'.
-    LDAA    #MIDI_STATUS_SYSEX_START
-    JSR     midi_tx
-    LDAA    #MIDI_MANUFACTURER_ID_YAMAHA
-    JSR     midi_tx
-    LDAA    #MIDI_SYSEX_SUBSTATUS_PARAM_CHANGE
-    JSR     midi_tx
     LDAA    #1
     JSR     midi_tx
     LDAA    #27
     JSR     midi_tx
     LDAA    patch_edit_operator_status
     JSR     midi_tx
+
+    LDAA    #MIDI_STATUS_SYSEX_END
+    JMP     midi_tx
 
 .exit:
     RTS
@@ -227,12 +235,8 @@ midi_sysex_tx_key_transpose:                    SUBROUTINE
     TST     sys_info_avail
     BEQ     .exit
 
-    LDAA    #MIDI_STATUS_SYSEX_START
-    JSR     midi_tx
-    LDAA    #MIDI_MANUFACTURER_ID_YAMAHA
-    JSR     midi_tx
-    LDAA    #MIDI_SYSEX_SUBSTATUS_PARAM_CHANGE
-    JSR     midi_tx
+    SYSEX_SEND_HEADER_PARAM_CHANGE
+
     LDAA    #1
     JSR     midi_tx
     LDAA    #16
@@ -246,12 +250,12 @@ midi_sysex_tx_key_transpose:                    SUBROUTINE
 
 
 ; ==============================================================================
-; MIDI_SYSEX_TX_BULK_DATA_SINGLE_VOICE
+; MIDI_SYSEX_TX_BULK_DATA_SINGLE_PATCH
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
-; Transmits a single voice bulk data dump over SysEx.
+; Transmits a single patch bulk data dump over SysEx.
 ;
 ; ARGUMENTS:
 ; Memory:
@@ -261,7 +265,7 @@ midi_sysex_tx_key_transpose:                    SUBROUTINE
 ; * ACCA
 ;
 ; ==============================================================================
-midi_sysex_tx_bulk_data_single_voice:           SUBROUTINE
+midi_sysex_tx_bulk_data_single_patch:           SUBROUTINE
     TST     sys_info_avail
     BEQ     .exit
 
@@ -273,7 +277,7 @@ midi_sysex_tx_bulk_data_single_voice:           SUBROUTINE
     LDX     #midi_buffer_sysex_tx
     JSR     patch_deserialise
 
-    JSR     midi_sysex_tx_bulk_data_single_voice_send
+    JMP     midi_sysex_tx_bulk_data_single_patch_send
 
 .exit:
     RTS
@@ -315,7 +319,7 @@ midi_sysex_tx_recalled_patch:                   SUBROUTINE
     LDX     #midi_buffer_sysex_tx
     JSR     patch_deserialise
 
-    JSR     midi_sysex_tx_bulk_data_single_voice_send
+    JMP     midi_sysex_tx_bulk_data_single_patch_send
 
 .exit:
     RTS
@@ -341,43 +345,58 @@ midi_sysex_tx_bulk_data_send_init_voice:        SUBROUTINE
     LDX     #midi_buffer_sysex_tx
     JSR     patch_deserialise
 
-    JSR     midi_sysex_tx_bulk_data_single_voice_send
+    JMP     midi_sysex_tx_bulk_data_single_patch_send
 
 .exit:
     RTS
 
 
 ; ==============================================================================
-; MIDI_SYSEX_TX_BULK_DATA_32_VOICES
+; MIDI_SYSEX_TX_BULK_DATA_ALL_PATCHES
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
-; @TODO
+; Sends a bulk patch dump of all the synth's patches.
+; @NOTE: In order for a bulk patch dump to be properly recognised, it needs to
+; have a full 32 patches included. In the original DX9 firmware this was
+; accomplished by sending whatever was in the 'incoming' buffer multiple times
+; to pad the dump.
+; This firmware pads the dump with the initialised patch.
 ;
 ; ==============================================================================
-midi_sysex_tx_bulk_data_32_voices:              SUBROUTINE
+midi_sysex_tx_bulk_data_all_patches:            SUBROUTINE
     JSR     voice_reset
     JSR     lcd_clear
     JSR     lcd_update
 
-    SYSEX_SEND_HEADER midi_sysex_header_bulk_data_32_voices
+    SYSEX_SEND_HEADER midi_sysex_header_bulk_data_all_patches
 
     CLR     midi_sysex_tx_checksum
 
     CLR     midi_sysex_patch_number
 
 .send_patch_loop:
-; Store the pointer to the source patch in the patch buffer.
+; If the _current_ patch number is under the size of the internal patch count,
+; then send the indexed patch.
+; Otherwise send the initialised patch.
     LDAB    <midi_sysex_patch_number
+    CMPB    #PATCH_BUFFER_COUNT
+    BCS     .serialise_internal_patch
+
+    LDX     #patch_buffer_init_voice
+    BRA     .serialise_to_outgoing_buffer
+
+.serialise_internal_patch:
     JSR     patch_get_ptr
+
+.serialise_to_outgoing_buffer:
+; Store the pointer to the source patch.
     STX     <memcpy_ptr_src
 
-; Load the destination buffer adress, and number of bytes to copy.
-    LDX     #midi_buffer_sysex_tx
-    LDAB    PATCH_SIZE_PACKED_DX7
-
 ; Copy to the temporary SysEx buffer, then send.
+    LDX     #midi_buffer_sysex_tx
+    LDAB    #PATCH_SIZE_PACKED_DX7
     JSR     memcpy_store_dest_and_copy_accb_bytes
 
     SYSEX_SEND_BUFFER midi_buffer_sysex_tx, PATCH_SIZE_PACKED_DX7
@@ -389,35 +408,37 @@ midi_sysex_tx_bulk_data_32_voices:              SUBROUTINE
     CMPB    #32
     BNE     .send_patch_loop
 
-; Send the checksum.
+; Send the checksum, and SysEx end status.
     LDAA    <midi_sysex_tx_checksum
     NEGA
     ANDA    #$7F
     JSR     midi_tx
 
+    LDAA    #MIDI_STATUS_SYSEX_END
+    JSR     midi_tx
+
     JMP     ui_print
 
 
-midi_sysex_header_bulk_data_32_voices:
+midi_sysex_header_bulk_data_all_patches:
     DC.B MIDI_STATUS_SYSEX_START
     DC.B MIDI_MANUFACTURER_ID_YAMAHA
     DC.B 0
     DC.B MIDI_SYSEX_FORMAT_BULK
-; @TODO: Fix byte count.
     DC.B $20
     DC.B 0
 
 
 ; ==============================================================================
-; MIDI_SYSEX_TX_BULK_DATA_SINGLE_VOICE_SEND
+; MIDI_SYSEX_TX_BULK_DATA_SINGLE_PATCH_SEND
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
-; @TODO
+; Sends a single patch via SysEx.
 ;
 ; ==============================================================================
-midi_sysex_tx_bulk_data_single_voice_send:      SUBROUTINE
+midi_sysex_tx_bulk_data_single_patch_send:      SUBROUTINE
     SYSEX_SEND_HEADER midi_sysex_header_bulk_data_single
 
     CLR     midi_sysex_tx_checksum
@@ -430,7 +451,8 @@ midi_sysex_tx_bulk_data_single_voice_send:      SUBROUTINE
     TBA
     JSR     midi_tx
 
-    RTS
+    LDAA    #MIDI_STATUS_SYSEX_END
+    JMP     midi_tx
 
 
 midi_sysex_header_bulk_data_single:
@@ -440,25 +462,3 @@ midi_sysex_header_bulk_data_single:
     DC.B 0
     DC.B 1
     DC.B $1B
-
-
-; ==============================================================================
-; MIDI_SYSEX_TX_PROGRAM_CHANGE_CURRENT_PATCH
-; ==============================================================================
-; DESCRIPTION:
-; If SysEx is enabled, this subroutine sends a MIDI 'Program Change' event
-; with the currently selected patch index.
-;
-; ==============================================================================
-midi_sysex_tx_program_change_current_patch:     SUBROUTINE
-    TST     sys_info_avail
-    BNE     .exit
-
-    LDAA    #MIDI_STATUS_PROGRAM_CHANGE
-    JSR     midi_tx
-    LDAA    patch_index_current
-    ANDA    #$7F
-    JSR     midi_tx
-
-.exit:
-    RTS

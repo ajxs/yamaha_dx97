@@ -45,8 +45,8 @@ patch_load:                                     SUBROUTINE
 patch_load_store_edit_buffer_to_compare:
 ; Patch index is saved here.
     JSR     patch_set_new_index_and_copy_edit_to_compare
-    JSR     midi_sysex_tx_program_change_current_patch
-    JSR     midi_sysex_tx_bulk_data_single_voice
+    JSR     midi_tx_program_change_current_patch
+    JSR     midi_sysex_tx_bulk_data_single_patch
 
 patch_load_clear_compare_mode_state:
     CLR     patch_compare_mode_active
@@ -79,6 +79,4 @@ patch_deserialise_to_edit_from_ptr_and_reload:  SUBROUTINE
     LDAB    #EVENT_HALT_VOICES_RELOAD_PATCH
     STAB    main_patch_event_flag
     JSR     patch_deserialise
-    JSR     patch_validate
-
-    RTS
+    JMP     patch_validate

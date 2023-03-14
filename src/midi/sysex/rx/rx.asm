@@ -570,7 +570,7 @@ midi_rx_sysex_bulk_data_finalise:               SUBROUTINE
     BNE     .checksum_error
 
     TST     midi_sysex_format_type
-    BNE     .finalise_32_voices
+    BNE     .finalise_all_patches
 
 ; Copy the received patch to the 'incoming' buffer, and load it.
     JSR     midi_sysex_rx_bulk_data_serialise_incoming
@@ -595,7 +595,7 @@ midi_rx_sysex_bulk_data_finalise:               SUBROUTINE
 
     BRA     .exit
 
-.finalise_32_voices:
+.finalise_all_patches:
 ; Since each patch is 128 bytes in size, and the SysEx data has a 7 bit length,
 ; the data length's MSB indicates the number of patches in the dump.
 ; Decrement the MSB count to convert the total number of patches in the
@@ -682,7 +682,7 @@ midi_sysex_rx_param_function_64_to_78:          SUBROUTINE
     JSR     portamento_calculate_rate
 
 .update_ui_and_exit:
-    JSR     ui_print_update_led_and_menu
+    JMP     ui_print_update_led_and_menu
 
 .exit:
     RTS
@@ -730,7 +730,7 @@ midi_sysex_rx_param_function_button:            SUBROUTINE
 ; message by passing the parameter number to the main input handler.
     CLR     main_patch_event_flag
     TAB
-    JSR     main_input_handler_process_button
+    JMP     main_input_handler_process_button
 
 .exit:
     RTS
@@ -797,7 +797,7 @@ midi_sysex_rx_bulk_data_deserialise:            SUBROUTINE
     STD     <memcpy_ptr_dest
 
     LDAB    #PATCH_SIZE_PACKED_DX7
-    JSR     memcpy
+    JMP     memcpy
 
 .exit:
     RTS
