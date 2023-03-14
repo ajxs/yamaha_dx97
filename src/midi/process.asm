@@ -320,9 +320,9 @@ table_midi_velocity:
 ; ==============================================================================
 ; MIDI_RX_AFTERTOUCH
 ; ==============================================================================
+; @NEW_FUNCTIONALITY
 ; DESCRIPTION:
 ; Aftertouch is currently not supported.
-; At some point I may implement this.
 ;
 ; ==============================================================================
 midi_rx_aftertouch:                             SUBROUTINE
@@ -333,6 +333,7 @@ midi_rx_aftertouch:                             SUBROUTINE
 ; MIDI_RX_PROGRAM_CHANGE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Handles incoming MIDI data when the pending MIDI event is a
 ; 'Program Change' event.
@@ -353,11 +354,12 @@ midi_rx_aftertouch:                             SUBROUTINE
 ;
 ; ==============================================================================
 midi_rx_program_change:                         SUBROUTINE
-; If the patch number is '20', or above, set to '19'.
-    CMPA    #20
+; If the patch number is equal to the total patch amount, or above, set to the
+; last patch index.
+    CMPA    #PATCH_BUFFER_COUNT
     BCS     .is_synth_in_play_mode
 
-    LDAA    #19
+    LDAA    #(PATCH_BUFFER_COUNT - 1)
 
 .is_synth_in_play_mode:
 ; Test whether the synth is in 'Play/Memory Select' mode. If not, exit.
@@ -472,6 +474,7 @@ midi_process_status_message:                    SUBROUTINE
 ; MIDI_RX_ACTIVE_SENSING
 ; ==============================================================================
 ; @NEW_FUNCTIONALITY
+; @NEEDS_TESTING
 ; DESCRIPTION:
 ; Handles an incoming MIDI active sensing message.
 ; The original DX9 firmware handled active sensing very differently.
@@ -503,7 +506,6 @@ midi_process_status_message:                    SUBROUTINE
 midi_rx_active_sensing:                         SUBROUTINE
     LDAA    #1
     STAA    <midi_active_sensing_rx_counter_enabled
-    CLRA
-    STAA    <midi_active_sensing_rx_counter
+    CLR     <midi_active_sensing_rx_counter
 
     RTS
