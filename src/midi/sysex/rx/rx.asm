@@ -227,6 +227,8 @@ midi_sysex_rx_byte_count_msb_param:             SUBROUTINE
 ; =============================================================================
 ; MIDI_SYSEX_RX_PROCESS_RECEIVED_DATA
 ; =============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Stores the last incoming SysEx header data, and begins processing the data.
 ; In the case that this is the start of a bulk data dump, this subroutine
@@ -260,9 +262,9 @@ midi_sysex_rx_process_received_data:            SUBROUTINE
     DC.B midi_sysex_rx_param_voice - *
     DC.B 1
     DC.B midi_sysex_rx_param_end - *
-    DC.B 3
+    DC.B 2
     DC.B midi_sysex_rx_param_function - *
-    DC.B 4
+    DC.B 3
     DC.B midi_sysex_rx_param_end - *
     DC.B 0
 
@@ -299,7 +301,7 @@ midi_sysex_rx_param_function:                   SUBROUTINE
     TST     sys_info_avail
     BEQ     midi_sysex_rx_param_end
 
-    JSR     midi_sysex_rx_param_function_64_to_78
+    JSR     midi_sysex_rx_param_function_64_to_76
     BRA     midi_sysex_rx_param_end
 
 .function_param_below_64:
@@ -637,30 +639,101 @@ midi_rx_sysex_bulk_data_finalise:               SUBROUTINE
 
 
 ; =============================================================================
-; MIDI_SYSEX_RX_PARAM_FUNCTION_64_TO_78
+; MIDI_SYSEX_RX_PARAM_FUNCTION_64_TO_76
 ; =============================================================================
 ; DESCRIPTION:
-; Handles a SysEx function parameter change message from '64' to '78'.
+; Handles a SysEx function parameter change message from '64' to '76'.
 ; These correspond to the synth's main function parameters.
 ;
 ; ARGUMENTS:
 ; Registers:
 ; * ACCA: The incoming SysEx parameter number.
+; * ACCB: The incoming SysEx parameter value.
 ;
 ; =============================================================================
-midi_sysex_rx_param_function_64_to_78:          SUBROUTINE
-; If 78 or above, this is an invalid param, so branch...
-    CMPA    #78
+midi_sysex_rx_param_function_64_to_76:          SUBROUTINE
+; If the parameter number is '76' or above, this is invalid.
+; Unlike the DX7, this excludes the final two editable parameters
+; (0x4C, and 0x4D). These are for aftertouch, which is not relevant to the DX9.
+    CMPA    #76
     BCC     .exit
 
+; If the parameter number is equal to '70', or higher, this represents a
+; controller parameter. These are not stored linearly in memory, and require
+; different logic.
+    CMPA    #70
+    BCC     .is_mod_wheel_param
+
 ; Load a pointer to the function data.
-; Subtract '65', and use this value as an index to the specified function
+; Subtract '64', and use this value as an index to the specified function
 ; parameter in the synth's memory.
-    LDX     #master_tune
-    SUBA    #65
+    LDX     #mono_poly
+    SUBA    #64
     TAB
     ABX
+    BRA     .store_incoming_value
 
+.is_mod_wheel_param:
+; If the parameter number is equal to '72' or above, it's not the mod wheel.
+    CMPA    #72
+    BCC     .is_breath_controller_param
+
+; The parameter number is either '46' (Range), or '47' (Settings).
+; The following code tests which setting number it is by testing whether the
+; parameter number is odd.
+    LDX     #mod_wheel_range
+
+    BITA    #1
+    BNE     .parse_modulation_properties
+
+    BRA     .store_incoming_value
+
+.is_breath_controller_param:
+; If the parameter number is below '74', it's for the foot controller, so exit.
+    CMPA    #74
+    BCS     .exit
+
+    LDX     #breath_control_range
+
+    BITA    #1
+    BNE     .parse_modulation_properties
+
+    BRA     .store_incoming_value
+
+.parse_modulation_properties:
+; In the DX7 firmware, the controller settings are stored as a bitmask.
+; This section translates between the bitmask format shared by the SysEx
+; implementation, and the sequential variables used in the DX9 firmware.
+    CLC
+    LDAA    #1
+
+; Clear the three settings variables initially.
+    CLR     1,x
+    CLR     2,x
+    CLR     3,x
+
+; Rotate the bitmask rightwards.
+; If the first bit (Pitch modulation) is set, this will set the carry bit.
+    RORB
+    BCC     .test_amplitude_setting
+
+    STAA    1,x
+
+.test_amplitude_setting:
+    RORB
+    BCC     .test_eg_bias_setting
+
+    STAA    2,x
+
+.test_eg_bias_setting:
+    RORB
+    BCC     .update_ui_and_exit
+
+    STAA    3,x
+
+    BRA     .update_ui_and_exit
+
+.store_incoming_value:
 ; Write the newly received SysEx data.
     LDAA    <midi_sysex_byte_count_lsb_param_data
     STAA    0,x
