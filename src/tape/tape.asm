@@ -24,7 +24,6 @@
 ; DESCRIPTION:
 ; Calculates the checksum for an individual patch before it is output over the
 ; synth's cassette interface.
-; @TODO: Assess using a temporary variable in place of 'copy_counter'.
 ;
 ; MEMORY MODIFIED:
 ; * copy_counter
@@ -202,47 +201,3 @@ str_ready:                              DC " ready?", 0
 str_err:                                DC "ERR", 0
 str_single:                             DC "single", 0
 str_function_control_verify:            DC "FUNCTION CONTROLVERIFY COMPLETED", 0
-
-
-; ==============================================================================
-; PATCH_COPY_FROM_TAPE_BUFFER
-; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
-; DESCRIPTION:
-; Copies a patch from the synth's temporary tape buffer into the synth's
-; internal memory, after being received via the cassette interface.
-;
-; ARGUMENTS:
-; Registers:
-; * ACCA: The patch number to copy to, indexed from 0.
-;
-; ==============================================================================
-patch_copy_from_tape_buffer:                    SUBROUTINE
-    LDX     #patch_buffer_incoming
-    STX     <copy_ptr_src
-    LDAB    #PATCH_SIZE_PACKED_DX7
-    MUL
-    ADDD    #patch_buffer
-    STD     <copy_ptr_dest
-; Falls-through below.
-
-patch_copy:                                     SUBROUTINE
-    LDAB    #64
-    STAB    <copy_counter
-
-.copy_word_loop:
-    LDX     <copy_ptr_src
-    LDD     0,x
-    INX
-    INX
-    STX     <copy_ptr_src
-    LDX     <copy_ptr_dest
-    STD     0,x
-    INX
-    INX
-    STX     <copy_ptr_dest
-    DEC     copy_counter
-    BNE     .copy_word_loop
-
-    RTS
