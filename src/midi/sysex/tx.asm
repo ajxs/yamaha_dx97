@@ -42,7 +42,6 @@
     .ENDM
 
 
-
 ; ==============================================================================
 ; Sends the parameter change SysEx header.
 ;
@@ -56,6 +55,7 @@
         LDAA    #MIDI_MANUFACTURER_ID_YAMAHA
         JSR     midi_tx
         LDAA    #MIDI_SYSEX_SUBSTATUS_PARAM_CHANGE
+        JSR     midi_tx
     .ENDM
 
 
@@ -93,11 +93,10 @@
 ; ==============================================================================
 ; MIDI_SYSEX_TX_PARAM_CHANGE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
 ; @CHANGED_FOR_6_OP
 ; @NEEDS_TESTING
 ; DESCRIPTION:
-; Sends a parameter change event via MIDI SysEx.
+; Sends a SysEx parameter change event.
 ; This subroutine will determine the proper parameter change message format to
 ; send based upon the parameter address in the IX register.
 ;
@@ -123,9 +122,12 @@ midi_sysex_tx_param_change:                     SUBROUTINE
 
 ; Test if the currently selected edit parameter is a function parameter.
 ; If so it will be above the 'master tune' parameter in memory.
-    CPX     #master_tune
-    BCC     .send_function_parameter
+    CPX     #mono_poly
+    BCC     midi_sysex_tx_param_change_function
 
+; If the synth is in compare mode, exit.
+; This check is performed here so the synth can still send 'function parameter'
+; changes when in compare mode, but not 'edit parameter' changes.
     TST     patch_compare_mode_active
     BNE     .exit
 
@@ -137,42 +139,99 @@ midi_sysex_tx_param_change:                     SUBROUTINE
 
 ; Test if the parameter number is over 128.
 ; If so, increment A to set the MSB of the parameter number.
+; ACCA will be '0' otherwise, since the parameter offsets are all under '256'.
     SUBB    #128
 
     BCS     .parameter_under_128
 
     INCA
-    BRA     .send_parameter_value
+    BRA     .send_sysex_data
 
 .parameter_under_128:
+; Re-add the '128' that was previously subtracted.
     ADDB    #128
-    BRA     .send_parameter_value
 
-.send_function_parameter:
+.send_sysex_data:
+; Send the parameter group.
+    JSR     midi_tx
+
+; Send the parameter number.
+    TBA
+    JSR     midi_tx
+
+    BRA     midi_sysex_tx_send_active_parameter_value
+
+.exit:
+    RTS
+
+
+; ==============================================================================
+; MIDI_SYSEX_TX_PARAM_CHANGE_FUNCTION
+; ==============================================================================
+; DESCRIPTION:
+; Sends a SysEx function parameter change event.
+;
+; ARGUMENTS:
+; Registers:
+; * IX:   The address of the selected parameter to send via SysEx.
+;
+; Memory:
+; * ui_active_param_address: The address of the currently selected parameter.
+;
+; REGISTERS MODIFIED:
+; * ACCA, ACCB, IX
+;
+; ==============================================================================
+midi_sysex_tx_param_change_function:            SUBROUTINE
 ; Test whether the currently selected edit parameter pointer points to
-; something higher in memory than the MIDI RX channel. If so, it represents
-; an invalid value. In this case, exit.
-; @Note: This is a different point in memory than the original DX9 ROM, due to
-; parameters being reordered.
+; something higher in memory than the function parameters. In this case, exit.
     CPX     #sys_info_avail
     BCC     .exit
 
+; Get the function parameter offset by loading the address of the parameter
+; from the pointer, then subtracting the 'mono_poly' address.
+    LDD     ui_active_param_address
+    SUBD    #mono_poly
+
+; If the parameter offset is equal to '6', or higher, this represents a
+; controller parameter. These are not stored linearly in memory, and require
+; different logic.
+    CMPB    #6
+    BCC     midi_sysex_tx_param_change_modulation
+
     SYSEX_SEND_HEADER_PARAM_CHANGE
 
-; Get the function parameter number by loading the address of the parameter
-; from the pointer, then subtracting the 'master_tune' address.
-    LDD     ui_active_param_address
-    SUBD    #master_tune
-
-; @TODO: Why does this not match DX7?
-    LDAA    #12
-    ADDB    #65
-
-.send_parameter_value:
+; Send the parameter group.
+    LDAA    #8
     JSR     midi_tx
+
+; Send the parameter number.
+; This is 0x40 plus the offset.
+    ADDB    #64
     TBA
-    ANDA    #$7F
     JSR     midi_tx
+
+    BRA     midi_sysex_tx_send_active_parameter_value
+
+.exit:
+    RTS
+
+
+; ==============================================================================
+; MIDI_SYSEX_TX_SEND_ACTIVE_PARAMETER_VALUE
+; ==============================================================================
+; DESCRIPTION:
+; Sends the value of the currently selected function parameter via SysEx.
+;
+; ARGUMENTS:
+; Memory:
+; * ui_active_param_address: The address of the currently selected parameter.
+;
+; REGISTERS MODIFIED:
+; * ACCA, IX
+;
+; ==============================================================================
+midi_sysex_tx_send_active_parameter_value:      SUBROUTINE
     LDX     ui_active_param_address
     LDAA    0,x
     ANDA    #$7F
@@ -180,6 +239,132 @@ midi_sysex_tx_param_change:                     SUBROUTINE
 
     LDAA    #MIDI_STATUS_SYSEX_END
     JMP     midi_tx
+
+
+; ==============================================================================
+; MIDI_SYSEX_TX_PARAM_CHANGE_MODULATION
+; ==============================================================================
+; DESCRIPTION:
+; This subroutine handles sending a function parameter change SysEx message
+; related to the synth's modulation parameters.
+; If an assignment parameter is changed, this involves converting the data to
+; the bitmask format usde by the DX7.
+;
+; ARGUMENTS:
+; Registers:
+; * ACCB: The parameter offset.
+;
+; REGISTERS MODIFIED:
+; * ACCA, ACCB, IX
+;
+; ==============================================================================
+midi_sysex_tx_param_change_modulation:          SUBROUTINE
+; If the parameter offset is equal to '10', or higher, it corresponds to
+; the breath controller.
+    CMPB    #10
+    BCC     .breath_controller_param
+
+    LDX     #mod_wheel_range
+
+; If the parameter offset is between '6', and '10', it is an assignment flag
+; parameter.
+    CMPB    #6
+    BEQ     .send_mod_wheel_range
+
+    LDAB    #71
+    BRA     .modulation_assignment_flag_parameter
+
+.send_mod_wheel_range:
+    LDAB    #70
+    LDAA    0,x
+    BRA     .send_parameter
+
+.breath_controller_param:
+    LDX     #breath_control_range
+
+; If the parameter offset is abve '10', it is an assignment flag parameter.
+    CMPB    #10
+    BEQ     .send_breath_control_range
+
+    LDAB    #75
+    BRA     .modulation_assignment_flag_parameter
+
+.send_breath_control_range:
+    LDAB    #74
+    LDAA    0,x
+    BRA     .send_parameter
+
+.modulation_assignment_flag_parameter:
+; If the current edit parameter is a modulation source flag
+; parameter (pitch/amp/eg bias), convert to the bitmask format used by the DX7.
+; Test each of the sequential parameters, setting the appropriate bitmask for
+; each if they're enabled.
+    PSHB
+    JSR     midi_sysex_tx_convert_mod_assignment_flags
+    PULB
+
+.send_parameter:
+    PSHA
+
+    SYSEX_SEND_HEADER_PARAM_CHANGE
+
+; Send the parameter group.
+    LDAA    #8
+    JSR     midi_tx
+
+; Send the parameter number.
+    TBA
+    JSR     midi_tx
+
+; Send the parameter value.
+    PULA
+    ANDA    #$7F
+    JSR     midi_tx
+
+    LDAA    #MIDI_STATUS_SYSEX_END
+    JMP     midi_tx
+
+    RTS
+
+
+; ==============================================================================
+; MIDI_SYSEX_TX_CONVERT_MOD_ASSIGNMENT_FLAGS
+; ==============================================================================
+; @PRIVATE
+; DESCRIPTION:
+; The DX7, and DX9 ROMs store the modulation assignment flags differently.
+; The DX9 stores the assignment flags (pitch/amp/eg bias) as sequantial bytes,
+; whereas the DX7 stores them in a bitmask.
+; This subroutine converts the data to the bitmask format usde by the DX7.
+;
+; ARGUMENTS:
+; Registers:
+; * IX:   The address of the currently selected modulation source's 'range'
+; value. This will be either 'mod_wheel_range', or 'breath_control_range'.
+;
+; REGISTERS MODIFIED:
+; * ACCA, ACCB, IX
+;
+; ==============================================================================
+midi_sysex_tx_convert_mod_assignment_flags:     SUBROUTINE
+    CLRA
+
+    LDAB    1,x
+    BEQ     .test_pitch_modulation
+
+    ORAA    #1
+
+.test_pitch_modulation:
+    LDAB    2,x
+    BEQ     .test_eg_bias
+
+    ORAA    #2
+
+.test_eg_bias:
+    LDAB    3,x
+    BEQ     .exit
+
+    ORAA    #4
 
 .exit:
     RTS

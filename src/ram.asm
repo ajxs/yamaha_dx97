@@ -282,6 +282,11 @@ master_tune:                                    DS 2
 ; * 1: Monophonic.
 mono_poly:                                      DS 1
 pitch_bend_range:                               DS 1
+; This is currently not implemented.
+; This is placed here so that the incoming SysEx function parameter changes
+; work correctly. This feature may be properly implemented at one point in the
+; future.
+pitch_bend_step:                                DS 1
 
 ; Portamento Mode:
 ; Monophonic Mode:

@@ -251,7 +251,9 @@ ui_memory_protect_state_clear:                  SUBROUTINE
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; @PRIVATE
 ; DESCRIPTION:
-; @TODO
+; Toggles the 'Patch Compare Mode' state based upon a press of the front-panel
+; 'Edit/Compare' button while the synth is in the 'Edit' UI mode.
+;
 ; ==============================================================================
 ui_patch_compare_toggle:                        SUBROUTINE
     LDAA    patch_current_modified_flag
@@ -267,17 +269,18 @@ ui_patch_compare_toggle:                        SUBROUTINE
 .compare_mode_active:
     CLR     patch_compare_mode_active
     JSR     patch_restore_edit_buffer_from_compare
+
     LDAA    #BUTTON_EDIT_20_KEY_TRANSPOSE
     CMPA    ui_btn_numeric_last_pressed
-    BEQ     loc_DE9B
+    BEQ     .last_button_key_tranpose
 
     LDX     ui_active_param_address
-    BRA     loc_DE9E
+    BRA     .send_active_edit_parameter
 
-loc_DE9B:
+.last_button_key_tranpose:
     LDX     #patch_edit_key_transpose
 
-loc_DE9E:
+.send_active_edit_parameter:
     JMP     midi_sysex_tx_param_change
 
 .exit:

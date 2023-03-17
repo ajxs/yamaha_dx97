@@ -650,6 +650,9 @@ midi_rx_sysex_bulk_data_finalise:               SUBROUTINE
 ; * ACCA: The incoming SysEx parameter number.
 ; * ACCB: The incoming SysEx parameter value.
 ;
+; REGISTERS MODIFIED:
+; * ACCA, ACCB, IX
+;
 ; =============================================================================
 midi_sysex_rx_param_function_64_to_76:          SUBROUTINE
 ; If the parameter number is '76' or above, this is invalid.
