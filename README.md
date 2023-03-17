@@ -1,15 +1,15 @@
-# Yamaha DX9/7 Alternate Firmware ROM
+# Yamaha DX9/7 Alternative Firmware ROM
 
 ## What is this?
 
-This is an alternate firmware ROM for the Yamaha DX9 synthesiser. Its aim is to make the DX9's functionality more closely match that of the DX7 by restoring features that were intentionally restricted in the firmware, such as increasing the operator count to six, and adding a pitch envelope generator. This ROM makes the synth properly patch-compatible with the DX7.
+DX9/7 is an alternative firmware ROM for the Yamaha DX9 synthesiser. Its aim is to uplift the DX9's functionality to more closely match that of the DX7. It restores features that were intentionally restricted in the firmware, such as increasing the operator count to six, and adding a pitch envelope generator. This ROM makes the synth properly patch-compatible with the DX7.
 
 This is not a patch for the existing DX9 firmware, it is an entirely new firmware ROM. It has been assembled from the original binary, together with code from the DX7's V1.8 ROM, as well as new code written from scratch.
 
 ### New Features:
 * Makes the DX9 able to play DX7 patches.
 * Restores the use of all six operators.
-* The synth is now sensitive to velocity of incoming MIDI notes.
+* The synth is now sensitive to the velocity of incoming MIDI notes.
 * Implements the DX7's pitch EG.
 * Implements DX7 style operator scaling.
 * Implements DX7 style portamento/glissando.
@@ -17,14 +17,20 @@ This is not a patch for the existing DX9 firmware, it is an entirely new firmwar
 ## What is the current status of the ROM?
 
 This firmware is currently highly experimental. Although the main features are fully working, testing and bugfixes are ongoing. Installing the firmware for everyday general use is currently not recommended. As additional testing is performed this will improve. If you do intend to use the ROM despite this warning, please refer to the section on reporting issues.
+Development, and testing of the cassette interface is ongoing, and at this point it should only be used for testing purposes.
 
 The risk of any harm coming to your DX9 as a result of using this ROM is incredibly, *incredibly* small, however the developers take no responsibility for any issues that may arise as a result of using this alternate firmware. All care has been taken, and considerable testing has been performed, however the developers accept no liability for any issues.
 
-## Known Issues
-* Despite this firmware making the DX9 patch-compatible with the DX7, it cannot properly emulate all of the DX7's functionality. While your DX9 might think that it's actually a DX7, your patch editor might not be so easily fooled. Certain MIDI functionality, such as triggering button-presses via SysEx, and function parameter changes, simply can't be emulated in any reasonable way. This might cause issues communicating with common patch editors.
-Receiving individual/bulk patch dumps via SysEx *does* work, however. Every effort is being made to make the ROM as compatible as possible, however some issues will inevitably remain.
+## Important: First Time Installation
 
-* In some cases pitch-bend input is updated at a slightly lower frequency than in the original ROM. If the pitch bend wheel is moved quickly this can result in a noticeable gradation in pitch transition. This is due to the pitch-bend input being processed as part of the main periodic timer interrupt. In the original DX7 pitch-bend input is read by the sub-cpu, and the input is parsed in the firmware only when updated. In the DX9 the pitch-bend's analog input is wired directly to the CPU's I/O ports, and is parsed periodically as part of the OCF interrupt routine. In time this routine may be further optimised to mitigate this issue.
+**Important:** After installing this firmware ROM, due to the locations of important data in the synth's RAM having changed, all of the synth's internal parameters will be filled with random data. The potential effects of this on the synthesizer are not well understood. To initialise all of the synth's performance parameters, and current voice data, hold the **FUNCTION** button as the synth boots up. This will reset the synth to a fresh, safe state.
+
+## Known Issues
+* Despite this firmware making the DX9 patch-compatible with the DX7, it cannot properly emulate all of the DX7's functionality. While your DX9 might think that it's actually a DX7, your patch editor might not be so easily fooled. Certain SysEx functionality, such as triggering DX7-specific button-presses, and changes to the DX7-specific function parameters, simply can't be emulated in any reasonable way. This might cause issues communicating with common patch editors.
+Receiving individual/bulk patch dumps via SysEx *does* work, however. Every effort is being made to make the ROM as compatible as possible, however some discrepancies will inevitably remain.
+
+* In some cases pitch-bend input is updated at a slightly lower frequency than in the original ROM. If the pitch bend wheel is moved quickly this can result in a noticeable gradation in pitch transition. This is due to the pitch-bend input being processed as part of the main periodic timer interrupt. 
+In the DX7 the analog pitch-bend wheel is wired to the sub-CPU, and its input is read, and transmitted to the main CPU periodically. The input is parsed by the main CPU only when it is updated. In the DX9 the pitch-bend's analog input is wired directly to the CPU's I/O ports, and is parsed periodically as part of the OCF interrupt routine. This routine may be further optimised to mitigate this issue in the future.
 
 ## Reporting Issues
 
@@ -66,9 +72,10 @@ With regards to selling programmed EPROM chips, this is currently not on the pro
 The DX9 has considerably less front-panel buttons than that of the DX7. As a result editing of all the DX7-specific parameters via the front-panel just isn't going to be possible. In some cases the editing of these parameters has been made possible via the alternate-functionality of individual buttons, however this just isn't practical for all parameters.
 
 
-**Q: Will this functionality introduce keyboard velocity sensitivity?**
+**Q: Will this functionality introduce keyboard velocity sensitivity, or aftertouch?**
 
 **A:** Unfortunately, this isn't possible. As best as I'm currently aware, this just isn't supported by the keyboard used in the DX9. However the DX9 now responds to velocity in MIDI messages in the same way the DX7 does. Keyboard events also now transmit velocity values of 127, as opposed to '64' in the original ROM.
+Unfortunately the hardware doesn't support aftertouch either. Support for the DX9's missing modulation sources via MIDI is not currently planned: The synth will not respond to aftertouch MIDI messages.
 
 
 **Q: Why is patch storage so limited?**
@@ -82,11 +89,6 @@ The DX7 firmware uses several internal buffers that don't exist in that of the D
 All efforts are being made to optimise the RAM usage for additional patch storage.
 
 
-**Q: Can aftertouch modulation be implemented?**
-
-**A:** Unfortunately the hardware doesn't support aftertouch. Support for the DX9's missing modulation sources via MIDI is not currently planned: The synth will not respond to aftertouch MIDI messages.
-
-
 **Q: After editing the ROM, is it possible to get the ROM diagnostic test stage to pass?**
 
 **A:** Yes! 
@@ -97,7 +99,8 @@ Please refer to this helper script for instructions on how to resovle this: `etc
 
 **A:** Like in the original DX7 firmware, the ROM version is displayed in the 'Test Mode' entry prompt. To display this, hold down the 'Test Mode' button combination: Function+10+20.
 
+
 **Q: Is the cassette interface still functional?**
 
 **A:** Yes. Although with some limitations. 
-Unlike the DX9's SysEx implementation, which serialised patches in a DX7-compatible format, patches output over the cassette interface are serialised in the DX9's native format. To ensure that DX9 patches serialised to tape can still be read this firmware preserves the original formatting. Patches read over the cassette interface will be converted from the DX9 format to the DX7 format used by this firmware. Conversely, patches output to cassette will be converted to DX9 format. This means that certain patches that depend on DX7 functionality may be corrupted in the process. It is not recommended to use this feature.
+Unlike the DX9's SysEx implementation, which serialises patches in a DX7-compatible format, patches output over the cassette interface are serialised in the DX9's native format. To ensure that DX9 patches serialised to tape can still be read this firmware preserves the original formatting. This means that patches output to cassette will be converted to the DX9 format. Patches that depend on DX7-specific functionality will be corrupted in the process. It is not recommended to use this feature. Patches input from the cassette interface will be converted from the DX9 format to the DX7 format used by this firmware. 

@@ -22,6 +22,8 @@ If you are adding a new file to the project, please add this header with the GPL
 
 			.PROCESSOR HD6303
 
+The `.PROCESSOR HD6303` dasm directive is added to new files, as some tooling uses this to determine the assembly dialect.
+
 ## Function Documentation
 
 Functions should use the following documentation.
@@ -70,4 +72,4 @@ The various annotations can be used to categorise functions that need additional
 * Line width must be less-than, or equal to 80.
 * Place a line break after branch statements.
 * Start line comments in column 0.
-* When creating a new file, the directory structure, and file naming convention should model the hierarchy of the function definitions they contain. For example, the function `patch_activate_lfo` is contained in the file `src/patch/activate/lfo`.
+* When creating a new file, the directory structure, and file naming convention should model the hierarchy of the function definitions they contain. For example, the function `patch_activate_lfo` is contained in the file `src/patch/activate/lfo`. This format is just a recommendation. There is no specific requirement for *when* to create new files.

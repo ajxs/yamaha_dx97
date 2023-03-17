@@ -22,4 +22,8 @@ with open(ROM_PATH, mode="rb") as rom_binary:
 
         checksum = (checksum + byte_value) & 0xFF
 
-    print(256 - checksum)
+    checksum_remainder = 256 - checksum
+    if checksum_remainder == 256:
+        print("Checksum is correct!")
+    else:
+        print(checksum_remainder)

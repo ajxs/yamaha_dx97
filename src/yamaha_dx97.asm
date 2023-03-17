@@ -111,9 +111,21 @@
 ; then run the associated script to generate the remainder byte.
 ; Refer to the external documentation for the tools used to calculate this.
 checksum_remainder_byte:
-    DC.B #75
+    DC.B #74
 
     ORG $FFEE
-    INCLUDE "src/vectors.asm"
+
+; This is the main hardware vector table.
+; This table contains the various interupt vectors used by the HD6303 CPU. It
+; always sits in a fixed position at the end of the ROM.
+vector_trap:                                    DC.W handler_reset
+vector_sci:                                     DC.W handler_sci
+vector_tmr_tof:                                 DC.W handler_reset
+vector_tmr_ocf:                                 DC.W handler_ocf
+vector_tmr_icf:                                 DC.W handler_reset
+vector_irq:                                     DC.W handler_reset
+vector_swi:                                     DC.W handler_reset
+vector_nmi:                                     DC.W handler_reset
+vector_reset:                                   DC.W handler_reset
 
     END
