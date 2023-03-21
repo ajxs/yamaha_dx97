@@ -16,14 +16,17 @@ This is not a patch for the existing DX9 firmware, it is an entirely new firmwar
 
 ## What is the current status of the ROM?
 
-This firmware is currently highly experimental. Although the main features are fully working, testing and bugfixes are ongoing. Installing the firmware for everyday general use is currently not recommended. As additional testing is performed this will improve. If you do intend to use the ROM despite this warning, please refer to the section on reporting issues.
+This firmware is currently highly experimental. The main features are fully working, however testing and bugfixing are ongoing. Installing the firmware for everyday general use isn't recommended just yet. This situation will improve over time as additional testing is performed. If you still want to use the ROM, please be sure to read the section on reporting issues.
+
 Development, and testing of the cassette interface is ongoing, and at this point it should only be used for testing purposes.
 
 The risk of any harm coming to your DX9 as a result of using this ROM is incredibly, *incredibly* small, however the developers take no responsibility for any issues that may arise as a result of using this alternate firmware. All care has been taken, and considerable testing has been performed, however the developers accept no liability for any issues.
 
 ## Important: First Time Installation
 
-**Important:** After installing this firmware ROM, due to the locations of important data in the synth's RAM having changed, all of the synth's internal parameters will be filled with random data. The potential effects of this on the synthesizer are not well understood. To initialise all of the synth's performance parameters, and current voice data, hold the **FUNCTION** button as the synth boots up. This will reset the synth to a fresh, safe state.
+**Important: Back up your patches before installation!** 
+
+After installing this firmware ROM all of the synth's patch data, and internal parameters will be filled with random data. This is due to the locations of important data in the synth's RAM having changed. To initialise all of the synth's voice data, and parameters, hold the **FUNCTION** button as the synth boots up. This will reset the synth to a fresh, safe state. The potential effects of running the synth with random voice data loaded is not known.
 
 ## Known Issues
 * Despite this firmware making the DX9 patch-compatible with the DX7, it cannot properly emulate all of the DX7's functionality. While your DX9 might think that it's actually a DX7, your patch editor might not be so easily fooled. Certain SysEx functionality, such as triggering DX7-specific button-presses, and changes to the DX7-specific function parameters, simply can't be emulated in any reasonable way. This might cause issues communicating with common patch editors.
@@ -104,3 +107,8 @@ Please refer to this helper script for instructions on how to resovle this: `etc
 
 **A:** Yes. Although with some limitations. 
 Unlike the DX9's SysEx implementation, which serialises patches in a DX7-compatible format, patches output over the cassette interface are serialised in the DX9's native format. To ensure that DX9 patches serialised to tape can still be read this firmware preserves the original formatting. This means that patches output to cassette will be converted to the DX9 format. Patches that depend on DX7-specific functionality will be corrupted in the process. It is not recommended to use this feature. Patches input from the cassette interface will be converted from the DX9 format to the DX7 format used by this firmware. 
+
+**Q: If I use this ROM, is it possible to reinstall the original?**
+
+**A:** Yes, of course! 
+To go back to using the original ROM, replace the mask ROM IC, and run the synth's diagnostic test routines. This will reset the synth's voice parameters to their default values.
