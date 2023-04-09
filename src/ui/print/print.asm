@@ -159,7 +159,7 @@ ui_print_copy_string_and_update:
 ui_print_eg_copy_mode:                          SUBROUTINE
     LDX     #str_eg_copy
     JSR     lcd_strcpy
-    LDX     #(lcd_buffer_next + 16)
+    LDX     #lcd_buffer_next_line_2
     STX     <memcpy_ptr_dest
     LDX     #str_op_copy
     JSR     lcd_strcpy

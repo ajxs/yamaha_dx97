@@ -90,11 +90,12 @@ voice_reset_frequency_data:                     SUBROUTINE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
-; @TODO
 ; Resets all voices on the EGS chip.
 ; This involves resetting all of the operators to their default, maximum level,
 ; and then sending an 'off' voice event for all of the synth's 16 voices,
 ; followed by an 'on' event, and another 'off' event.
+; It's quite likely that sending this sequence of events to the EGS resets the
+; current envelope stage for all of the synth's notes.
 ;
 ; ==============================================================================
 voice_reset_egs:                                SUBROUTINE

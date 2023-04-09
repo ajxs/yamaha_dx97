@@ -157,6 +157,14 @@ handler_ocf_compare_mode_led_blink:             SUBROUTINE
 ; Handles the OCF (Output Compare Counter) timer interrupt (IRQ2).
 ; This is where all of the synth's periodicly repeated functions are called.
 ;
+; According to the schematics, the CPU is clocked with a 3.77MHz crystal.
+; The HD63B03RP has built in divide-by-4 circuitry, so the synth's actual clock
+; rate is 0.9425MHz.
+; The DX7's OCF interrupt resets the 'Output Compare' register to '3140'.
+; From this we can use the following formula to calculate the actual rate of
+; the periodic interrupt:
+; ((3.77 / 4) ⋅ 10^6) / 3140 = 300.15924Hz
+
 ; MEMORY MODIFIED:
 ; * pitch_eg_update_toggle
 ;
@@ -193,11 +201,8 @@ handler_ocf:                                    SUBROUTINE
 ; updated in this interrupt.
 ; Refer to documentation in the variable definition file `ram.asm`.
     COM     pitch_eg_update_toggle
-    BPL     .process_pitch_mod
+    BNE     .process_pitch_modulation
 
-    BRA     .process_pitch_modulation
-
-.process_pitch_mod:
     JSR     pitch_eg_process
     JSR     handler_ocf_compare_mode_led_blink
 
