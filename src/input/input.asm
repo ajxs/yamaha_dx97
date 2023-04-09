@@ -30,7 +30,7 @@ INPUT_BUTTON_EDIT:                              EQU 5
 INPUT_BUTTON_PLAY:                              EQU 7
 INPUT_BUTTON_1:                                 EQU 8
 INPUT_BUTTON_10:                                EQU 17
-
+INPUT_BUTTON_20:                                EQU 27
 
 ; ==============================================================================
 ; MAIN_INPUT_HANDLER

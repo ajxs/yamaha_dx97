@@ -90,8 +90,6 @@ voice_add_index:                                DS 1
 
 tape_byte_counter:                              DS 1
 tape_input_polarity_previous:                   DS 1
-tape_input_pilot_tone_counter_QQQ:              DS 1
-tape_input_read_byte:                           DS 1
 tape_input_delay_length:                        DS 1
 tape_error_flag:                                DS 1
 
@@ -230,8 +228,11 @@ patch_buffer:                                   DS PATCH_BUFFER_SIZE_BYTES
 ; as a normal patch in the patch buffer, but is not accessible via the UI.
 patch_buffer_incoming:                          DS PATCH_SIZE_PACKED_DX7
 
-tape_patch_output_counter:                      DS 1
-tape_patch_checksum:                            DS 2
+; Patches input via the cassette interface shared the incoming patch buffer,
+; bute are only 64 bytes in size, followed by 3 bytes for the counter, and
+; checksum.
+patch_tape_counter:                             EQU (#patch_buffer_incoming + 64)
+patch_tape_checksum:                            EQU (#patch_buffer_incoming + 65)
 
 patch_buffer_compare:                           DS PATCH_SIZE_PACKED_DX7
 
@@ -320,7 +321,6 @@ tape_remote_output_polarity:                    DS 1
 ; tape input operations.
 memory_protect:                                 DS 1
 
-tape_unknown_byte_15DC:                         DS 1
 tape_patch_index:                               DS 1
 
 ; The current Pitch EG step for each of the synth's voices.

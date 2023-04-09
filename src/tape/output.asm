@@ -62,7 +62,7 @@ tape_output_patch:                              SUBROUTINE
 ; Outputs the pilot tone played before sending a patch.
 ;
 ; Memory:
-; * tape_patch_output_counter: If this is the first patch being sent over the
+; * patch_tape_counter: If this is the first patch being sent over the
 ;    tape interface, an extra long pilot tone is output.
 ;
 ; REGISTERS MODIFIED:
@@ -76,7 +76,7 @@ tape_output_pilot_tone:                         SUBROUTINE
 
 ; If this is the first patch being output in the bulk patch dump, output
 ; a long pilot tone, otherwise output a short pilot tone between patches.
-    TST     tape_patch_output_counter
+    TST     patch_tape_counter
     BNE     .output_short_pilot_tone
 
     LDX     #12000
@@ -90,7 +90,9 @@ tape_output_pilot_tone:                         SUBROUTINE
     LDAB    #14
     DELAY_SHORT
     NOP
-; @TODO: What is this?
+; Since the tape output functions add an arbitrary value to the stack
+; pointer to return to the main UI functions after an error, this operation
+; likely adjusts the stack pointer to match this arbitrary value.
     DES
     JSR     tape_output_bit_one
     INS
@@ -413,7 +415,7 @@ tape_output_all:                                SUBROUTINE
 ; The following loop outputs each of the individual patches.
 ; This variable is used as the main loop counter.
     CLRA
-    STAA    tape_patch_output_counter
+    STAA    patch_tape_counter
 
 .patch_output_loop:
 ; Print the number of the current patch being output.
@@ -424,7 +426,7 @@ tape_output_all:                                SUBROUTINE
     JSR     lcd_update
 
 ; Set up the source, and destination pointers for patch conversion.
-    LDAB    tape_patch_output_counter
+    LDAB    patch_tape_counter
     JSR     patch_get_ptr
     STX     <memcpy_ptr_src
 
@@ -435,16 +437,16 @@ tape_output_all:                                SUBROUTINE
     JSR     patch_convert_to_dx9_format
 
     JSR     tape_calculate_patch_checksum
-    STD     tape_patch_checksum
+    STD     patch_tape_checksum
     JSR     tape_output_patch
 
 ; If any error occurred, exit.
     TST     tape_error_flag
     BNE     .exit
 
-    LDAA    tape_patch_output_counter
+    LDAA    patch_tape_counter
     INCA
-    STAA    tape_patch_output_counter
+    STAA    patch_tape_counter
     CMPA    #PATCH_BUFFER_COUNT
     BNE     .patch_output_loop
 

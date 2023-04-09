@@ -91,11 +91,11 @@ tape_verify:                                    SUBROUTINE
     BNE     .cancel_and_exit
 
     LDAA    tape_patch_index
-    CMPA    tape_patch_output_counter
+    CMPA    patch_tape_counter
     BNE     .print_error_message
 
     JSR     tape_calculate_patch_checksum
-    SUBD    tape_patch_checksum
+    SUBD    patch_tape_checksum
     BNE     .print_error_message
 
 ; This flag being set indicates an error condition returned from the
@@ -111,7 +111,7 @@ tape_verify:                                    SUBROUTINE
     BNE     .verify_patch_loop
 
 ; Print the 'Ok' string to line 2.
-    LDX     #(lcd_buffer_next + 16)
+    LDX     #lcd_buffer_next_line_2
     STX     <memcpy_ptr_dest
     LDX     #str_ok
     JSR     lcd_strcpy
@@ -151,7 +151,7 @@ tape_verify:                                    SUBROUTINE
     JMP     .wait_for_user_input
 
 .print_error_message:
-    LDX     #(lcd_buffer_next + 16)
+    LDX     #lcd_buffer_next_line_2
     STX     <memcpy_ptr_dest
 
     LDX     #str_error
@@ -180,7 +180,7 @@ tape_verify:                                    SUBROUTINE
 ;
 ; ARGUMENTS:
 ; Memory:
-; * tape_patch_output_counter: The patch index being verified.
+; * patch_tape_counter: The patch index being verified.
 ;
 ; MEMORY MODIFIED:
 ; * copy_counter
@@ -200,7 +200,7 @@ tape_verify_patch:                              SUBROUTINE
 ; Setup destination pointer.
 ; Construct this by multiplying the incoming patch number by the patch size,
 ; then adding the patch buffer offset.
-    LDAA    tape_patch_output_counter
+    LDAA    patch_tape_counter
     LDAB    #64
     MUL
     ADDD    #patch_buffer
