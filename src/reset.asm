@@ -205,38 +205,22 @@ handler_reset_validate_parameters:              SUBROUTINE
     RTS
 
 ; ==============================================================================
-; HANDLER_RESET_TEST_FOR_PARAMETER_RESET
+; HANDLER_RESET_PARAMETER_RESET
 ; ==============================================================================
 ; @PRIVATE
 ; DESCRIPTION:
-; Tests whether the 'Function' button is currently being pressed. If so, all of
-; the synth's voice, and performance parameters are reset.
+; Resets all of the synth's voice, and performance parameters.
 ; This is useful for when the addresses of variables in RAM have been changed,
 ; and the voice, and performance parameters end up filled with random data.
 ;
 ; ==============================================================================
-handler_reset_test_for_parameter_reset:         SUBROUTINE
-; Read the status of the 'Function' button.
-    LDAA    <io_port_1_data
-    ANDA    #%11110000
-    STAA    <io_port_1_data
-
-    DELAY_SINGLE
-    LDAA    <key_switch_scan_driver_input
-    ANDA    #KEY_SWITCH_LINE_0_BUTTON_FUNCTION
-    BEQ     .exit
-
+handler_reset_parameter_reset:                  SUBROUTINE
 ; Reset master tune and performance parameters.
     LDD     #$100
     STD     master_tune
 
     LDAA    #0
     STAA    midi_channel_rx
-
-; Reset the UI mode to 'Function'.
-    CLR     ui_mode_memory_protect_state
-
-    CLR     memory_protect
 
     LDAA    #1
     STAA    sys_info_avail
@@ -269,8 +253,14 @@ handler_reset_test_for_parameter_reset:         SUBROUTINE
 ; This will be 'activated' immediately after.
     JSR     patch_init_edit_buffer
 
-.exit:
-    RTS
+; Reset the synth's UI.
+    CLR     memory_protect
+
+    LDAA    #UI_MODE_PLAY
+    STAA    ui_mode_memory_protect_state
+
+    CLR     ui_btn_numeric_last_pressed
+    JMP     ui_print_update_led_and_menu
 
 
 ; ==============================================================================
@@ -366,7 +356,16 @@ handler_reset:                                  SUBROUTINE
 
 ; Test for the 'Function' button being pressed.
 ; This will trigger a reset of the synth's parameters.
-    JSR     handler_reset_test_for_parameter_reset
+    LDAA    <io_port_1_data
+    ANDA    #%11110000
+    STAA    <io_port_1_data
+
+    DELAY_SINGLE
+    LDAA    <key_switch_scan_driver_input
+    ANDA    #KEY_SWITCH_LINE_0_BUTTON_FUNCTION
+    BEQ     .activate_patch
+
+    JSR     handler_reset_parameter_reset
 
 .activate_patch:
 ; Reload of all patch data to the EGS chip.

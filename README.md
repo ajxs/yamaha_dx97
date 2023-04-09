@@ -22,11 +22,13 @@ Development, and testing of the cassette interface is ongoing, and at this point
 
 The risk of any harm coming to your DX9 as a result of using this ROM is incredibly, *incredibly* small, however the developers take no responsibility for any issues that may arise as a result of using this alternate firmware. All care has been taken, and considerable testing has been performed, however the developers accept no liability for any issues.
 
-## Important: First Time Installation
+## Important: First Time Installation or Upgrade
 
 **Important: Back up your patches before installation!** 
 
-After installing this firmware ROM all of the synth's patch data, and internal parameters will be filled with random data. This is due to the locations of important data in the synth's RAM having changed. To initialise all of the synth's voice data, and parameters, hold the **FUNCTION** button as the synth boots up. This will reset the synth to a fresh, safe state. The potential effects of running the synth with random voice data loaded is not known.
+After installing this firmware ROM for the first time, or upgrading to a new version, all of the synth's patch data, and internal parameters will be filled with random data. This is due to the locations of important data in the synth's RAM having changed. 
+
+To initialise all of the synth's parameters and voice data, hold down the **FUNCTION** button as the synth boots up. This will reset the synth to a fresh, safe state. The potential effects of running the synth with random voice data loaded is not known.
 
 ## Known Issues
 * Despite this firmware making the DX9 patch-compatible with the DX7, it cannot properly emulate all of the DX7's functionality. While your DX9 might think that it's actually a DX7, your patch editor might not be so easily fooled. Certain SysEx functionality, such as triggering DX7-specific button-presses, and changes to the DX7-specific function parameters, simply can't be emulated in any reasonable way. This might cause issues communicating with common patch editors.
