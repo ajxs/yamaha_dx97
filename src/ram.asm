@@ -208,21 +208,12 @@ interrupt_temp_variables:                       DS 18
 
 external_ram_start:                             EQU *
 
-midi_buffer_tx:                                 DS MIDI_BUFFER_TX_SIZE
-midi_buffer_tx_end:                             EQU *
-
-midi_buffer_rx:                                 DS MIDI_BUFFER_RX_SIZE
-midi_buffer_rx_end:                             EQU *
-
-; @TODO: Is it possible to use one buffer for both sending, and receiving of
-; SysEx data? Is it possible for both to be used simultaneously?
-midi_buffer_sysex_tx:                           DS PATCH_SIZE_UNPACKED_DX7
-midi_buffer_sysex_rx:                           DS PATCH_SIZE_UNPACKED_DX7
-
-midi_channel_rx:                                DS 1
-midi_channel_tx:                                DS 1
-
+; Place the patch buffer at the start of external RAM.
+; Because it is a fixed size that is unlikely to change, putting this buffer
+; here at this fixed location stops the synth's patch memory being corrupted
+; when the firmware is upgraded.
 patch_buffer:                                   DS PATCH_BUFFER_SIZE_BYTES
+
 ; This is essentially a 'hidden' patch buffer, used to store a patch received
 ; via MIDI/cassette tape. This can be loaded programmatically in the same way
 ; as a normal patch in the patch buffer, but is not accessible via the UI.
@@ -320,6 +311,20 @@ tape_remote_output_polarity:                    DS 1
 ; This variable is referred to independently of the UI state when performing
 ; tape input operations.
 memory_protect:                                 DS 1
+
+midi_buffer_tx:                                 DS MIDI_BUFFER_TX_SIZE
+midi_buffer_tx_end:                             EQU *
+
+midi_buffer_rx:                                 DS MIDI_BUFFER_RX_SIZE
+midi_buffer_rx_end:                             EQU *
+
+; @TODO: Is it possible to use one buffer for both sending, and receiving of
+; SysEx data? Is it possible for both to be used simultaneously?
+midi_buffer_sysex_tx:                           DS PATCH_SIZE_UNPACKED_DX7
+midi_buffer_sysex_rx:                           DS PATCH_SIZE_UNPACKED_DX7
+
+midi_channel_rx:                                DS 1
+midi_channel_tx:                                DS 1
 
 tape_patch_index:                               DS 1
 
