@@ -12,7 +12,11 @@
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
-; Reads a single patch over the synth's cassette interface.
+; Reads a single patch over the synth's cassette interface into the
+; synth's edit buffer.
+; First the user needs to select which patch number to read using the
+; front-panel numeric switches. Then the cassette interface 'reads' each
+; incoming patch until the selected one is read.
 ;
 ; ==============================================================================
 
@@ -154,8 +158,17 @@ tape_input_single:                              SUBROUTINE
     JSR     tape_remote_output_low
 
 .load_incoming_patch_to_edit_buffer:
+; Convert the patch from the serialised DX9 format to the DX7 format.
     LDX     #patch_buffer_incoming
     STX     <memcpy_ptr_src
+    LDX     #patch_buffer_tape_conversion
+    STX     <memcpy_ptr_dest
+    JSR     patch_convert_from_dx9_format
+
+; Deserialise the patch into the edit buffer.
+    LDX     #patch_buffer_tape_conversion
+    STX     <memcpy_ptr_src
+
     LDX     #patch_buffer_edit
     JSR     patch_deserialise
 

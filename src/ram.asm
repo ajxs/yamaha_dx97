@@ -318,8 +318,14 @@ midi_buffer_tx_end:                             EQU *
 midi_buffer_rx:                                 DS MIDI_BUFFER_RX_SIZE
 midi_buffer_rx_end:                             EQU *
 
+; This is a temporary buffer location for conversion of patches read over the
+; cassette interface from the DX9 format, to the DX7 format.
+; This relies on the SysEx buffer being bigger than the size of a single patch.
+patch_buffer_tape_conversion:                   EQU *
+
 ; @TODO: Is it possible to use one buffer for both sending, and receiving of
 ; SysEx data? Is it possible for both to be used simultaneously?
+; @TODO: Is it possible to use these for tape data?
 midi_buffer_sysex_tx:                           DS PATCH_SIZE_UNPACKED_DX7
 midi_buffer_sysex_rx:                           DS PATCH_SIZE_UNPACKED_DX7
 

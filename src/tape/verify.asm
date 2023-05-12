@@ -22,7 +22,7 @@
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
-; Reads all 20 patches from the cassette interface, verifying each one as it is
+; Reads all 10 patches from the cassette interface, verifying each one as it is
 ; input. An error message will be printed in the case that verification fails.
 ;
 ; ==============================================================================
@@ -107,7 +107,7 @@ tape_verify:                                    SUBROUTINE
     LDAA    tape_patch_index
     INCA
     STAA    tape_patch_index
-    CMPA    #20
+    CMPA    #PATCH_BUFFER_COUNT
     BNE     .verify_patch_loop
 
 ; Print the 'Ok' string to line 2.
@@ -177,6 +177,8 @@ tape_verify:                                    SUBROUTINE
 ; DESCRIPTION:
 ; Verifies an individual incoming patch by comparing it against its associated
 ; index in the patch buffer.
+; @NOTE: This will automatically convert the incoming patch to the DX7 format,
+; storing it in a temporary buffer overlaid with the SysEx transmit buffer.
 ;
 ; ARGUMENTS:
 ; Memory:
@@ -194,20 +196,28 @@ tape_verify:                                    SUBROUTINE
 ;
 ; ==============================================================================
 tape_verify_patch:                              SUBROUTINE
+; Convert the patch from the serialised DX9 format to the DX7 format.
     LDX     #patch_buffer_incoming
+    STX     <copy_ptr_src
+    LDX     #patch_buffer_tape_conversion
+    STX     <memcpy_ptr_dest
+    JSR     patch_convert_from_dx9_format
+
+; Set the converted patch as a source for the verification operation.
+    LDX     #patch_buffer_tape_conversion
     STX     <copy_ptr_src
 
 ; Setup destination pointer.
 ; Construct this by multiplying the incoming patch number by the patch size,
 ; then adding the patch buffer offset.
     LDAA    patch_tape_counter
-    LDAB    #64
+    LDAB    #PATCH_SIZE_PACKED_DX7
     MUL
     ADDD    #patch_buffer
     STD     <copy_ptr_dest
 
-; Setup counter. This is 32 WORDS.
-    LDAB    #32
+; Setup counter. This is 64 WORDS, since it is comparing against the DX7 format.
+    LDAB    #64
     STAB    <copy_counter
 
 .compare_word_loop:
