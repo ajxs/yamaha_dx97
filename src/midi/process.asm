@@ -48,6 +48,8 @@ midi_process_incoming_data:                     SUBROUTINE
     CPX     <midi_buffer_ptr_rx_write
     BNE     .process_incoming_data
 
+    CLR     midi_rx_processing_pending
+
 ; In the event that the MIDI RX buffer is empty:
 ; Test whether the synth is currently receiving SysEx data. If this is the
 ; case, and the buffer is empty, reset MIDI, and exit.
@@ -57,10 +59,12 @@ midi_process_incoming_data:                     SUBROUTINE
     BCS     .exit
 
     CLR     midi_sysex_rx_active_flag
-    JSR     midi_reset_timers
-    BRA     .exit
+    JMP     midi_reset_timers
 
 .process_incoming_data:
+    LDAA    #1
+    STAA    midi_rx_processing_pending
+
 ; Read the next incoming data byte.
 ; IX still contains the MIDI RX buffer read pointer.
     LDAA    0,x

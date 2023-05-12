@@ -194,7 +194,12 @@ handler_ocf:                                    SUBROUTINE
     JSR     mod_amp_update
     JSR     voice_update_sustain_status
 
-; @TODO: Ignore if MIDI messages are pending, like in DX7 firmware.
+; If there is received MIDI data pending processing skip processing the
+; portamento, and pitch EG processing.
+; This logic is taken from the DX7.
+    TST     midi_rx_processing_pending
+    BNE     .process_pitch_modulation
+
     JSR     portamento_process
 
 ; Toggle the flag to determine whether portamento, or pitch modulation are

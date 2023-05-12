@@ -148,6 +148,10 @@ midi_rx_first_data_byte:                        DS 1
 
 midi_rx_data_count:                             DS 1
 
+; This boolean parameter is used to test whether incoming MIDI processing is
+; currently pending. If so, pitch modulation processing is ignored.
+midi_rx_processing_pending:                     DS 1
+
 midi_sysex_substatus:                           DS 1
 midi_sysex_format_param_grp:                    DS 1
 
