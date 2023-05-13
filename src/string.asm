@@ -204,7 +204,9 @@ str_tape_load:                          DC "LOAD FROM TAPE ?", 0
 str_tape_single:                        DC "LOAD SINGLE ?", 0
 str_tape_remote:                        DC "TAPE REMOTE", 0
 
-str_test_mode_prompt:                   DC " V0.9 17-Mar-23 "
+; Note that this string is not null-terminated.
+; The test UI routine will copy both lines to the LCD buffer.
+str_test_mode_prompt:                   DC " V0.9.1  May-23 "
 str_test_mode_prompt_line_2:            DC " Test Entry ?", 0
 
 str_voice_init:                         DC "VOICE INIT ?", 0
