@@ -14,6 +14,16 @@ This is not a patch for the existing DX9 firmware, it is an entirely new firmwar
 * Implements DX7 style operator scaling.
 * Implements DX7 style portamento/glissando.
 
+## Important: First Time Installation or Upgrade
+
+**Important: Back up your patches before installation!** 
+
+When installing this firmware ROM for the first time, or upgrading to a new version, all of the synth's internal parameters will be filled with random data. This is because the locations of important data in the synth's RAM will have changed. 
+
+To initialise all of the synth's parameters and voice data, hold down the **FUNCTION** button as the synth boots up. This will reset the synth to a fresh, safe state. The potential effects of running the synth with random voice data loaded is not known.
+
+**Note:** Newer versions of this ROM use a fixed location for patch storage at the starting address of the external RAM. This means that upgrading to a new version *should* not corrupt the current patch memory. The original published version did not do this. So please be sure to back up your patches before upgrading.
+
 ## What is the current status of the ROM?
 
 This firmware is currently highly experimental. The main features are fully working, however testing and bugfixing are ongoing. Installing the firmware for everyday general use isn't recommended just yet. This situation will improve over time as additional testing is performed. If you still want to use the ROM, please be sure to read the section on reporting issues.
@@ -22,16 +32,8 @@ Development, and testing of the cassette interface is ongoing, and at this point
 
 The risk of any harm coming to your DX9 as a result of using this ROM is incredibly, *incredibly* small, however the developers take no responsibility for any issues that may arise as a result of using this alternate firmware. All care has been taken, and considerable testing has been performed, however the developers accept no liability for any issues.
 
-## Important: First Time Installation or Upgrade
-
-**Important: Back up your patches before installation!** 
-
-After installing this firmware ROM for the first time, or upgrading to a new version, all of the synth's patch data, and internal parameters will be filled with random data. This is due to the locations of important data in the synth's RAM having changed. 
-
-To initialise all of the synth's parameters and voice data, hold down the **FUNCTION** button as the synth boots up. This will reset the synth to a fresh, safe state. The potential effects of running the synth with random voice data loaded is not known.
-
 ## Known Issues
-* Despite this firmware making the DX9 patch-compatible with the DX7, it cannot properly emulate all of the DX7's functionality. While your DX9 might think that it's actually a DX7, your patch editor might not be so easily fooled. Certain SysEx functionality, such as triggering DX7-specific button-presses, and changes to the DX7-specific function parameters, simply can't be emulated in any reasonable way. This might cause issues communicating with common patch editors.
+* Despite this firmware making the DX9 patch-compatible with the DX7, it can't emulate *all* of the DX7's functionality. While your DX9 might think that it's actually a DX7, your patch editor might not be so easily fooled. Some SysEx functionality just can't be emulated in any reasonable way, such as triggering DX7-specific button-presses, and changes to the DX7-specific function parameters. This might cause issues communicating with some patch editors.
 Receiving individual/bulk patch dumps via SysEx *does* work, however. Every effort is being made to make the ROM as compatible as possible, however some discrepancies will inevitably remain.
 
 * In some cases pitch-bend input is updated at a slightly lower frequency than in the original ROM. If the pitch bend wheel is moved quickly this can result in a noticeable gradation in pitch transition. This is due to the pitch-bend input being processed as part of the main periodic timer interrupt. 
@@ -59,9 +61,9 @@ Simply run `make` from the root directory to produce the final binary.
 ## FAQ
 **Q: How do I install this new ROM in my DX9?**
 
-**A:** To install this new ROM, you'll need to flash the firmware onto an EPROM chip, and install it into your DX9 synthesiser in place of the DX9's original mask ROM.
+**A:** To install this new ROM, you'll need to flash the firmware onto an EPROM chip, and install it into your DX9 synthesiser in place of the DX9's original mask ROM chip.
 According to the DX7/9 Service Manual, early model DX9s had the ROM installed on two 2764 series EPROM chips (IC4, and IC5), with later revisions using a single 27128-series EPROM. Replacement with a single EPROM chip socket will likely be necessary for installing a new ROM.
-Fortunately most DX9s feature a single socketed ROM chip which makes replacement enormously simpler. The firmware can be flashed to any 27128-series EPROM for installation.
+Fortunately most DX9s feature a single socketed ROM chip which makes replacement much simpler. The firmware can be flashed to any 27128-series EPROM for installation.
 
 Note: This ROM is still highly experimental, and is not recommended for everyday use. Refer to the *What is the current status of the ROM?* message above.
 
@@ -74,22 +76,19 @@ With regards to selling programmed EPROM chips, this is currently not on the pro
 
 **A:** Unfortunately, no.
 
-The DX9 has considerably less front-panel buttons than that of the DX7. As a result editing of all the DX7-specific parameters via the front-panel just isn't going to be possible. In some cases the editing of these parameters has been made possible via the alternate-functionality of individual buttons, however this just isn't practical for all parameters.
+Due to the DX9 having different front-panel buttons than the DX7, editing of all the DX7-specific parameters via the front-panel just isn't going to be possible. In some cases the editing of these parameters has been made possible via the alternate-functionality of individual buttons, however this just isn't practical for all parameters.
 
 
 **Q: Will this functionality introduce keyboard velocity sensitivity, or aftertouch?**
 
-**A:** Unfortunately, this isn't possible. As best as I'm currently aware, this just isn't supported by the keyboard used in the DX9. However the DX9 now responds to velocity in MIDI messages in the same way the DX7 does. Keyboard events also now transmit velocity values of 127, as opposed to '64' in the original ROM.
-Unfortunately the hardware doesn't support aftertouch either. Support for the DX9's missing modulation sources via MIDI is not currently planned: The synth will not respond to aftertouch MIDI messages.
+**A:** Unfortunately, this isn't possible. As best as I'm currently aware, velocity and aftertouch just aren't supported by the DX9's keyboard hardware. However this firmware makes the DX9 respond to MIDI velocity the same way the DX7 does. Keyboard events also now transmit velocity values of 127, as opposed to '64' in the original ROM. Support for the DX9's missing modulation sources via MIDI is not currently planned.
 
 
 **Q: Why is patch storage so limited?**
 
 **A:** Unfortunately the DX9 features considerably less RAM than the DX7. 4Kb versus 6Kb, respectively. The DX7's 32 patch storage buffer takes up 4Kb by itself.
 
-Each DX7 patch is 128 bytes in size, as opposed to a DX9 patch being 64 bytes. This means that even if no extra RAM space was used by the additional features added in this firmware, only ten DX7 patches would fit in the existing space.
-
-The DX7 firmware uses several internal buffers that don't exist in that of the DX9, such as the data structures related to the pitch EG, and glissando, for instance. These take up additional space that could otherwise be used for patch storage.
+Each DX7 patch is 128 bytes in size, as opposed to a DX9 patch being 64 bytes. This means that even if no extra RAM space was used by the additional features added in this firmware, only ten DX7 patches would fit in the existing space. The DX7's missing firmware firmware features, such as pitch EG and glissando, also use a reasonable amount of additional memory that could otherwise be used for patch storage.
 
 All efforts are being made to optimise the RAM usage for additional patch storage.
 
@@ -108,9 +107,9 @@ Please refer to this helper script for instructions on how to resovle this: `etc
 **Q: Is the cassette interface still functional?**
 
 **A:** Yes. Although with some limitations. 
-Unlike the DX9's SysEx implementation, which serialises patches in a DX7-compatible format, patches output over the cassette interface are serialised in the DX9's native format. To ensure that DX9 patches serialised to tape can still be read this firmware preserves the original formatting. This means that patches output to cassette will be converted to the DX9 format. Patches that depend on DX7-specific functionality will be corrupted in the process. It is not recommended to use this feature. Patches input from the cassette interface will be converted from the DX9 format to the DX7 format used by this firmware. 
+Unlike the DX9's SysEx implementation, which serialises patches in a DX7-compatible format, patches output over the cassette interface are serialised in the DX9's native format. To ensure that DX9 patches saved to tape can still be read, this firmware preserves the original formatting. This means that patches saved to cassette will be converted to the original DX9 format. Unfortunately this means that patches which depend on DX7-specific functionality will be corrupted by outputting them over tape. It is not recommended to use this feature. Patches input from the cassette interface will automatically be converted to the DX7 format used by this firmware. 
 
 **Q: If I use this ROM, is it possible to reinstall the original?**
 
 **A:** Yes, of course! 
-To go back to using the original ROM, replace the mask ROM IC, and run the synth's diagnostic test routines. This will reset the synth's voice parameters to their default values.
+To go back to using the original ROM, just replace the original mask ROM IC, and run the synth's diagnostic test routines to reset the synth's internal parameters to their default values.
