@@ -152,27 +152,29 @@ ui_print_copy_string_and_update:
 ; ==============================================================================
 ; UI_PRINT_EG_COPY_MODE
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
+; @PRIVATE
 ; DESCRIPTION:
 ; Prints the 'EG COPY' menu dialog when the synth is in EG Copy mode.
+;
+; MEMORY MODIFIED:
+; * operator_selected_dest
 ;
 ; ==============================================================================
 ui_print_eg_copy_mode:                          SUBROUTINE
     LDX     #str_eg_copy
     JSR     lcd_strcpy
+
     LDX     #lcd_buffer_next_line_2
     STX     <memcpy_ptr_dest
     LDX     #str_op_copy
     JSR     lcd_strcpy
 
-; Store the position for the source EG number on the LCD in the copy ptr.
-    LDX     #(lcd_buffer_next + 23)
-    STX     <memcpy_ptr_dest
-
 ; Print the selected operator number.
     LDAA    operator_selected_src
-    ANDA    #%11
-    INCA    ; Increment, since the number is zero-based.
-    JSR     lcd_print_number_single_digit
+    ADDA    #'1
+    STAA    lcd_buffer_next + 23
 
 ; Load the destination operator.
 ; Check whether this is uninitialised (0xFF).
@@ -180,15 +182,11 @@ ui_print_eg_copy_mode:                          SUBROUTINE
     LDAA    operator_selected_dest
     BMI     .exit
 
-; Store the position for the dest EG number on the LCD in the copy ptr.
-    LDX     #(lcd_buffer_next + 30)
-    STX     <memcpy_ptr_dest
+    ADDA    #'1
+    STAA    lcd_buffer_next + 30
 
-; Increment, since the number is zero-based.
-    INCA
-    JSR     lcd_print_number_single_digit
-
-; @TODO: Why is this reset?
+; Reset this value so that when the destination operator button is released
+; the UI will show the '?' value again.
     LDAA    #$FF
     STAA    operator_selected_dest
 
