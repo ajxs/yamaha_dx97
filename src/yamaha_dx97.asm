@@ -95,6 +95,7 @@
     INCLUDE "src/ui/yes_no.asm"
     INCLUDE "src/ui/print/print.asm"
     INCLUDE "src/ui/print/value.asm"
+    INCLUDE "src/ui/print/osc_frequency.asm"
     INCLUDE "src/voice/add/add.asm"
     INCLUDE "src/voice/add/mono.asm"
     INCLUDE "src/voice/add/poly.asm"

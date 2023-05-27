@@ -402,14 +402,22 @@ ui_button_edit_14:                              SUBROUTINE
     CMPB    ui_btn_numeric_last_pressed
     BNE     .store_last_button_pressed
 
-    TOGGLE_BUTTON_SUB_FUNCTION ui_btn_edit_14_sub_function
+    CYCLE_3_BUTTON_SUB_FUNCTIONS ui_btn_edit_14_sub_function
 
 .store_last_button_pressed:
     STAB    ui_btn_numeric_last_pressed
-    TST     ui_btn_edit_14_sub_function
+
+    LDAA    ui_btn_edit_14_sub_function
     BEQ     ui_load_max_value_from_button
 
+    CMPA    #2
+    BEQ     .edit_oscillator_mode
+
     LDX     #max_value_oscillator_sync
+    BRA     ui_button_edit_get_active_parameter_address
+
+.edit_oscillator_mode:
+    LDX     #max_value_oscillator_mode
     BRA     ui_button_edit_get_active_parameter_address
 
 
@@ -887,6 +895,9 @@ table_max_param_values_edit_mode:
     DC.B 99
 max_value_oscillator_sync:                      ; Button 14 - Sub Function 1.
     DC.B PATCH_OSC_SYNC
+    DC.B 1
+max_value_oscillator_mode:                      ; Button 14 - Sub Function 2.
+    DC.B PATCH_OP_MODE
     DC.B 1
 max_value_lfo_pitch_mod_depth:                  ; Button 9 - Sub Function 1.
     DC.B PATCH_LFO_PITCH_MOD_DEPTH

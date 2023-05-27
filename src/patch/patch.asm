@@ -145,6 +145,18 @@ patch_operator_get_ptr_to_selected:             SUBROUTINE
 ;
 ; ==============================================================================
 patch_operator_get_ptr:                         SUBROUTINE
+; 'Reverse' the operator numbering from 0-5 to 5-0, since the ordering in the
+; edit buffer is in reverse.
+    LDAA    #5
+.reverse_operator_number_loop:
+    DECB
+    BMI     .get_offset_into_edit_buffer
+    DECA
+    BRA     .reverse_operator_number_loop
+
+.get_offset_into_edit_buffer:
+    TAB
+
 ; Get the offset into the patch edit buffer by multiplying the selected
 ; operator number by the size of an operator.
     LDAA    #PATCH_DX7_UNPACKED_OP_STRUCTURE_SIZE
@@ -176,14 +188,9 @@ patch_operator_get_ptr:                         SUBROUTINE
 ; ==============================================================================
 patch_get_ptr_to_current:                       SUBROUTINE
     LDAB    patch_index_current
-    BMI     .get_pointer_to_init_buffer
+    BPL     patch_get_ptr
 
-    JMP     patch_get_ptr
-
-.get_pointer_to_init_buffer:
     LDX     #patch_buffer_init_voice
-
-.exit:
     RTS
 
 

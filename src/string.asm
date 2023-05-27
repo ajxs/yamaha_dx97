@@ -166,6 +166,12 @@ str_osc_detune:                         DC "OSC DE"
 str_osc_key_sync:                       DC "OSC KEY SYNC"
                                         DC.B PRINT_PARAM_FUNCTION_BOOLEAN
 
+str_osc_mode:                           DC "OSC MODE"
+                                        DC.B PRINT_PARAM_FUNCTION_OSC_MODE
+
+str_osc_mode_ratio:                     DC "RATIO", 0
+str_osc_mode_fixed:                     DC "FIXED", 0
+
 str_output_level:                       DC "OUTPUT "
                                         DC.B STR_FRAGMENT_OFFSET_LEVEL
                                         DC.B PRINT_PARAM_FUNCTION_NUMERIC

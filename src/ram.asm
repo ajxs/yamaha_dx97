@@ -420,6 +420,7 @@ ui_btn_edit_10_sub_function:                    DS 1
 ; Edit mode button 14 sub-function:
 ; * 0: Detune
 ; * 1: Oscillator Sync
+; * 2: Oscillator Mode
 ui_btn_edit_14_sub_function:                    DS 1
 
 ; Function mode button 4 sub-function:

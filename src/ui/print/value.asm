@@ -62,6 +62,7 @@ ui_print_param_value_equals_and_load_value:     SUBROUTINE
 ; * ACCA, IX
 ;
 ; RETURNS:
+; * IX:   The address of the selected edit parameter.
 ; * ACCA: The value of the selected edit parameter.
 ;
 ; ==============================================================================
@@ -117,90 +118,6 @@ ui_print_parameter_value_on_off:                SUBROUTINE
 
 .print_on_off_string:
     JSR     lcd_strcpy
-    JMP     lcd_update
-
-
-; ==============================================================================
-; UI_PRINT_PARAMETER_VALUE_OSC_FREQ
-; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; @PRIVATE
-; DESCRIPTION:
-; Prints the oscillator frequency to the LCD.
-; @TODO.
-;
-; ==============================================================================
-ui_print_parameter_value_osc_freq:              SUBROUTINE
-    LDAA    #'=
-    LDX     #(lcd_buffer_next + 24)
-    JSR     ui_print_separator_and_load_active_param
-    LDAA    operator_selected_src
-    BITA    #1
-    BEQ     loc_E639
-
-    INX
-    XGDX
-    ANDB    #$FE
-    XGDX
-    DEX
-    BRA     loc_E63D
-
-loc_E639:
-    XGDX
-    ANDB    #$FE
-    XGDX
-
-loc_E63D:
-    LDAA    0,x
-    BEQ     loc_E67E
-
-    LDAB    1,x
-    ADDB    #100
-    MUL
-    CLR     lcd_print_number_print_zero_flag
-    CLR     lcd_print_number_divisor
-
-loc_E64C:
-    SUBD    #1000
-    BCS     loc_E656
-
-    INC     lcd_print_number_print_zero_flag
-    BRA     loc_E64C
-
-loc_E656:
-    ADDD    #1000
-
-loc_E659:
-    SUBD    #100
-    BCS     loc_E663
-
-    INC     lcd_print_number_divisor
-    BRA     loc_E659
-
-loc_E663:
-    ADDD    #100
-    PSHB
-    LDAA    <lcd_print_number_print_zero_flag
-    LDAB    #10
-    MUL
-    ADDB    <lcd_print_number_divisor
-    TBA
-    JSR     lcd_print_number_three_digits
-    LDAB    #'.
-    JSR     lcd_store_character_and_increment_ptr
-    PULA
-    JSR     lcd_print_number_two_digits
-    JMP     lcd_update
-
-loc_E67E:
-    CLRA
-    JSR     lcd_print_number_three_digits
-    LDAB    #'.
-    JSR     lcd_store_character_and_increment_ptr
-    LDAA    1,x
-    LSRA
-    ADDA    #50
-    JSR     lcd_print_number_two_digits
     JMP     lcd_update
 
 
@@ -425,6 +342,7 @@ table_str_lfo_names:
     DC.W str_lfo_name_sine
     DC.W str_lfo_name_sample_hold
 
+
 ; ==============================================================================
 ; UI_PRINT_PARAMETER_VALUE_SYS_INFO
 ; ==============================================================================
@@ -479,3 +397,30 @@ ui_print_parameter_value_midi_channel:          SUBROUTINE
 ui_print_update_led_and_menu:
     JSR     led_print_patch_number
     JMP     ui_print
+
+
+; ==============================================================================
+; UI_PRINT_PARAMETER_VALUE_OSC_MODE
+; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @PRIVATE
+; DESCRIPTION:
+; Prints the value of the currently selected operator's mode.
+;
+; REGISTERS MODIFIED:
+; * ACCA
+;
+; ==============================================================================
+ui_print_parameter_value_osc_mode:
+    LDX     #(lcd_buffer_next + 24)
+    LDAA    #':
+
+    JSR     ui_print_separator_and_load_active_param
+
+    LDX     #str_osc_mode_fixed
+    TSTA
+    BNE     ui_lcd_copy_and_update
+
+    LDX     #str_osc_mode_ratio
+
+    BRA     ui_lcd_copy_and_update

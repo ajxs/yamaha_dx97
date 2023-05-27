@@ -259,14 +259,16 @@ ui_print_edit_mode:                             SUBROUTINE
     BEQ     .print_selected_operator
 
 .was_last_button_below_12:
+; If the carry flag is set, it means that the last button pressed was below 12.
     CMPB    #BUTTON_EDIT_12_OSC_FREQ_COARSE
     BCS     ui_print_parameter
 
     CMPB    #BUTTON_EDIT_14_DETUNE_SYNC
     BNE     .was_last_button_in_function_mode
 
-    TST     ui_btn_edit_14_sub_function
-    BNE     ui_print_parameter
+    LDAA    ui_btn_edit_14_sub_function
+    CMPA    #1
+    BEQ     ui_print_parameter
 
 .was_last_button_in_function_mode:
 ; If the carry flag is clear, it means that the last button press registered
@@ -431,9 +433,17 @@ ui_print_parameter:                             SUBROUTINE
 ; Value 9 (13) = Button 14 (Detune/Osc Sync).
 ; Test the value of the Edit Button 14 sub-status.
 ; 0 = Detune, 1 = Oscillator Sync.
-    TST     ui_btn_edit_14_sub_function
+    LDAA    ui_btn_edit_14_sub_function
     BEQ     .test_if_param_is_printable
 
+    CMPA    #1
+    BEQ     .parameter_osc_key_sync
+
+; Load the string table offset for 'Osc Mode'.
+    LDAB    #46
+    BRA     .print_parameter_name
+
+.parameter_osc_key_sync:
 ; Load the string table offset for 'Osc Key Sync'.
     LDAB    #37
     BRA     .print_parameter_name
@@ -532,10 +542,10 @@ ui_print_parameter:                             SUBROUTINE
     JSR     lcd_strcpy
 
 ; After the parameter name has been printed, print the parameter value.
-; If ACCB less than 12, branch, otherwise clear the index.
+; If ACCB less than 13, branch, otherwise clear the index.
 ; This index will be used as an offset into a table of printing routines.
 ; These routines are used to correctly print the parameter.
-    CMPB    #12
+    CMPB    #13
     BCS     .print_parameter_value
 
 .non_printable_param_value:
@@ -545,7 +555,7 @@ ui_print_parameter:                             SUBROUTINE
 ; This is where the parameter value is printed.
 ; The following table contains pointers to the various functions used to
 ; print the parameter values.
-; Most parameters (value over 12) do not require any specialised printing
+; Most parameters (value over 13) do not require any specialised printing
 ; routine, so in this case the LCD will just be updated.
     LDX     #table_menu_print_parameter_functions
     ASLB
@@ -614,6 +624,7 @@ table_menu_parameter_names:
     DC.W str_sys_info
     DC.W str_midi_transmit
     DC.W str_glissando
+    DC.W str_osc_mode
 
 ; ==============================================================================
 ; Parameter value print function pointers.
@@ -631,6 +642,7 @@ table_menu_print_parameter_functions:
     DC.W ui_print_parameter_value_lfo
     DC.W ui_print_parameter_value_sys_info
     DC.W ui_print_parameter_value_midi_channel
+    DC.W ui_print_parameter_value_osc_mode
 
 ; ==============================================================================
 ; Printing the polyphony mode, and portamento mode don't print the parameter
@@ -660,3 +672,4 @@ PRINT_PARAM_FUNCTION_PORTAMENTO_MODE:           EQU 8
 PRINT_PARAM_FUNCTION_LFO_WAVE:                  EQU 9
 PRINT_PARAM_FUNCTION_AVAIL_UNAVAIL:             EQU 10
 PRINT_PARAM_FUNCTION_MIDI_CHANNEL:              EQU 11
+PRINT_PARAM_FUNCTION_OSC_MODE:                  EQU 12
