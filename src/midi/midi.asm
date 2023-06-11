@@ -90,7 +90,7 @@ midi_init:                                      SUBROUTINE
 ; MIDI_RESET
 ; ==============================================================================
 ; DESCRIPTION:
-; Halts all active voices, and resets the synth's MIDI interface.
+; Halts all active voices, and resets the synth's MIDI incoming data buffer.
 ; This routine is called in the case of an SCI error.
 ;
 ; MEMORY MODIFIED:
@@ -164,7 +164,7 @@ midi_reset_timers:                              SUBROUTINE
 
 ; Reading this register clears the Timer Overflow Flag (TOF).
     LDAA    <timer_ctrl_status
-    LDX     #2500
+    LDX     #SYSTEM_TICK_PERIOD
     STX     <output_compare
 
 ; Enable output compare (OCF) interrupt.

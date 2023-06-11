@@ -122,17 +122,14 @@ handler_reset_print_welcome_message:            SUBROUTINE
     JSR     lcd_update
 
 ; Print 'AJ' to the LED display.
-    LDAA    #%10001000
-    LDAB    #%11100001
-    STAA    led_1
-    STAB    led_2
+; This is the literal value for 'AJ' on the LEDs.
+    LDD     #$88E1
+    STD     <led_1
     BSR     handler_reset_welcome_message_delay
 
-; Print 'XS' to LEDs.
-    LDAA    #%10001001
-    LDAB    #%10010010
-    STAA    led_1
-    STAB    led_2
+; Print 'XS' to the LED display.
+    LDD     #$8992
+    STD     <led_1
     BSR     handler_reset_welcome_message_delay
 
 ; Clear the LCD.
@@ -141,8 +138,8 @@ handler_reset_print_welcome_message:            SUBROUTINE
 
 ; Clear the LEDs.
     LDAA    #$FF
-    STAA    led_1
-    STAA    led_2
+    STAA    <led_1
+    STAA    <led_2
 
     RTS
 
@@ -169,6 +166,7 @@ handler_reset_print_welcome_message:            SUBROUTINE
 ; ==============================================================================
 handler_reset_validate_parameters:              SUBROUTINE
 ; Ensure that the 'Master Tune' value is within the 0 - 0x1FF range.
+; This logic is taken from the DX7 ROM.
     LDD     master_tune
     LSRD
     CLRA
@@ -219,8 +217,8 @@ handler_reset_parameter_reset:                  SUBROUTINE
     LDD     #$100
     STD     master_tune
 
-    LDAA    #0
-    STAA    midi_channel_rx
+    CLR     midi_channel_rx
+    CLR     midi_channel_tx
 
     LDAA    #1
     STAA    sys_info_avail
@@ -282,8 +280,8 @@ handler_reset_parameter_reset:                  SUBROUTINE
 ;
 ; ==============================================================================
 handler_reset:                                  SUBROUTINE
-    CLRA
-    STAA    <timer_ctrl_status
+    CLR     <timer_ctrl_status
+
     LDS     #stack_top
 
 ; Set Port 1 direction.
@@ -385,7 +383,7 @@ handler_reset:                                  SUBROUTINE
 ; Reset the free-running, and output compare counters.
     LDD     #0
     STD     <free_running_counter
-    LDD     #2500
+    LDD     #SYSTEM_TICK_PERIOD
     STD     <output_compare
 
 ; Enable the output-compare interrupt, and clear condition flags.

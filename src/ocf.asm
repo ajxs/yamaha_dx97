@@ -16,6 +16,11 @@
 
     .PROCESSOR HD6303
 
+; The period between the synth's periodic interrupts.
+; This value is taken from the DX7 ROM.
+SYSTEM_TICK_PERIOD:                             EQU 3140
+
+
 ; ==============================================================================
 ; ACTIVE_SENSING_TEST_FOR_TIMEOUT
 ; ==============================================================================
@@ -87,8 +92,10 @@ active_sensing_update_tx_counter:               SUBROUTINE
     TIMD   #%1000000, midi_active_sensing_tx_counter
     BEQ     .exit
 
-    CLR     midi_active_sensing_send_flag
-    CLR     midi_active_sensing_tx_counter
+; This CLRA/STRA combination is used to save CPU cycles.
+    CLRA
+    STAA    <midi_active_sensing_send_flag
+    STAA    <midi_active_sensing_tx_counter
 
 .exit:
     RTS
@@ -115,7 +122,9 @@ handler_ocf_compare_mode_led_blink:             SUBROUTINE
     TST     patch_compare_mode_active
     BNE     .compare_mode_active
 
-    CLR     led_compare_mode_blink_counter
+; This CLRA/STRA combination is used to save CPU cycles.
+    CLRA
+    STAA    led_compare_mode_blink_counter
     BRA     .exit
 
 .compare_mode_active:
@@ -173,7 +182,8 @@ handler_ocf_compare_mode_led_blink:             SUBROUTINE
 ;
 ; ==============================================================================
 handler_ocf:                                    SUBROUTINE
-    CLR     timer_ctrl_status
+    CLRA
+    STAA    <timer_ctrl_status
 ; Clear the OCF interrupt flag by reading from the timer control register.
     LDAA    <timer_ctrl_status
 
@@ -181,14 +191,14 @@ handler_ocf:                                    SUBROUTINE
     LDX     #0
     STX     <free_running_counter
 
-    LDX     #3140
+    LDX     #SYSTEM_TICK_PERIOD
     STX     <output_compare
 
 ; Clear the interrupt bit in the condition code register.
     CLI
 
-    JSR     active_sensing_update_tx_counter
-    JSR     active_sensing_test_for_timeout
+    BSR     active_sensing_update_tx_counter
+    BSR     active_sensing_test_for_timeout
 
     JSR     lfo_process
     JSR     mod_amp_update
