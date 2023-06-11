@@ -114,7 +114,7 @@
 ; then run the associated script to generate the remainder byte.
 ; Refer to the external documentation for the tools used to calculate this.
 checksum_remainder_byte:
-    DC.B #108
+    DC.B #119
 
     ORG $FFEE
 
