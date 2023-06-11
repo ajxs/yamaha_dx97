@@ -22,7 +22,6 @@
 ; ==============================================================================
 LED_DIGIT_0                                     EQU %11000000
 LED_DIGIT_1                                     EQU %11111001
-LED_DIGIT_2                                     EQU %10100100
 
 ; ==============================================================================
 ; LED segment mapping table.
@@ -44,7 +43,7 @@ LED_DIGIT_2                                     EQU %10100100
 table_led_digit_map:
     DC.B LED_DIGIT_0
     DC.B LED_DIGIT_1
-    DC.B LED_DIGIT_2
+    DC.B %10100100
     DC.B %10110000
     DC.B %10011001
     DC.B %10010010
@@ -115,9 +114,13 @@ led_get_digits_hex:                             SUBROUTINE
 ; ==============================================================================
 ; LED_PRINT_PATCH_NUMBER
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Prints the currently selected patch number to the synth's LED display.
+; This has been altered from the original to take advantage of the lower patch
+; count. This version only prints numbers up to '10', with any patch index
+; above '10' being printed as '00'. This scenario occurs when receiving
+; incoming single patches.
 ;
 ; ARGUMENTS:
 ; Memory:
@@ -129,132 +132,44 @@ led_get_digits_hex:                             SUBROUTINE
 ; ==============================================================================
 led_print_patch_number:                         SUBROUTINE
     LDAB    patch_index_current
-
-; The patch number is set to 128 after initialising the patch.
-; If this is the case print '00' to the LEDs.
-; Otherwise proceed to printing the LED number normally.
-    BPL     .jumpoff
-
-    LDAA    #LED_DIGIT_0
-    LDAB    #0
-    BRA     led_write_digit_1_lookup_digit_2
-
-; The patch number is set to '20' when finished receiving a bulk patch dump
-; over the cassette interface.
-    CMPB    #20
-    BNE     .jumpoff
-
-; In the case that the patch number was '20', subtract '21' to set it to 0xFF,
-; which will clear the LEDs.
-    SUBB    #21
-
-.jumpoff:
-; Increment the patch number since its internal representation is 0-indexed.
-; This will be used to jump to functions based upon whether the number is
-; below '10', '20', or equal to '20'.
     INCB
-    JSR     jumpoff
 
-    DC.B led_print_patch_number_below_10 - *
-    DC.B 10
-    DC.B led_print_patch_number_below_20 - *
-    DC.B 20
-    DC.B led_print_patch_number_20 - *
-    DC.B 0
+    CMPB    #10
+    BEQ     .patch_index_10
 
+    BCS     .patch_index_below_10
 
-; ==============================================================================
-; LED_PRINT_PATCH_NUMBER_BELOW_10
-; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; DESCRIPTION:
-; Prints the currently selected patch number if it below '10'
-;
-; ==============================================================================
-led_print_patch_number_below_10:
-; Load the LED code for a blank 7-segment display (0xFF) for LED1.
-    LDAA    #$FF
-    BRA     led_write_digit_1_lookup_digit_2
+; For any value above '10', print '00'.
+    LDAA    #LED_DIGIT_0
+    LDAB    #LED_DIGIT_0
+    BRA     .print_value
 
-
-; ==============================================================================
-; LED_PRINT_PATCH_NUMBER_BELOW_20
-; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; DESCRIPTION:
-; Prints the currently selected patch number if it below '20'
-;
-; ==============================================================================
-led_print_patch_number_below_20:
-; Load the 7-segment display LED code for '1' (0xF9) for LED1.
-; Subtract '10' from the number to get the number to print to LED2.
+.patch_index_10:
     LDAA    #LED_DIGIT_1
-    SUBB    #10
-    BRA     led_write_digit_1_lookup_digit_2
+    LDAB    #LED_DIGIT_0
+    BRA     .print_value
 
+.patch_index_below_10:
+    LDAA    #$FF
 
-; ==============================================================================
-; LED_PRINT_PATCH_NUMBER_20
-; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; DESCRIPTION:
-; Prints the currently selected patch number if it is '20'
-;
-; ==============================================================================
-led_print_patch_number_20:
-; Load the 7-segment display LED code for '2' (0xA4) for LED1.
-; Clear ACCB, and then fall-through to lookup digit 2.
-    LDAA    #LED_DIGIT_2
-    CLRB
-; Fall-through below.
-
-; ==============================================================================
-; LED_WRITE_DIGIT_1_LOOKUP_DIGIT_2
-; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
-; DESCRIPTION:
-; Prints the first digit of the LED, and looks up digit 2 based upon the
-; value passed in ACCB.
-;
-; ARGUMENTS:
-; Registers:
-; * ACCA: The LED digit data to write to the first LED digit.
-;         This data is obtained from the LED mapping table.
-; * ACCB: The number to write to the second LED digit.
-;         This will be looked up from the LED mapping table.
-;
-; ==============================================================================
-led_write_digit_1_lookup_digit_2:               SUBROUTINE
-    STAA    led_contents
-    TST     patch_compare_mode_active
-    BNE     .lookup_digit_2
-
-    STAA    <led_1
-
-.lookup_digit_2:
 ; Lookup the second digit in the LED mapping table.
     LDX     #table_led_digit_map
     ABX
-    LDAA    0,x
+    LDAB    0,x
 
-; If the active patch has been edited, don't perform a check for whether
-; the patch compare mode is active.
-    TST     patch_current_modified_flag
-    BEQ     .write_digit_2_contents
+.print_value:
+    STD     led_contents
+
+    STAA    <led_1
 
 ; If the compare mode is active, mask bit 7 of the second LED digit to
 ; display the compare mode marker.
     TST     patch_compare_mode_active
-    BNE     .write_digit_2_contents
+    BNE     .write_led2_and_exit
 
-    ANDA    #%1111111
+    ANDB    #%1111111
 
-.write_digit_2_contents:
-    STAA    led_contents+1
-    TST     patch_compare_mode_active
-    BNE     .write_digit_1_lookup_digit_2_exit
+.write_led2_and_exit:
+    STAB    <led_2
 
-    STAA    <led_2
-
-.write_digit_1_lookup_digit_2_exit:
     RTS
