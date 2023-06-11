@@ -454,7 +454,7 @@ midi_sysex_rx_force_message_end:
 ; MIDI_SYSEX_RX_BULK_DATA_STORE
 ; =============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Stores incoming SysEx data for a bulk voice dump.
 ; Based upon whether this is a single voice, or a 32 voice bulk data dump,
@@ -471,7 +471,7 @@ midi_sysex_rx_force_message_end:
 ;
 ; =============================================================================
 midi_sysex_rx_bulk_data_store:                  SUBROUTINE
-    CLR     timer_ctrl_status
+    CLR     <timer_ctrl_status
     LDAB    #1
     STAB    <midi_sysex_rx_active_flag
 
@@ -484,40 +484,31 @@ midi_sysex_rx_bulk_data_store:                  SUBROUTINE
     LDX     #midi_buffer_sysex_rx
     ABX
 
-; Test whether we're storing the bulk data for a single voice, or 32.
-    TST     midi_sysex_format_type
-    BNE     .store_32_voices
-
-; Store the incoming data.
+; Store the incoming data, and increment the received byte count.
     STAA    0,x
-
-; Add the incoming data to the checksum byte, and store.
-; Increment the received byte count, and then return to process further
-; incoming data.
-    ADDA    <midi_sysex_rx_checksum
-    STAA    <midi_sysex_rx_checksum
-    INCREMENT_BYTE_COUNT_AND_RETURN
-
-.store_32_voices:
-; Store the incoming data.
-    STAA    0,x
+    INC     <midi_rx_data_count
 
 ; Add the incoming data to the checksum byte, and store.
     ADDA    <midi_sysex_rx_checksum
     STAA    <midi_sysex_rx_checksum
+
+; Test whether we're storing the bulk data for a single patch, or multiple.
+    TST     <midi_sysex_format_type
+    BNE     .receiving_multiple_patches
+
+; Return to process further incoming data.
+    JMP     midi_process_incoming_data
+
+.receiving_multiple_patches:
+; Test whether '133' bytes have been received (128 + 5 for the header).
+; If a full patch has not been received, return and process the next data.
     LDAA    <midi_rx_data_count
-    INCA
-    STAA    <midi_rx_data_count
-
-; Compare against '133' to take into account the header size.
-; If a full patch has not been received, exit and process the next incoming
-; MIDI data.
     CMPA    #133
-    BEQ     .process_patch
+    BEQ     .process_completed_patch
 
     JMP     midi_process_incoming_data
 
-.process_patch:
+.process_completed_patch:
 ; Deserialise the newly received patch into the synth's patch memory.
     JSR     midi_sysex_rx_bulk_data_deserialise
 
@@ -534,7 +525,7 @@ midi_sysex_rx_bulk_data_store:                  SUBROUTINE
 
 ; If the bulk voice transfer isn't finished, reset the received SysEx byte
 ; count to '5', which is the size of the SysEx header.
-; This sets the state machine to anticipate the next incoming patch.
+; This sets up the state machine to anticipate the next incoming patch.
     LDAB    #5
     STAB    <midi_rx_data_count
     JMP     midi_process_incoming_data
@@ -571,13 +562,13 @@ midi_rx_sysex_bulk_data_finalise:               SUBROUTINE
     ANDA    #%1111111
     BNE     .checksum_error
 
-    TST     midi_sysex_format_type
+    TST     <midi_sysex_format_type
     BNE     .finalise_all_patches
 
 ; Copy the received patch to the 'incoming' buffer, and load it.
     JSR     midi_sysex_rx_bulk_data_serialise_incoming
 
-    LDAB    #PATCH_INCOMING_BUFFER_NUMBER
+    LDAB    #PATCH_INCOMING_BUFFER_INDEX
     JSR     patch_set_new_index_and_copy_edit_to_compare
     JSR     patch_load_clear_compare_mode_state
 
@@ -631,11 +622,9 @@ midi_rx_sysex_bulk_data_finalise:               SUBROUTINE
     JSR     lcd_update
 
 .exit:
-    JSR     midi_reset_timers
     LDAA    #MIDI_STATUS_SYSEX_END
     STAA    <midi_last_command_received
-
-    RTS
+    JMP     midi_reset_timers
 
 
 ; =============================================================================
@@ -856,14 +845,12 @@ midi_sysex_rx_bulk_data_deserialise:            SUBROUTINE
     STX     <memcpy_ptr_src
 
 ; Ensure patch index is less than, or equal to the size of the patch buffer.
-; A value equal to the patch count will write the patch into the incoming
-; patch buffer.
+; If the index is above the maximum, store it in the incoming patch buffer.
     LDAA    <midi_sysex_rx_bulk_patch_index
     CMPA    #PATCH_BUFFER_COUNT
     BLS     .get_patch_buffer_pointer
 
-; If the index is above the maximum, store it in the incoming patch buffer.
-    LDAA    #PATCH_BUFFER_COUNT
+    LDAA    #PATCH_INCOMING_BUFFER_INDEX
 
 .get_patch_buffer_pointer:
 ; Get index into patch buffer.

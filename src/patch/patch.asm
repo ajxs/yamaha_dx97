@@ -79,8 +79,8 @@ PATCH_PACKED_ALGORITHM                          EQU 110
 
 PATCH_DX9_PACKED_ALGORITHM                      EQU 56
 
-; The patch number of the incoming patch buffer.
-PATCH_INCOMING_BUFFER_NUMBER                    EQU PATCH_BUFFER_COUNT
+; The index of the incoming patch buffer.
+PATCH_INCOMING_BUFFER_INDEX                     EQU PATCH_BUFFER_COUNT
 
 ; ==============================================================================
 ; Serialisation/Deserialisation macros.

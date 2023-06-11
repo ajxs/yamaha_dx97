@@ -35,7 +35,7 @@ midi_process_incoming_data:                     SUBROUTINE
 ; Test whether there is a current MIDI error code set.
 ; If not, proceed to processing the incoming data, otherwise print the
 ; associated error message, and exit.
-    TST     midi_error_code
+    TST     <midi_error_code
     BEQ     .is_queue_empty
 
     JMP     midi_print_error_message
@@ -48,22 +48,20 @@ midi_process_incoming_data:                     SUBROUTINE
     CPX     <midi_buffer_ptr_rx_write
     BNE     .process_incoming_data
 
-    CLR     midi_rx_processing_pending
+    CLR     <midi_rx_processing_pending
 
 ; In the event that the MIDI RX buffer is empty:
-; Test whether the synth is currently receiving SysEx data. If this is the
-; case, and the buffer is empty, reset MIDI, and exit.
-; This section was directly taken from the DX9 firmware.
+; Test whether the synth is currently receiving SysEx data.
+; If this is the case reset the periodic interrupt, and exit.
+; This functionality was copied from the DX9 firmware.
     LDAA    <midi_sysex_rx_active_flag
-    CMPA    #1
-    BCS     .exit
+    BNE     .reset_and_exit
 
-    CLR     midi_sysex_rx_active_flag
-    JMP     midi_reset_timers
+    RTS
 
 .process_incoming_data:
     LDAA    #1
-    STAA    midi_rx_processing_pending
+    STAA    <midi_rx_processing_pending
 
 ; Read the next incoming data byte.
 ; IX still contains the MIDI RX buffer read pointer.
@@ -87,8 +85,9 @@ midi_process_incoming_data:                     SUBROUTINE
 
     JMP     midi_process_status_message
 
-.exit
-    RTS
+.reset_and_exit:
+    CLR     midi_sysex_rx_active_flag
+    JMP     midi_reset_timers
 
 
 ; ==============================================================================
@@ -132,12 +131,12 @@ midi_process_data_message:                      SUBROUTINE
     BNE     .exit
 
 ; Increment the received data count.
-    INC     midi_rx_data_count
+    INC     <midi_rx_data_count
 
 ; Load the last status byte received, shift it right 4 bits, and mask the three
 ; least-significant bits. This will create a usable index from the MIDI status
 ; byte.
-    LDAB    midi_last_command_received
+    LDAB    <midi_last_command_received
     LSRB
     LSRB
     LSRB
@@ -201,7 +200,7 @@ midi_rx_note_off:                               SUBROUTINE
 ; If so, all the necessary data had now been received. Proceed to processing
 ; the MIDI event.
 ; Otherwise, store the incoming note number byte and return.
-    LDAB    midi_rx_data_count
+    LDAB    <midi_rx_data_count
     CMPB    #2
     BNE     .midi_rx_note_off_incomplete
 
@@ -210,15 +209,15 @@ midi_rx_note_off:                               SUBROUTINE
 midi_rx_note_off_process:
 ; Load the necessary data, and jump to the subroutine to remove the voice with
 ; the specified note.
-    LDAB    midi_rx_first_data_byte
-    STAB    note_number
-    STAA    note_velocity
+    LDAB    <midi_rx_first_data_byte
+    STAB    <note_number
+    STAA    <note_velocity
 
     JMP     voice_remove
 
 .midi_rx_note_off_incomplete:
 ; Store the incoming data byte, and exit.
-    STAA    midi_rx_first_data_byte
+    STAA    <midi_rx_first_data_byte
     RTS
 
 
@@ -252,7 +251,7 @@ midi_rx_note_on:                                SUBROUTINE
 ; If so, all the necessary data had now been received. Proceed to processing
 ; the MIDI event.
 ; Otherwise, store the incoming note number byte and return.
-    LDAB    midi_rx_data_count
+    LDAB    <midi_rx_data_count
     CMPB    #2
     BNE     .midi_rx_note_on_incomplete
 
@@ -268,17 +267,17 @@ midi_rx_note_on:                                SUBROUTINE
     LDX     #table_midi_velocity
     ABX
     LDAA    0,x
-    STAA    note_velocity
+    STAA    <note_velocity
 
 ; Load the necessary data, and jump to the subroutine to add a new voice with
 ; the specified note.
-    LDAB    midi_rx_first_data_byte
-    STAB    note_number
+    LDAB    <midi_rx_first_data_byte
+    STAB    <note_number
 
     JSR     voice_add
 
 .midi_rx_note_on_incomplete:
-    STAA    midi_rx_first_data_byte
+    STAA    <midi_rx_first_data_byte
     RTS
 
 ; ==============================================================================
@@ -423,17 +422,18 @@ midi_rx_pitch_bend:                             SUBROUTINE
 ; the MIDI event.
 ; Otherwise, store the incoming byte and proceed to process the next
 ; incoming MIDI data messages.
-    TST     midi_rx_data_count
+    TST     <midi_rx_data_count
     BNE     .midi_rx_pitch_bend_incomplete
 
     INCREMENT_BYTE_COUNT_AND_RETURN
 
 .midi_rx_pitch_bend_incomplete:
-    CLR     midi_rx_data_count
+    CLR     <midi_rx_data_count
 
 ; Only take the MSB, discard the 2nd data byte with the LSB.
     ASLA
     STAA    analog_input_pitch_bend
+
     RTS
 
 
@@ -467,8 +467,8 @@ midi_process_status_message:                    SUBROUTINE
     BEQ     midi_rx_active_sensing
 
 .store_message_type:
-    STAA    midi_last_command_received
-    CLR     midi_rx_data_count
+    STAA    <midi_last_command_received
+    CLR     <midi_rx_data_count
 
 ; Return back to process any further incoming data in the buffer.
     JMP     midi_process_incoming_data
