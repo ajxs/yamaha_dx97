@@ -188,7 +188,6 @@ table_midi_function_pointers:
 ; * ACCA: The received MIDI data.
 ;
 ; MEMORY MODIFIED:
-; * note_number
 ; * note_velocity
 ;
 ; REGISTERS MODIFIED:
@@ -207,12 +206,11 @@ midi_rx_note_off:                               SUBROUTINE
 ; This label is also referenced in the case that an incoming 'Note On' message
 ; has a velocity of zero. If so, it is treated as a 'Note Off' event.
 midi_rx_note_off_process:
+    STAA    <note_velocity
+
 ; Load the necessary data, and jump to the subroutine to remove the voice with
 ; the specified note.
     LDAB    <midi_rx_first_data_byte
-    STAB    <note_number
-    STAA    <note_velocity
-
     JMP     voice_remove
 
 .midi_rx_note_off_incomplete:
@@ -239,7 +237,6 @@ midi_rx_note_off_process:
 ; * ACCA: The received MIDI data.
 ;
 ; MEMORY MODIFIED:
-; * note_number
 ; * note_velocity
 ;
 ; REGISTERS MODIFIED:
@@ -272,9 +269,7 @@ midi_rx_note_on:                                SUBROUTINE
 ; Load the necessary data, and jump to the subroutine to add a new voice with
 ; the specified note.
     LDAB    <midi_rx_first_data_byte
-    STAB    <note_number
-
-    JSR     voice_add
+    JMP     voice_add
 
 .midi_rx_note_on_incomplete:
     STAA    <midi_rx_first_data_byte
