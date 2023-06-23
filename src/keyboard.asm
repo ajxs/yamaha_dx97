@@ -179,7 +179,7 @@ keyboard_event_handler:                         SUBROUTINE
     JMP     voice_add
 
 .key_up_event:
-; Send the MIDI 'Note On' event, then jump to removing the note.
+; Send the MIDI 'Note Off' event, then jump to removing the note.
     JSR     midi_tx_note_off
     JMP     voice_remove
 
@@ -218,6 +218,7 @@ keyboard_set_key_transpose:                     SUBROUTINE
 ; If so, set to its maximum of 72.
     CMPB    #72
     BLS     .set_tranpose_key
+
     LDAB    #72
     BRA     .set_tranpose_key
 
@@ -228,6 +229,7 @@ keyboard_set_key_transpose:                     SUBROUTINE
     SUBB    #48
     CMPB    patch_edit_key_transpose
     BEQ     .clear_key_transpose_flag
+
     STAB    patch_edit_key_transpose
 
 ; After the key transpose has been set, send the new value via SysEx.

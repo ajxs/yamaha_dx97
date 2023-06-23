@@ -31,7 +31,7 @@
 ; * ACCB: The MIDI note number to send with the 'Note On' event.
 ;
 ; REGISTERS MODIFIED:
-; * ACCA, ACCB
+; * ACCA
 ;
 ; ==============================================================================
 midi_tx_note_on:                                SUBROUTINE
@@ -61,7 +61,7 @@ midi_tx_note_on:                                SUBROUTINE
 ; * ACCB: The MIDI note number to send with the 'Note Off' event.
 ;
 ; REGISTERS MODIFIED:
-; * ACCA, ACCB
+; * ACCA
 ;
 ; ==============================================================================
 midi_tx_note_off:                               SUBROUTINE
