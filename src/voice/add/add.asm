@@ -30,33 +30,18 @@
 ; internal representation of pitch. The various voice buffers related to pitch
 ; transitions are set, and reset here.
 ;
+; @NOTE: The DX9/7 firmware follows the DX7 convention of storing the MIDI note
+; number in the voice status array, _without_ any transposition.
+; The DX9 code stores the MSB of the logarithmic frequency instead.
+;
 ; ARGUMENTS:
 ; Registers:
 ; * ACCB: The note number to add to the new voice.
 ;
 ; ==============================================================================
 voice_add:                                      SUBROUTINE
-; The note number is stored here so that the interface of this function
-; matches that of the DX9.
-; The DX9 code stores the MSB of the logarithmic frequency in the voice status
-; array, as opposed to the DX7, which uses the MIDI note number.
-; The DX7 stores the MIDI note number _without_ the key transpose value added.
-; This shouldn't cause any problems as long as it is consistent.
     STAB    <note_number
-
-; Add the current transpose value, and subtract 24,  to take into account
-; that it has a -24 - 24 range.
-    ADDB    patch_edit_key_transpose
-    SUBB    #24
-
-; If the result is > 127, clamp at 127.
-    CMPB    #127
-    BLS     .get_note_frequency
-
-    LDAB    #127
-
-.get_note_frequency:
-    JSR     voice_convert_midi_note_to_log_freq
+    JSR     voice_transpose_and_convert_note_to_log_freq
 
     LDAB    mono_poly
     BNE     .synth_in_mono_mode

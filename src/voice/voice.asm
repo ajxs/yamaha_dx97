@@ -72,11 +72,38 @@ table_midi_key_to_log_f:
     DC.B $9C, $9D, $9E, $A0, $A1
     DC.B $A2, $A4, $A5, $A6, $A8
 
+; ==============================================================================
+; VOICE_TRANSPOSE_AND_CONVERT_NOTE_TO_LOG_FREQ
+; ==============================================================================
+; @NEW_FUNCTIONALITY
+; DESCRIPTION:
+; Applies the current patch's 'Key Transpose' settings, and then converts the
+; transposed MIDI note to its logarithmic frequency representation.
+;
+; ARGUMENTS:
+; Registers:
+; * ACCB: The note number value to get the logarithmic frequency value for.
+;
+; ==============================================================================
+voice_transpose_and_convert_note_to_log_freq: SUBROUTINE
+; Add the current transpose value, and subtract 24,  to take into account
+; that it has a -24 - 24 range.
+    ADDB    patch_edit_key_transpose
+    SUBB    #24
+
+; If the result of transposing the note is > 127, clamp.
+    CMPB    #127
+    BLS     .get_note_frequency
+
+    LDAB    #127
+
+.get_note_frequency:
+; Fall-through below.
 
 ; ==============================================================================
 ; VOICE_CONVERT_MIDI_NOTE_TO_LOG_FREQ
 ; ==============================================================================
-; @TAKEN_FROM_DX7_FIRMWARE
+; @TAKEN_FROM_DX7_FIRMWARE:0xD7DF
 ; DESCRIPTION:
 ; This is the main subroutine responsible for converting the key number value
 ; shared by the keyboard controller, and MIDI input, to the frequency value
