@@ -55,7 +55,7 @@ voice_add:                                      SUBROUTINE
 ; ==============================================================================
 ; VOICE_ADD_OPERATOR_LEVEL_VOICE_FREQUENCY
 ; ==============================================================================
-; @TAKEN_FROM_DX7_FIRMWARE
+; @TAKEN_FROM_DX7_FIRMWARE:0xDD90
 ; DESCRIPTION:
 ; Loads the operator scaling, and frequency for a new note to the EGS chip.
 ; Tests whether the current portamento settings mean the new note frequency
@@ -63,7 +63,7 @@ voice_add:                                      SUBROUTINE
 ;
 ; ARGUMENTS:
 ; Registers:
-; * IX:   The frequency for the new note.
+; * IX:   The initial frequency for the new note.
 ; * ACCA: The zero-indexed voice number.
 ;
 ; ==============================================================================
@@ -77,18 +77,15 @@ voice_add_operator_level_voice_frequency:       SUBROUTINE
 .voice_status_ptr:                              EQU #temp_variables + 2
 .operator_sensitivity_ptr:                      EQU #temp_variables + 4
 .operator_volume_ptr:                           EQU #temp_variables + 6
-.voice_frequency_current:                       EQU #temp_variables + 8
-.voice_frequency_new:                           EQU #temp_variables + 10
-.voice_index:                                   EQU #temp_variables + 12
-.voice_current:                                 EQU #temp_variables + 13
-.find_inactive_voice_loop_index:                EQU #temp_variables + 14
-.voice_buffer_offset:                           EQU #temp_variables + 15
-.operator_status:                               EQU #temp_variables + 16
-.operator_loop_index:                           EQU #temp_variables + 17
+.voice_frequency_initial:                       EQU #temp_variables + 8
+.voice_index:                                   EQU #temp_variables + 10
+.voice_buffer_offset:                           EQU #temp_variables + 11
+.operator_status:                               EQU #temp_variables + 12
+.operator_loop_index:                           EQU #temp_variables + 13
 
 ; ==============================================================================
-    STX     .voice_frequency_new
-    STAA    .voice_current
+    STX     .voice_frequency_initial
+    STAA    .voice_index
 
 ; Setup pointers.
     LDX     #patch_operator_velocity_sensitivity
@@ -167,7 +164,7 @@ voice_add_operator_level_voice_frequency:       SUBROUTINE
     ABX
 
 ; Use the MSB of the note pitch as an index into the keyboard scaling curve.
-    LDAB    .voice_frequency_new
+    LDAB    .voice_frequency_initial
     LSRB
     LSRB
     ABX
@@ -193,7 +190,7 @@ voice_add_operator_level_voice_frequency:       SUBROUTINE
     LDAA    #16
     LDAB    .operator_loop_index
     MUL
-    ADDB    .voice_current
+    ADDB    .voice_index
     LDX     #egs_operator_level
     ABX
     PULA
@@ -236,40 +233,39 @@ voice_add_operator_level_voice_frequency:       SUBROUTINE
     BITA    #PEDAL_INPUT_PORTA
     BEQ     voice_add_load_frequency_to_egs
 
-.exit:
     RTS
 
 
 ; ==============================================================================
 ; VOICE_ADD_LOAD_FREQUENCY_TO_EGS
 ; ==============================================================================
+; @TAKEN_FROM_DX7_FIRMWARE:0xDE2D
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; This function calculates the final current frequency value for the current
 ; voice, and loads it to the appropriate register in the EGS chip.
 ; @Note: This subroutine shares the temporary variables with the
-; 'voice_add_operator_level_voice_frequency' routine.
+; 'voice_add_operator_level_voice_frequency', and 'voice_add_poly' routines.
 ;
 ; ==============================================================================
 voice_add_load_frequency_to_egs:                SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
+; @WARNING: These temporary variable definitions are shared across all of the
+; 'Voice Add' subroutines.
 .voice_frequency_target_ptr:                    EQU #temp_variables
 .voice_status_ptr:                              EQU #temp_variables + 2
 .operator_sensitivity_ptr:                      EQU #temp_variables + 4
 .operator_volume_ptr:                           EQU #temp_variables + 6
-.voice_frequency_current:                       EQU #temp_variables + 8
-.voice_frequency_new:                           EQU #temp_variables + 10
-.voice_index:                                   EQU #temp_variables + 12
-.voice_current:                                 EQU #temp_variables + 13
-.find_inactive_voice_loop_index:                EQU #temp_variables + 14
-.voice_buffer_offset:                           EQU #temp_variables + 15
-.operator_status:                               EQU #temp_variables + 16
-.operator_loop_index:                           EQU #temp_variables + 17
+.voice_frequency_initial:                       EQU #temp_variables + 8
+.voice_index:                                   EQU #temp_variables + 10
+.voice_buffer_offset:                           EQU #temp_variables + 11
+.operator_status:                               EQU #temp_variables + 12
+.operator_loop_index:                           EQU #temp_variables + 13
 
 ; ==============================================================================
-    LDAB    .voice_current
+    LDAB    .voice_index
     ASLB
 
 ; Load the voice's current pitch EG level, and add this to the voice's
@@ -277,11 +273,10 @@ voice_add_load_frequency_to_egs:                SUBROUTINE
     LDX     #pitch_eg_current_frequency
     ABX
     LDD     0,x
-    ADDD    .voice_frequency_new
+    ADDD    .voice_frequency_initial
     SUBD    #$1BA8
 
 ; Clamp the frequency value to a minimum of zero.
-; If it is below this minumum value, set to zero.
 ; If the current vaue of D > 0x1BA8, branch.
     BCC     .add_master_tune
 
@@ -293,7 +288,7 @@ voice_add_load_frequency_to_egs:                SUBROUTINE
 
 ; Write the frequency value to the EGS chip.
     LDX     #egs_voice_frequency
-    LDAB    .voice_current
+    LDAB    .voice_index
     ASLB
     ABX
     STAA    0,x
@@ -340,3 +335,31 @@ table_operator_velocity_scale:
     DC.B $83
     DC.B $84
     DC.B $85
+
+; ==============================================================================
+; VOICE_ADD_INITIALISE_LFO
+; ==============================================================================
+; Initialises the LFO when adding a new voice.
+; This is used in both the polyphonic, and monophonic 'Voice Add' routines.
+;
+; ==============================================================================
+    .MACRO VOICE_ADD_INITIALISE_LFO
+; If the synth's LFO delay is not set to 0, reset the LFO delay accumulator.
+        TST     patch_edit_lfo_delay
+        BEQ     .is_lfo_sync_enabled
+
+        LDD     #0
+        STD     <lfo_delay_accumulator
+        CLR     <lfo_delay_fadein_factor
+
+.is_lfo_sync_enabled:
+; If 'LFO Key Sync' is enabled, reset the LFO phase accumulator to its
+; maximum positive value to coincide with the 'Key On' event.
+        TST     patch_edit_lfo_sync
+        BEQ     .end_initialise_lfo
+
+        LDD     #$7FFF
+        STD     <lfo_phase_accumulator
+
+.end_initialise_lfo:
+    .ENDM

@@ -35,6 +35,7 @@
 ;
 ; ARGUMENTS:
 ; Memory:
+; * note_number: The number of the new note being added.
 ; * note_frequency: The frequency of the new note being added.
 ;
 ; MEMORY MODIFIED:
@@ -91,24 +92,8 @@ voice_add_mono:                                 SUBROUTINE
     BNE     voice_add_mono_multiple_voices
 
 ; If there's only one active voice, initialise the LFO.
-; If the synth's LFO delay is not set to 0, reset the LFO delay accumulator.
-    TST     patch_edit_lfo_delay
-    BEQ     .is_lfo_sync_enabled
+    VOICE_ADD_INITIALISE_LFO
 
-    LDD     #0
-    STD     <lfo_delay_accumulator
-    CLR     lfo_delay_fadein_factor
-
-.is_lfo_sync_enabled:
-; If 'LFO Key Sync' is enabled, reset the LFO phase accumulator to its
-; maximum positive value to synchronise with the 'Key On' event.
-    TST     patch_edit_lfo_sync
-    BEQ     .write_reset_key_event_to_egs
-
-    LDD     #$7FFF
-    STD     <lfo_phase_accumulator
-
-.write_reset_key_event_to_egs:
 ; The following section will send a 'Key Off' event to the EGS chip's
 ; 'Key Event' register, prior to sending the new 'Key On' event.
     LDAB    #EGS_VOICE_EVENT_OFF

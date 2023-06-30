@@ -10,13 +10,15 @@
 ; ==============================================================================
 ; voice/add/poly.asm
 ; ==============================================================================
-; @TAKEN_FROM_DX7_FIRMWARE
+; @TAKEN_FROM_DX7_FIRMWARE:0xD43B
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; This subroutine handes 'adding' a new voice event when the synth is in
 ; polyphonic mode.
 ;
 ; ARGUMENTS:
 ; Memory:
+; * note_number: The number of the new note being added.
 ; * note_frequency: The frequency of the new note being added.
 ;
 ; MEMORY MODIFIED:
@@ -40,60 +42,54 @@ voice_add_poly:                                 SUBROUTINE
 .voice_status_ptr:                              EQU #temp_variables + 2
 .operator_sensitivity_ptr:                      EQU #temp_variables + 4
 .operator_volume_ptr:                           EQU #temp_variables + 6
-.voice_frequency_current:                       EQU #temp_variables + 8
-.voice_frequency_new:                           EQU #temp_variables + 10
-.voice_index:                                   EQU #temp_variables + 12
-.voice_current:                                 EQU #temp_variables + 13
-.find_inactive_voice_loop_index:                EQU #temp_variables + 14
-.voice_buffer_offset:                           EQU #temp_variables + 15
-.operator_status:                               EQU #temp_variables + 16
-.operator_loop_index:                           EQU #temp_variables + 17
+.voice_frequency_initial:                       EQU #temp_variables + 8
+.voice_index:                                   EQU #temp_variables + 10
+.voice_buffer_offset:                           EQU #temp_variables + 11
+.operator_status:                               EQU #temp_variables + 12
+.operator_loop_index:                           EQU #temp_variables + 13
 
 ; ==============================================================================
     LDAA    #16
-    STAA    .find_inactive_voice_loop_index
+    STAA    .voice_index
 
-; Search for an entry in the voice key event array where bit 1 is 0.
-; This indicates that the voice is currently inactive.
+; Search for an inactive voice in the voice status array.
 .find_inactive_voice_loop:
     LDX     #voice_status
     LDAB    voice_add_index
-    ANDB    #15
+    ANDB    #15                     ; B = B % 16.
     ASLB
     ABX
-    LDAA    1,x
 
-; Test whether the current voice has an active key event.
-    BITA    #VOICE_STATUS_ACTIVE
-    BEQ     .deactivate_found_active_voice
+; Test whether the current voice's 'Active' flag is set.
+    TIMX    #VOICE_STATUS_ACTIVE, 1
+    BEQ     .found_inactive_voice
 
 ; Increment the loop index.
     INC     voice_add_index
-    DEC     .find_inactive_voice_loop_index
+    DEC     .voice_index
     BNE     .find_inactive_voice_loop
 
 ; If this point is reached, it means no inactive voices have been found.
     RTS
 
-.deactivate_found_active_voice:
-; Send a 'Key Off' event to the EGS chip's 'Key Event' register, prior to
-; sending the new 'Key On' event.
+.found_inactive_voice:
+; Clear timer interrupt.
+    LDAA    <timer_ctrl_status
+    PSHA
+    CLR     timer_ctrl_status
 
 ; Store the current offset into the voice buffers.
     STAB    .voice_buffer_offset
 
-; Add '1', and shift the buffer offset value to the left to create the bitmask
+; Send a 'Key Off' event to the EGS. This possibly resets the envelope.
+; Add '1', and shift the buffer offset value left to create the bitmask
 ; for sending a 'Key Off' event for this voice to the EGS chip.
     INCB
     ASLB
-; Write the 'Key Off' event for this voice to the EGS chip.
     STAB    egs_key_event
 
-    LDAA    #16
-    STAA    .voice_index
-
 ; Increment the 'current voice' index so that the next 'Voice Add'
-; command starts at the most likely free voice.
+; command starts at the most likely voice to be free.
     INC     voice_add_index
 
 ; Setup pointers for the 'Voice Add' functionality.
@@ -104,7 +100,8 @@ voice_add_poly:                                 SUBROUTINE
     STX     .voice_status_ptr
 
 ; Test whether the portamento pedal is active.
-    LDAA    pedal_status_current
+; Note that this line is pulled high when no pedal is inserted.
+    LDAA    <pedal_status_current
     BITA    #PEDAL_INPUT_PORTA
     BEQ     .no_portamento
 
@@ -114,17 +111,19 @@ voice_add_poly:                                 SUBROUTINE
     CMPA    #$FF
     BEQ     .no_portamento
 
-; Check if the synth's portamento mode is set to 'Follow'.
-; If this is the case, all of the currently active notes will 'follow' the
-; pitch of the new note, gliding until the new target frequency is reached.
+; Check if the synth's portamento mode is set to 'Retain'.
+; If this is the case, any active notes will retain their current pitch.
     TST     portamento_mode
-    BEQ     .set_portamento_glissando_frequency
+    BEQ     .initialise_new_note_frequency
 
-; If the synth's portamento mode is set to 'Follow', in which all active
-; notes transition to the latest note event, update all of the voices that
-; are currently being sustained by the sustain pedal, setting their target
-; frequency to the new value. This will cause the main portamento handler to
-; transition their pitches towards that of the new note.
+; If the synth's portamento mode is set to 'Follow', all active notes will
+; transition in pitch to the latest note event.
+; This loop updates all of the voices that are currently being sustained,
+; setting their target frequency to the new value. This will cause the main
+; portamento handler to transition their pitch towards the new note.
+    LDAA    #16
+    STAA    .voice_index
+
 .update_follow_portamento_frequency_loop:
     LDX     .voice_status_ptr
     LDAA    1,x
@@ -158,21 +157,21 @@ voice_add_poly:                                 SUBROUTINE
 .no_portamento:
 ; In the event that there is no portamento, the 'previous' note frequency is set
 ; to the current target pitch. The effect of this is that when the
-; portamento, and glissando buffers are set, no pitch transition will occur.
+; portamento, and glissando buffers are initialised with the 'new' note
+; frequency in the block below, no pitch transition will occur.
     LDD     note_frequency
     STD     note_frequency_previous
 
-.set_portamento_glissando_frequency:
-; If portamento is currently enabled, the 'current' portamento, and
-; glissando frequencies for the new note will be set to the target frequency
-; of the previous note pressed.
-; In the event that there is no portamento. The portamento and glissando
-; pitch buffers will have been set to the current voice's target frequency
-; above. The effect of this is that there will be no frequency transition.
-; After these buffers have been set, the 'new' current frequency is set, which
-; will be loaded to the EGS below.
-    JSR     voice_add_poly_set_portamento_frequency
-    STD     .voice_frequency_new
+.initialise_new_note_frequency:
+; This sets the 'initial' starting frequency of the new note.
+; If portamento is enabled, the initial frequency will be the frequency of the
+; previous note. This will cause the pitch to transition to the new note.
+; Otherwise the initial frequency will be the new note frequency.
+    BSR     voice_add_poly_set_initial_frequency
+
+; The 'previous' new note frequency is now set as the 'initial' frequency
+; of the new note to be added. This frequency value will be sent to the EGS.
+    STD     .voice_frequency_initial
 
 ; Load the target frequency buffer, add offset, and store the target
 ; frequency for the current voice.
@@ -180,24 +179,25 @@ voice_add_poly:                                 SUBROUTINE
     LDAB    .voice_buffer_offset
     ABX
     LSRB
-    STAB    .voice_current
+    STAB    .voice_index        ; Used in the 'voice_add_load...' subroutine.
 
-; Store the frequency of this note as the previous frequency.
+; Set the target frequency of this voice to the new note's frequency.
     LDD     note_frequency
     STD     0,x
+
+; Set the 'previous note' frequency to the new note frequency.
     STD     note_frequency_previous
 
-; Load the new frequency to the EGS here.
-; It will be loaded again below. However if the portamento pedal is active
-; this will be the place the frequency is initially loaded.
+; Load the 'initial' note frequency to the EGS here.
+; In the case that portamento is active, this will be the 'previous' note
+; frequency. Otherwise it will be the 'new' note frequency.
+; Note that if the portamento pedal is inactive, the 'initial' note frequency
+; be initialised to the 'new' note frequency, and loaded to the EGS again.
     JSR     voice_add_load_frequency_to_egs
 
 .set_voice_status:
-; Set the status of the current voice.
-; This is a 16-bit value in the format: (Key_Number << 8) | Flags.
-; The flags field has two bits:
-;  * '0b10' : This voice is actively playing a note.
-;  * '0b1'  : This voice is being sustained.
+; Set the status of the new voice.
+; Refer to this array's documentation in 'ram.asm' for more information.
     LDX     #voice_status
     LDAB    .voice_buffer_offset
     ABX
@@ -225,28 +225,15 @@ voice_add_poly:                                 SUBROUTINE
     CLR     0,x
 
 ; Initialise the LFO.
-; If the synth's LFO delay is not set to 0, reset the LFO delay accumulator.
-    LDAA    patch_edit_lfo_delay
-    BEQ     .is_lfo_sync_enabled
+    VOICE_ADD_INITIALISE_LFO
 
-    LDD     #0
-    STD     <lfo_delay_accumulator
-    CLR     lfo_delay_fadein_factor
-
-.is_lfo_sync_enabled:
-; If 'LFO Key Sync' is enabled, reset the LFO phase accumulator to its
-; maximum positive value to coincide with the 'Key On' event.
-    LDAA    patch_edit_lfo_sync
-    BEQ     .write_frequency_to_egs
-
-    LDD     #$7FFF
-    STD     <lfo_phase_accumulator
-
-.write_frequency_to_egs:
+; If the portamento pedal is inactive, the 'new' note frequency will be loaded
+; to the EGS in the following subroutine call.
+; Otherwise, the previously loaded 'initial' value will be used.
+; The effect of this is to make the note pitch transition instantaneous when
+; a portamento pedal is inserted, but not active.
     LDAA    .voice_buffer_offset
     LSRA
-
-; The key frequency is stored again in this subroutine call.
     LDX     <note_frequency
     JSR     voice_add_operator_level_voice_frequency
 
@@ -257,31 +244,38 @@ voice_add_poly:                                 SUBROUTINE
     INCB
     STAB    egs_key_event
 
+; Reset the timer-control/status register to re-enable timer interrupts.
+    PULA
+    STAA    <timer_ctrl_status
+
     RTS
 
 
 ; ==============================================================================
-; VOICE_ADD_POLY_SET_PORTAMENTO_FREQUENCY
+; VOICE_ADD_POLY_SET_INITIAL_FREQUENCY
 ; ==============================================================================
-; @TAKEN_FROM_DX7_FIRMWARE
+; @TAKEN_FROM_DX7_FIRMWARE:0xD4CA
+; @CHANGED_FOR_6_OP
 ; @PRIVATE
 ; DESCRIPTION:
-; This subroutine sets the current portamento, and glissando frequency values
-; for the current voice from the frequency of the 'last' note.
-; @Note: This subroutine shares the same temporary variables as its caller.
+; This subroutine sets the 'initial' frequency for the new note.
+; This involves setting the current portamento, and glissando frequency values
+; for the new note's voice. If portamento is enabled, this frequency value will
+; be that of the previously added voice. Otherwise it will be the frequency
+; of the new note.
 ;
 ; ARGUMENTS:
 ; Memory:
-; * note_frequency_previous
+; * note_frequency_previous: The 'initial' frequency value.
 ;
 ; REGISTERS MODIFIED:
 ; * ACCA, ACCB, IX
 ;
 ; RETURNS:
-; * ACCD: The 'previous' note frequency.
+; * ACCD: The 'initial' note frequency.
 ;
 ; ==============================================================================
-voice_add_poly_set_portamento_frequency:        SUBROUTINE
+voice_add_poly_set_initial_frequency:           SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
@@ -291,14 +285,11 @@ voice_add_poly_set_portamento_frequency:        SUBROUTINE
 .voice_status_ptr:                              EQU #temp_variables + 2
 .operator_sensitivity_ptr:                      EQU #temp_variables + 4
 .operator_volume_ptr:                           EQU #temp_variables + 6
-.voice_frequency_current:                       EQU #temp_variables + 8
-.voice_frequency_new:                           EQU #temp_variables + 10
-.voice_index:                                   EQU #temp_variables + 12
-.voice_current:                                 EQU #temp_variables + 13
-.find_inactive_voice_loop_index:                EQU #temp_variables + 14
-.voice_buffer_offset:                           EQU #temp_variables + 15
-.operator_status:                               EQU #temp_variables + 16
-.operator_loop_index:                           EQU #temp_variables + 17
+.voice_frequency_initial:                       EQU #temp_variables + 8
+.voice_index:                                   EQU #temp_variables + 10
+.voice_buffer_offset:                           EQU #temp_variables + 11
+.operator_status:                               EQU #temp_variables + 12
+.operator_loop_index:                           EQU #temp_variables + 13
 
 ; ==============================================================================
     LDAB    .voice_buffer_offset
@@ -306,7 +297,7 @@ voice_add_poly_set_portamento_frequency:        SUBROUTINE
     ABX
 
 ; This 'load IX, add B to index, push, repeat, store, pull' routine
-; here avoids needing to load ACCD twice.
+; here avoids the need to load ACCD twice.
     PSHX
     LDX     #voice_frequency_current_glissando
     ABX
