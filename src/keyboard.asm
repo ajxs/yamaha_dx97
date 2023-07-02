@@ -217,15 +217,15 @@ keyboard_set_key_transpose:                     SUBROUTINE
 ; Test whether the tranpose key is above 72.
 ; If so, set to its maximum of 72.
     CMPB    #72
-    BLS     .set_tranpose_key
+    BLS     .set_transpose_key
 
     LDAB    #72
-    BRA     .set_tranpose_key
+    BRA     .set_transpose_key
 
 .key_under_48:
     LDAB    #48
 
-.set_tranpose_key:
+.set_transpose_key:
     SUBB    #48
     CMPB    patch_edit_key_transpose
     BEQ     .clear_key_transpose_flag
