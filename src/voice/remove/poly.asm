@@ -11,16 +11,14 @@
 ; voice/remove/poly.asm
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; This file contains the subroutine for removing a voice when the synth is in
 ; polyphonic mode.
 ;
 ; ARGUMENTS:
 ; Registers:
-; * ACCA: The MSB of the logarithmic frequency of the note to remove.
-; The voice status array entries are stored as words with the 14-bit
-; logarithmic frequency stored together with the voice status bits. This byte
-; is used to search for the voice to remove.
+; * ACCA: The number of the note to remove.
 ;
 ; MEMORY MODIFIED:
 ; * voice_status
@@ -34,26 +32,12 @@
     .PROCESSOR HD6303
 
 voice_remove_poly:                              SUBROUTINE
-; ==============================================================================
-; LOCAL TEMPORARY VARIABLES
-; ==============================================================================
-.pitch_eg_current_step_ptr:                     EQU #temp_variables
-.voice_status_ptr:                              EQU #temp_variables + 2
-.remove_voice_command_byte:                     EQU #temp_variables + 4
-
-; ==============================================================================
     LDX     #voice_status
-    STX     .voice_status_ptr
 
-    LDX     #pitch_eg_current_step
-    STX     .pitch_eg_current_step_ptr
-
+; ACCB will serve as the 'Remove Voice Command', which will be sent to the EGS.
     LDAB    #EGS_VOICE_EVENT_OFF
 
 .find_key_event_loop:
-    STAB    .remove_voice_command_byte
-    LDX     .voice_status_ptr
-
 ; Does the current entry in the 'Voice Key Events' buffer match the note
 ; being removed?
     CMPA    0,x
@@ -61,61 +45,54 @@ voice_remove_poly:                              SUBROUTINE
 
 ; Check if the matching key event is active.
 ; If not, advance the loop.
-    LDAB    1,x
-    BITB    #VOICE_STATUS_ACTIVE
-    BNE     .is_sustain_pedal_active
+    TIMX    #VOICE_STATUS_ACTIVE, 1
+    BNE     .deactivate_voice
 
 .increment_loop_pointers:
 ; Increment the loop pointers, and voice number, then loop back.
     INX
     INX
-    STX     .voice_status_ptr
 
-    LDX     .pitch_eg_current_step_ptr
-    INX
-    STX     .pitch_eg_current_step_ptr
-
-; Increase the voice number in the 'Remove Voice Event' command by one.
-; This is done by adding 4, since this field uses bytes 7..2.
-    LDAB    .remove_voice_command_byte
+; Increase the voice number in the 'Remove Voice Command' by one.
+; This is done by adding 4, since the 'Voice #' field uses bytes 7..2.
     ADDB    #4
 
-; If the index exceeds 16, exit.
+; If the voice index reaches 16, exit.
     BITB    #%1000000
     BEQ     .find_key_event_loop
 
 ; If this point has been reached, a matching voice was not found.
+; @NOTE: This can naturally occur in the case that a MIDI controller sends a
+; 'Key Down' event with a velocity of 0, which is interpreted as a 'Note Off'.
     RTS
 
-.is_sustain_pedal_active:
+.deactivate_voice:
+; Mask the appropriate bit of the 'flag byte' of the voice status buffer entry
+; to indicate a 'Key Off' event.
+    AIMX    #~VOICE_STATUS_ACTIVE, 1,x
+
+; Test whether sustain is active.
     TIMD    #PEDAL_INPUT_SUSTAIN, sustain_status
     BNE     .sustain_pedal_active
 
-; Mask the appropriate bit of the 'flag byte' of the Key Event buffer entry
-; to indicate a 'Key Off' event.
-    LDAA    1,x
-    ANDA    #~VOICE_STATUS_ACTIVE
-    STAA    1,x
-
-; The following lines set this voice's pitch EG step to 4, to indicate
-; that it's in the release phase.
-    LDAA    #4
-    LDX     .pitch_eg_current_step_ptr
-    STAA    0,x
-
-    LDAB    .remove_voice_command_byte
+; If the sustain pedal is not active, send the 'Key Off' event to the EGS.
     STAB    egs_key_event
+
+; Set this voice's pitch EG step to 4, to initiate the release phase.
+; Get the correct index by shifting the 'Remove Voice Command' right twice.
+; This will convert it to the voice number.
+    LSRB
+    LSRB
+    LDX     #pitch_eg_current_step
+    ABX
+    LDAA    #4
+    STAA    0,x
 
     RTS
 
 .sustain_pedal_active:
 ; IX points to the voice status array.
 ; Set the 'Voice Sustained' bit.
-    LDAA    #VOICE_STATUS_SUSTAIN
-    ORAA    1,x
-
-; Clear the 'Voice Active' bit.
-    ANDA    #~VOICE_STATUS_ACTIVE
-    STAA    1,x
+    OIMX    #VOICE_STATUS_SUSTAIN, 1,x
 
     RTS
