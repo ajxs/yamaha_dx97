@@ -39,7 +39,7 @@ main_process_events:                            SUBROUTINE
     CMPA    #EVENT_RELOAD_PATCH
     BEQ     .reload_patch
 
-    JSR     voice_reset_egs
+    JSR     voice_reset
 
 .reload_patch:
     JSR     patch_activate

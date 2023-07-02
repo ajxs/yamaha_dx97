@@ -27,11 +27,9 @@
 ;
 ; ==============================================================================
 voice_reset:                                    SUBROUTINE
-    JSR     voice_reset_egs
-    JSR     voice_reset_frequency_data
     CLR     active_voice_count
-
-    RTS
+    JSR     voice_reset_egs
+; Falls-through below.
 
 ; ==============================================================================
 ; VOICE_RESET_FREQUENCY_DATA
