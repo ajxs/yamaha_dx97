@@ -101,8 +101,7 @@ voice_add_poly:                                 SUBROUTINE
 
 ; Test whether the portamento pedal is active.
 ; Note that this line is pulled high when no pedal is inserted.
-    LDAA    <pedal_status_current
-    BITA    #PEDAL_INPUT_PORTA
+    TIMD    #PEDAL_INPUT_PORTA, pedal_status_current
     BEQ     .no_portamento
 
 ; Test whether the synth's portamento rate is at maximum (0xFF).
@@ -126,10 +125,9 @@ voice_add_poly:                                 SUBROUTINE
 
 .update_follow_portamento_frequency_loop:
     LDX     .voice_status_ptr
-    LDAA    1,x
 
 ; Check if this voice is being active. If so, update its target pitch.
-    BITA    #VOICE_STATUS_ACTIVE
+    TIMX    #VOICE_STATUS_ACTIVE, 1
     BNE     .update_follow_portamento_frequency_loop_pointer
 
 ; The new key log frequency is stored in the 'Target Frequency' entry for
@@ -149,6 +147,7 @@ voice_add_poly:                                 SUBROUTINE
     LDX     .voice_frequency_target_ptr
     ABX
     STX     .voice_frequency_target_ptr
+
     DEC     .voice_index
     BNE     .update_follow_portamento_frequency_loop
 

@@ -116,8 +116,7 @@ voice_add_mono:                                 SUBROUTINE
     BEQ     .no_portamento
 
 ; Test whether the portamento pedal is active.
-    LDAA    <pedal_status_current
-    BITA    #PEDAL_INPUT_PORTA
+    TIMD    #PEDAL_INPUT_PORTA, pedal_status_current
     BNE     .reset_pitch_eg_frequency
 
 .no_portamento:
@@ -215,8 +214,7 @@ voice_add_mono_multiple_voices:                 SUBROUTINE
 ; Test whether the synth's portamento pedal is active.
 ; If portamento is not active, clear the portamento and glissando target
 ; frequencies here, by setting them to this voice's target frequency.
-    LDAA    <pedal_status_current
-    BITA    #PEDAL_INPUT_PORTA
+    TIMD    #PEDAL_INPUT_PORTA, pedal_status_current
     BEQ     voice_add_mono_clear_porta_frequency
 
 .exit:
