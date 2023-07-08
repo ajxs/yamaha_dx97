@@ -25,10 +25,12 @@ SYSTEM_TICK_PERIOD:                             EQU 3140
 ; ACTIVE_SENSING_TEST_FOR_TIMEOUT
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
+; @NEEDS_TESTING
 ; @PRIVATE
 ; DESCRIPTION:
 ; This subroutine is run as part of the periodic 'OCF' interrupt.
-; When active sensing is active this function will count up to 255 invocations,
+; When active sensing is enabled this function will count up to 255 invocations,
 ; and then reset the synth's voice parameters if an active sensing 'pulse' has
 ; not been received.
 ;
@@ -49,13 +51,10 @@ active_sensing_test_for_timeout:             SUBROUTINE
     TST     midi_sysex_receive_data_active
     BNE     .exit
 
-; Increment the timeout counter.
-; If this counter reaches 255, clear the active sensing flags, and reset
-; all the synth's voice data.
+; If incrementing the active sensing timeout counter causes it to overflow,
+; reset the active sensing flags, and all the synth's voice data.
     INC     midi_active_sensing_rx_counter
-    LDAA    #254
-    CMPA    <midi_active_sensing_rx_counter
-    BCC     .exit
+    BNE     .exit
 
     CLRA
     STAA    <midi_active_sensing_rx_counter_enabled
