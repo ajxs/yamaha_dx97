@@ -93,11 +93,9 @@ voice_transpose_and_convert_note_to_log_freq: SUBROUTINE
 
 ; If the result of transposing the note is > 127, clamp.
     CMPB    #127
-    BLS     .get_note_frequency
+    BLS     voice_convert_midi_note_to_log_freq
 
     LDAB    #127
-
-.get_note_frequency:
 ; Fall-through below.
 
 ; ==============================================================================
