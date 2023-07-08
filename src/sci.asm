@@ -54,6 +54,7 @@ handler_sci:                                    SUBROUTINE
 ; Checks if Status[TDRE] is clear.
 ; If so the serial interface is ready to transmit new data.
     BMI     .is_tx_buffer_empty
+
     BRA     .handler_sci_exit
 
 .receive_incoming_data:
@@ -78,7 +79,6 @@ handler_sci:                                    SUBROUTINE
     BEQ     .midi_buffer_full
 
     STX     <midi_buffer_ptr_rx_write
-
     BRA     .handler_sci_exit
 
 .midi_buffer_full:
@@ -129,7 +129,7 @@ handler_sci:                                    SUBROUTINE
     BRA     .handler_sci_exit
 
 .tx_buffer_empty:
-    LDAA    #(SCI_CTRL_TE | SCI_CTRL_RE | SCI_CTRL_RIE | SCI_CTRL_TDRE)
+    LDAA    #(SCI_CTRL_TE | SCI_CTRL_RE | SCI_CTRL_RIE)
     STAA    <sci_ctrl_status
     BRA     .handler_sci_exit
 

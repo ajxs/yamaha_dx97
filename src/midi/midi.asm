@@ -51,6 +51,16 @@ MIDI_CC_DATA_ENTRY                              EQU 6
     .ENDM
 
 ; ==============================================================================
+; Macro for storing the first data byte making up a MIDI message, and
+; returning to process further incoming MIDI data.
+; ==============================================================================
+    .MAC STORE_FIRST_BYTE_AND_PROCESS_NEXT_INCOMING_DATA
+        STAA    <midi_rx_first_data_byte
+        JMP     midi_process_incoming_data
+    .ENDM
+
+
+; ==============================================================================
 ; MIDI_INIT
 ; ==============================================================================
 ; DESCRIPTION:
@@ -70,9 +80,10 @@ midi_init:                                      SUBROUTINE
     LDAA    #(RATE_MODE_CTRL_CC0 | RATE_MODE_CTRL_CC1)
     STAA    <rate_mode_ctrl
 
-    LDAA    #(SCI_CTRL_TE | SCI_CTRL_RE | SCI_CTRL_RIE | SCI_CTRL_TDRE)
+    LDAA    #(SCI_CTRL_TE | SCI_CTRL_RE | SCI_CTRL_RIE)
     STAA    <sci_ctrl_status
 
+; Reading STATUS, then reading RECEIVE will clear Status[RDRF].
     LDAA    <sci_ctrl_status
     LDAA    <sci_rx
 
