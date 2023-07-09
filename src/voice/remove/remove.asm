@@ -26,12 +26,6 @@
     .PROCESSOR HD6303
 
 voice_remove:                                   SUBROUTINE
-; The note number is stored here so that the interface of this function
-; matches that of the DX9.
-; The DX9 code stores the MSB of the logarithmic frequency in the voice status
-; array, as opposed to the DX7, which uses the MIDI note number.
-; The DX7 stores the MIDI note number _without_ the key transpose value added.
-; This shouldn't cause any problems as long as it is consistent.
     STAB    <note_number
 
     TBA

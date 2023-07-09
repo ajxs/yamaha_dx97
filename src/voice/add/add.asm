@@ -229,8 +229,7 @@ voice_add_operator_level_voice_frequency:       SUBROUTINE
 .is_portamento_pedal_active:
 ; If the portamento pedal is active, exit.
 ; Otherwise this routine falls-through below to 'load pitch'.
-    LDAA    pedal_status_current
-    BITA    #PEDAL_INPUT_PORTA
+    TIMD    #PEDAL_INPUT_PORTA, pedal_status_current
     BEQ     voice_add_load_frequency_to_egs
 
     RTS

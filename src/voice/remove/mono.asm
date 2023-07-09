@@ -23,13 +23,12 @@
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE
 ; DESCRIPTION:
-; @TODO
 ; Removes a voice with the specified note frequency when the synth is in
 ; polyphonic mode.
 ;
 ; ARGUMENTS:
 ; Registers:
-; * ACCA: The note number of the note to remove.
+; * ACCA: The number of the note to remove.
 ;
 ; MEMORY MODIFIED:
 ; * active_voice_count
@@ -54,8 +53,9 @@ voice_remove_mono:                              SUBROUTINE
     DEC     active_voice_count
     BNE     .multiple_active_voices
 
+; If the sustain pedal is active, exit without sending the 'Note Off' event.
     TIMD    #PEDAL_INPUT_SUSTAIN, sustain_status
-    BNE     .sustain_pedal_active
+    BNE     .exit
 
 ; Set the Pitch EG for this voice to its release stage.
     LDAA    #4
@@ -68,40 +68,32 @@ voice_remove_mono:                              SUBROUTINE
 .exit:
     RTS
 
-.sustain_pedal_active:
-    RTS
-
 .multiple_active_voices:
-; Since there's still another voice active after removing this one, the
+; Since there's still active voices after removing this one, the
 ; following section deals with finding the pitch of the 'last' active key,
 ; and depending on the legato direction, finding the lowest, or highest
 ; note remaining, and setting its frequency as the new target.
 ; This will cause the synth's portamento to transition towards this
 ; pitch in the 'portamento_process' subroutine.
+    JSR     voice_remove_mono_find_active_key_event
+
     LDAA    <portamento_direction
     BNE     .portamento_moving_upwards
 
 ; If the portamento direction was down, find the next lowest note to return to.
-    JSR     voice_remove_mono_find_active_key_event
     JSR     voice_remove_mono_find_lowest_note
     BRA     .store_portamento_target_frequency
 
 .portamento_moving_upwards:
 ; If the portamento direction was up, find the next highest note to return to.
-    JSR     voice_remove_mono_find_active_key_event
     JSR     voice_remove_mono_find_highest_note
 
 .store_portamento_target_frequency:
     LDAB    <note_number_previous
 
-; Add the patch transpose value, and subtract 24 to take the unsigned transpose
-; range into account.
-    ADDB    patch_edit_key_transpose
-    SUBB    #24
-
 ; Now that the key for the portamento to transition to has been found,
 ; calculate and store the new target frequency.
-    JSR     voice_convert_midi_note_to_log_freq
+    JSR     voice_transpose_and_convert_note_to_log_freq
     LDD     <note_frequency
     STD     voice_frequency_target
 
@@ -119,8 +111,7 @@ voice_remove_mono:                              SUBROUTINE
 ; Test whether the pedal is inactive.
 ; If so, set the portamento/glissando frequency to the new target to exit
 ; without any pitch transition.
-    LDAA    <pedal_status_current
-    BITA    #PEDAL_INPUT_PORTA
+    TIMD    #PEDAL_INPUT_PORTA, pedal_status_current
     BEQ     .no_portamento
 
 .portamento_mode_full_time:
@@ -136,11 +127,16 @@ voice_remove_mono:                              SUBROUTINE
 ; ==============================================================================
 ; VOICE_REMOVE_MONO_FIND_VOICE_WITH_KEY
 ; ==============================================================================
-; @TAKEN_FROM_DX7_FIRMWARE
+; @TAKEN_FROM_DX7_FIRMWARE:0xD69F
+; @CHANGED_FOR_6_OP
 ; @PRIVATE
 ; DESCRIPTION:
 ; Searches each word-length entry in the voice status buffer to find an entry
 ; matching the specified key.
+;
+; ARGUMENTS:
+; Registers:
+; * ACCA: The number of the note to find.
 ;
 ; RETURNS:
 ; * ACCA: The match, or zero if not found.
@@ -149,7 +145,6 @@ voice_remove_mono:                              SUBROUTINE
 ;
 ; ==============================================================================
 voice_remove_mono_find_voice_with_key:          SUBROUTINE
-    LDAA    <note_number
     LDAB    #16
     LDX     #voice_status
 
@@ -164,17 +159,16 @@ voice_remove_mono_find_voice_with_key:          SUBROUTINE
 
 ; If the key is not found, return 0.
     CLRA
-    RTS
+; Fall-through to exit.
 
 .voice_found:
-    LDAA    0,x
     RTS
 
 
 ; ==============================================================================
 ; VOICE_REMOVE_MONO_FIND_ACTIVE_KEY_EVENT
 ; ==============================================================================
-; @TAKEN_FROM_DX7_FIRMWARE
+; @TAKEN_FROM_DX7_FIRMWARE:0xD6B4
 ; @PRIVATE
 ; DESCRIPTION:
 ; Searches through the 'Voice Status Buffer', searching for the first entry with
@@ -204,7 +198,7 @@ voice_remove_mono_find_active_key_event:        SUBROUTINE
     RTS
 
 .active_entry_found:
-    BSR     voice_remove_mono_store_previous_note
+    STAA    <note_number_previous
     INX
     INX
 
@@ -214,13 +208,19 @@ voice_remove_mono_find_active_key_event:        SUBROUTINE
 ; ==============================================================================
 ; VOICE_REMOVE_MONO_FIND_HIGHEST_NOTE
 ; ==============================================================================
-; @TAKEN_FROM_DX7_FIRMWARE
+; @TAKEN_FROM_DX7_FIRMWARE:0xD6C8
 ; @PRIVATE
 ; DESCRIPTION:
-; @TODO
 ; Searches through the 'Voice Events' buffer searching the active voice event
 ; with the highest key number.
 ; This is used when removing a voice in monophonic mode.
+;
+; ARGUMENTS:
+; Registers:
+; * ACCB: The starting index for the search for the highest note.
+;
+; MEMORY MODIFIED:
+; * note_number_previous
 ;
 ; ==============================================================================
 voice_remove_mono_find_highest_note:            SUBROUTINE
@@ -249,13 +249,19 @@ voice_remove_mono_find_highest_note:            SUBROUTINE
 ; ==============================================================================
 ; VOICE_REMOVE_MONO_FIND_LOWEST_NOTE
 ; ==============================================================================
-; @TAKEN_FROM_DX7_FIRMWARE
+; @TAKEN_FROM_DX7_FIRMWARE:0xD6DA
 ; @PRIVATE
 ; DESCRIPTION:
-; @TODO
-; Searches through the 'Voice Events' buffer searching the active voice event
-; with the lowest key number.
+; Searches through every entry in the 'Voice Events' buffer searching for the
+; active voice event with the lowest key number.
 ; This is used when removing a voice in monophonic mode.
+;
+; ARGUMENTS:
+; Registers:
+; * ACCB: The starting index for the search for the highest note.
+;
+; MEMORY MODIFIED:
+; * note_number_previous
 ;
 ; ==============================================================================
 voice_remove_mono_find_lowest_note:             SUBROUTINE
@@ -284,7 +290,8 @@ voice_remove_mono_find_lowest_note:             SUBROUTINE
 ; ==============================================================================
 ; VOICE_REMOVE_MONO_SET_PORTAMENTO_TARGET_NOTE
 ; ==============================================================================
-; @TAKEN_FROM_DX7_FIRMWARE
+; @TAKEN_FROM_DX7_FIRMWARE:0xD6EC
+; @CHANGED_FOR_6_OP
 ; @PRIVATE
 ; DESCRIPTION:
 ; Sets the new portamento 'target' note.
@@ -295,28 +302,11 @@ voice_remove_mono_find_lowest_note:             SUBROUTINE
 ; Registers:
 ; * IX:   The portamento 'target' note.
 ;
-; ==============================================================================
-voice_remove_mono_set_portamento_target_note:   SUBROUTINE
-    LDAA    0,x
-; Falls-through below.
-
-; ==============================================================================
-; VOICE_REMOVE_MONO_STORE_PREVIOUS_NOTE
-; ==============================================================================
-; @TAKEN_FROM_DX7_FIRMWARE
-; @PRIVATE
-; DESCRIPTION:
-; @TODO
-; Stores the previous note number.
-;
-; ARGUMENTS:
-; Registers:
-; * ACCA: The previous note number to store.
-;
 ; MEMORY MODIFIED:
 ; * note_number_previous
 ;
 ; ==============================================================================
-voice_remove_mono_store_previous_note:          SUBROUTINE
+voice_remove_mono_set_portamento_target_note:   SUBROUTINE
+    LDAA    0,x
     STAA    <note_number_previous
     RTS
