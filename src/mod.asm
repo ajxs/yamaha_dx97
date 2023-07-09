@@ -25,19 +25,27 @@
 ;
 ; ==============================================================================
 mod_amp_update:                                 SUBROUTINE
+; ==============================================================================
+; LOCAL TEMPORARY VARIABLES
+; ==============================================================================
+.mod_wheel_input_scaled:                        EQU #interrupt_temp_variables
+.breath_controller_input_scaled:                EQU #interrupt_temp_variables + 1
+.mod_amount_total:                              EQU #interrupt_temp_variables + 2
+
+; ==============================================================================
 ; Scale the mod wheel input by its specified range.
     LDAA    mod_wheel_range
     JSR     patch_convert_serialised_value_to_internal
     LDAB    analog_input_mod_wheel
     MUL
-    STAA    <mod_wheel_input_scaled
+    STAA    .mod_wheel_input_scaled
 
 ; Scale the breath controller input by its specified range.
     LDAA    breath_control_range
     JSR     patch_convert_serialised_value_to_internal
     LDAB    analog_input_breath_controller
     MUL
-    STAA    <breath_controller_input_scaled
+    STAA    .breath_controller_input_scaled
 
     CLRA
     TST     mod_wheel_eg_bias
@@ -52,53 +60,53 @@ mod_amp_update:                                 SUBROUTINE
 
 ; If breath control EG bias is enabled, add the MSB of the scaled range value
 ; to this register.
-    STAA    <mod_amount_total
+    STAA    .mod_amount_total
     LDAA    breath_control_range
     JSR     patch_convert_serialised_value_to_internal
-    ADDA    <mod_amount_total
+    ADDA    .mod_amount_total
     BCC     .store_total_bias_amount
 
     LDAA    #$FF
 
 .store_total_bias_amount:
     COMA
-    STAA    <mod_amount_total
+    STAA    .mod_amount_total
 
     CLRA
     TST     mod_wheel_eg_bias
     BEQ     loc_D6CE
 
-    LDAA    <mod_wheel_input_scaled
+    LDAA    .mod_wheel_input_scaled
 
 loc_D6CE:
     TST     breath_control_eg_bias
     BEQ     loc_D6D9
 
-    ADDA    <breath_controller_input_scaled
+    ADDA    .breath_controller_input_scaled
     BCC     loc_D6D9
 
     LDAA    #$FF
 
 loc_D6D9:
-    ADDA    <mod_amount_total
+    ADDA    .mod_amount_total
     BCC     loc_D6DF
 
     LDAA    #$FF
 
 loc_D6DF:
     COMA
-    STAA    <mod_amount_total
+    STAA    .mod_amount_total
     CLRA
     TST     mod_wheel_amp
     BEQ     loc_D6EA
 
-    LDAA    <mod_wheel_input_scaled
+    LDAA    .mod_wheel_input_scaled
 
 loc_D6EA:
     TST     breath_control_amp
     BEQ     .get_scaled_depth_factor
 
-    ADDA    <breath_controller_input_scaled
+    ADDA    .breath_controller_input_scaled
     BCC     .get_scaled_depth_factor
 
     LDAA    #$FF
@@ -121,19 +129,19 @@ loc_D6EA:
 loc_D701:
 ; If the amp mod factor overflows, clamp at 0xFF.
 ; Otherwise branch.
-    ADDA    <mod_amount_total
+    ADDA    .mod_amount_total
     BCC     .calculate_lfo_amp_mod
 
     LDAA    #$FF
 
 .calculate_lfo_amp_mod:
-    SUBA    <mod_amount_total
+    SUBA    .mod_amount_total
 ; @TODO: Invert LFO amplitude, then invert polarity?
     LDAB    <lfo_amplitude
     COMB
     EORB    #$80
     MUL
-    ADDA    <mod_amount_total
+    ADDA    .mod_amount_total
     BCC     .write_amp_mod_to_egs
 
     LDAA    #$FF
@@ -209,6 +217,10 @@ table_egs_amp_mod_input:
 ;
 ; ==============================================================================
 mod_pitch_update:                               SUBROUTINE
+; ==============================================================================
+.mod_wheel_input_scaled:                        EQU #interrupt_temp_variables
+
+; ==============================================================================
     CLRA
 
 ; If the mod wheel is not assigned to any modulation destination, store '0' for
@@ -222,7 +234,7 @@ mod_pitch_update:                               SUBROUTINE
     MUL
 
 .store_scaled_mod_wheel_input:
-    STAA    <mod_wheel_input_scaled
+    STAA    .mod_wheel_input_scaled
 
     TST     breath_control_pitch
     BEQ     .get_scaled_depth_factor
@@ -231,7 +243,7 @@ mod_pitch_update:                               SUBROUTINE
     JSR     patch_convert_serialised_value_to_internal
     LDAB    analog_input_breath_controller
     MUL
-    ADDA    <mod_wheel_input_scaled
+    ADDA    .mod_wheel_input_scaled
     BCC     .get_scaled_depth_factor
 
 ; If this value overflows, clamp at 0xFF.

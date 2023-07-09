@@ -473,6 +473,4 @@ patch_print_current_name:                       SUBROUTINE
     CPX     #patch_edit_name + 10
     BNE     .print_name_loop
 
-    JSR     lcd_update
-
-    RTS
+    JMP     lcd_update

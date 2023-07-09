@@ -116,10 +116,6 @@ lfo_phase_accumulator:                          DS 2
 lfo_sample_and_hold_update_flag:                DS 1
 lfo_amplitude:                                  DS 1
 
-mod_wheel_input_scaled:                         DS 1
-breath_controller_input_scaled:                 DS 1
-mod_amount_total:                               DS 1
-
 ; This flag is 'toggled' On/Off with each interrupt.
 ; This flag is used to determine whether portamento, or pitch modulation
 ; should be updated in the OCF interrupt. The reason is likely to save CPU
