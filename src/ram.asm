@@ -200,7 +200,8 @@ test_stage_sub:                                 EQU #midi_sysex_format_param_grp
 test_stage_sub_2:                               EQU #midi_sysex_byte_count_msb_param_number
 test_button_input:                              EQU #midi_sysex_byte_count_lsb_param_data
 
-; @TODO: Consider combining with the pitch EG/Modulation IRQ toggle.
+; The portamento pitch transition for only half of the synth's voices are
+; processed with each iteration. This variable controls which half.
 portamento_voice_toggle:                        DS 1
 
 ; Temporary variables used in the various interrupt routines.

@@ -126,7 +126,6 @@ portamento_process:                             SUBROUTINE
     BRA     .setup_pointers
 
 .process_voices_8_to_15:
-    CLR     portamento_voice_toggle
     LDAB    #16
 
 .setup_pointers:
