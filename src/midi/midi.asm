@@ -56,6 +56,7 @@ MIDI_CC_DATA_ENTRY                              EQU 6
 ; ==============================================================================
     .MAC STORE_FIRST_BYTE_AND_PROCESS_NEXT_INCOMING_DATA
         STAA    <midi_rx_first_data_byte
+        INC     <midi_rx_data_count
         JMP     midi_process_incoming_data
     .ENDM
 

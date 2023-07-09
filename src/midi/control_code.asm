@@ -36,13 +36,12 @@
 ;
 ; ==============================================================================
 midi_rx_control_code:                           SUBROUTINE
-; Test if the number of data bytes received already is two.
-; If so, all the necessary data had now been received. Proceed to processing
-; the MIDI event.
-; Otherwise, store the incoming note number byte and return.
-    LDAB    midi_rx_data_count
-    CMPB    #2
-    BNE     .midi_rx_cc_incomplete
+; Test whether the first data byte has already been processed.
+; If not, the message is incomplete.
+    TST     <midi_rx_data_count
+    BEQ     .midi_rx_cc_incomplete
+
+    CLR     <midi_rx_data_count
 
 ; Load the necessary data, and jump to the subroutine to add a new voice with
 ; the specified note.
@@ -89,8 +88,7 @@ midi_rx_control_code:                           SUBROUTINE
     DC.B 128
 
 .midi_rx_cc_incomplete
-    STAA    midi_rx_first_data_byte
-    RTS
+    STORE_FIRST_BYTE_AND_PROCESS_NEXT_INCOMING_DATA
 
 
 ; ==============================================================================

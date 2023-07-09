@@ -83,11 +83,56 @@ midi_process_incoming_data:                     SUBROUTINE
     TSTA
     BPL     midi_process_data_message
 
-    JMP     midi_process_status_message
+    BRA     midi_process_status_message
 
 .reset_and_exit:
     CLR     midi_sysex_rx_active_flag
     JMP     midi_reset_timers
+
+
+; ==============================================================================
+; MIDI_PROCESS_STATUS_MESSAGE
+; ==============================================================================
+; DESCRIPTION:
+; Handles any incoming MIDI status message.
+; Typically this will just store the current message type, and return.
+;
+; ARGUMENTS:
+; Registers:
+; * ACCA: The received status code.
+;
+; MEMORY MODIFIED:
+; * midi_last_command_received
+; * midi_rx_data_count
+;
+; REGISTERS MODIFIED:
+; * ACCA
+;
+; ==============================================================================
+midi_process_status_message:                    SUBROUTINE
+; If the status code is 0xF7 or above, test if active sensing, otherwise ignore.
+; Like in the original DX9 firmware, the SysEx end message is ignored.
+    CMPA    #MIDI_STATUS_SYSEX_END
+    BCS     .store_message_type
+
+; The original DX9 firmware handled active sensing differently.
+; Refer to the documentation on the 'midi_rx_active_sensing' function.
+; This is handled here on account of active sensing not requiring any data.
+    CMPA    #MIDI_STATUS_ACTIVE_SENSING
+    BEQ     midi_rx_active_sensing
+
+; Any other status code above 0xF7 is ignored.
+; In this case, there's no need to store the 'last MIDI command', as no further
+; processing is necessary, and these commands don't have any associated data.
+    BRA     .exit
+
+.store_message_type:
+    STAA    <midi_last_command_received
+    CLR     <midi_rx_data_count
+
+; Return back to process any further incoming data in the buffer.
+.exit:
+    JMP     midi_process_incoming_data
 
 
 ; ==============================================================================
@@ -130,9 +175,6 @@ midi_process_data_message:                      SUBROUTINE
     CMPB    midi_channel_rx
     BNE     .exit
 
-; Increment the received data count.
-    INC     <midi_rx_data_count
-
 ; Load the last status byte received, shift it right 4 bits, and mask the three
 ; least-significant bits. This will create a usable index from the MIDI status
 ; byte.
@@ -173,6 +215,47 @@ table_midi_function_pointers:
 
 
 ; ==============================================================================
+; MIDI_RX_ACTIVE_SENSING
+; ==============================================================================
+; @NEW_FUNCTIONALITY
+; @NEEDS_TESTING
+; DESCRIPTION:
+; Handles an incoming MIDI active sensing message.
+; The original DX9 firmware handled active sensing very differently.
+; In the original, a SysEx start header together with the manufacturer code
+; indicated a SysEx 'pulse'. Later ratifications of the MIDI standard
+; implemented the current standard, which was subsequently introduced in a new
+; ROM revision.
+; From Yamaha Service News E-325:
+; """
+; Since DX-7 had been developed and released to the field before the MIDI
+; Standard was established, on some occasions, earlier models may develop
+; operational problems due to the MIDI code discord between instruments.
+; Therefore, in order to improve the performanceof DX-7, some specifications
+; have been modified as well as a change in the System ROM Version.
+; """
+;
+; ARGUMENTS:
+; Registers:
+; * ACCA: The received MIDI data.
+;
+; MEMORY MODIFIED:
+; * midi_active_sensing_rx_counter_enabled
+; * midi_active_sensing_rx_counter
+;
+; REGISTERS MODIFIED:
+; * ACCA
+;
+; ==============================================================================
+midi_rx_active_sensing:                         SUBROUTINE
+    LDAA    #1
+    STAA    <midi_active_sensing_rx_counter_enabled
+    CLR     <midi_active_sensing_rx_counter
+
+    RTS
+
+
+; ==============================================================================
 ; MIDI_RX_NOTE_OFF
 ; ==============================================================================
 ; DESCRIPTION:
@@ -195,17 +278,15 @@ table_midi_function_pointers:
 ;
 ; ==============================================================================
 midi_rx_note_off:                               SUBROUTINE
-; Test if the number of data bytes received already is two.
-; If so, all the necessary data had now been received. Proceed to processing
-; the MIDI event.
-; Otherwise, store the incoming note number byte and return.
-    LDAB    <midi_rx_data_count
-    CMPB    #2
-    BNE     .midi_rx_note_off_incomplete
+; Test whether the first data byte has already been processed.
+; If not, the message is incomplete.
+    TST     <midi_rx_data_count
+    BEQ     .midi_rx_note_off_incomplete
 
 ; This label is also referenced in the case that an incoming 'Note On' message
 ; has a velocity of zero. If so, it is treated as a 'Note Off' event.
 midi_rx_note_off_process:
+    CLR     <midi_rx_data_count
     STAA    <note_velocity
 
 ; Load the necessary data, and jump to the subroutine to remove the voice with
@@ -214,9 +295,7 @@ midi_rx_note_off_process:
     JMP     voice_remove
 
 .midi_rx_note_off_incomplete:
-; Store the incoming data byte, and exit.
-    STAA    <midi_rx_first_data_byte
-    RTS
+    STORE_FIRST_BYTE_AND_PROCESS_NEXT_INCOMING_DATA
 
 
 ; ==============================================================================
@@ -244,13 +323,14 @@ midi_rx_note_off_process:
 ;
 ; ==============================================================================
 midi_rx_note_on:                                SUBROUTINE
-; Test if the number of data bytes received already is two.
-; If so, all the necessary data had now been received. Proceed to processing
-; the MIDI event.
-; Otherwise, store the incoming note number byte and return.
-    LDAB    <midi_rx_data_count
-    CMPB    #2
-    BNE     .midi_rx_note_on_incomplete
+; Test whether the first data byte has already been processed.
+; If not, the message is incomplete.
+    TST     <midi_rx_data_count
+    BEQ     .midi_rx_note_on_incomplete
+
+; Clear the processed data count. This is important for the synth dealing with
+; 'Running Status' MIDI messages.
+    CLR     <midi_rx_data_count
 
 ; Check if the incoming velocity value is zero.
 ; If so, process this as a 'Note Off' event.
@@ -272,8 +352,8 @@ midi_rx_note_on:                                SUBROUTINE
     JMP     voice_add
 
 .midi_rx_note_on_incomplete:
-    STAA    <midi_rx_first_data_byte
-    RTS
+    STORE_FIRST_BYTE_AND_PROCESS_NEXT_INCOMING_DATA
+
 
 ; ==============================================================================
 ; MIDI Velocity Table.
@@ -382,7 +462,6 @@ midi_rx_program_change:                         SUBROUTINE
 ; ==============================================================================
 ; MIDI_RX_PITCH_BEND
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
 ; Handles incoming MIDI 'Pitch Bend' events.
 ; If the incoming data is the first of the two required bytes, this function
@@ -412,99 +491,18 @@ midi_rx_program_change:                         SUBROUTINE
 ;
 ; ==============================================================================
 midi_rx_pitch_bend:                             SUBROUTINE
-; Test if the number of data bytes received already is non-zero.
-; If so, all the necessary data had now been received. Proceed to processing
-; the MIDI event.
-; Otherwise, store the incoming byte and proceed to process the next
-; incoming MIDI data messages.
+; Test whether the first data byte has already been processed.
+; If not, the message is incomplete.
     TST     <midi_rx_data_count
-    BNE     .midi_rx_pitch_bend_incomplete
+    BEQ     .midi_rx_pitch_bend_incomplete
 
-    INCREMENT_BYTE_COUNT_AND_RETURN
-
-.midi_rx_pitch_bend_incomplete:
     CLR     <midi_rx_data_count
 
-; Only take the MSB, discard the 2nd data byte with the LSB.
+; Only take the MSB, discard the 1st data byte with the LSB.
     ASLA
     STAA    analog_input_pitch_bend
 
     RTS
 
-
-; ==============================================================================
-; MIDI_PROCESS_STATUS_MESSAGE
-; ==============================================================================
-; DESCRIPTION:
-; Handles any incoming MIDI status message.
-; Typically this will just store the current message type, and return.
-;
-; ARGUMENTS:
-; Registers:
-; * ACCA: The received MIDI data.
-;
-; MEMORY MODIFIED:
-; * midi_last_command_received
-;
-; REGISTERS MODIFIED:
-; * ACCA
-;
-; ==============================================================================
-midi_process_status_message:                    SUBROUTINE
-; Ignore any MIDI status code above 0xF7.
-    CMPA    #MIDI_STATUS_SYSEX_END
-    BCS     .store_message_type
-
-; The original DX9 firmware handled active sensing differently.
-; Refer to the documentation on the 'midi_rx_active_sensing' function.
-; This is handled here on account of active sensing not requiring any data.
-    CMPA    #MIDI_STATUS_ACTIVE_SENSING
-    BEQ     midi_rx_active_sensing
-
-.store_message_type:
-    STAA    <midi_last_command_received
-    CLR     <midi_rx_data_count
-
-; Return back to process any further incoming data in the buffer.
-    JMP     midi_process_incoming_data
-
-
-; ==============================================================================
-; MIDI_RX_ACTIVE_SENSING
-; ==============================================================================
-; @NEW_FUNCTIONALITY
-; @NEEDS_TESTING
-; DESCRIPTION:
-; Handles an incoming MIDI active sensing message.
-; The original DX9 firmware handled active sensing very differently.
-; In the original, a SysEx start header together with the manufacturer code
-; indicated a SysEx 'pulse'. Later ratifications of the MIDI standard
-; implemented the current standard, which was subsequently introduced in a new
-; ROM revision.
-; From Yamaha Service News E-325:
-; """
-; Since DX-7 had been developed and released to the field before the MIDI
-; Standard was established, on some occasions, earlier models may develop
-; operational problems due to the MIDI code discord between instruments.
-; Therefore, in order to improve the performanceof DX-7, some specifications
-; have been modified as well as a change in the System ROM Version.
-; """
-;
-; ARGUMENTS:
-; Registers:
-; * ACCA: The received MIDI data.
-;
-; MEMORY MODIFIED:
-; * midi_active_sensing_rx_counter_enabled
-; * midi_active_sensing_rx_counter
-;
-; REGISTERS MODIFIED:
-; * ACCA
-;
-; ==============================================================================
-midi_rx_active_sensing:                         SUBROUTINE
-    LDAA    #1
-    STAA    <midi_active_sensing_rx_counter_enabled
-    CLR     <midi_active_sensing_rx_counter
-
-    RTS
+.midi_rx_pitch_bend_incomplete:
+    STORE_FIRST_BYTE_AND_PROCESS_NEXT_INCOMING_DATA
