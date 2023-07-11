@@ -21,7 +21,12 @@
 ; MOD_AMP_UPDATE
 ; ==============================================================================
 ; DESCRIPTION:
-; @TODO
+; This subroutine calculates the total amplitude modulation input.
+; This tests the various modulation sources (Mod Wheel/Breath Controller) for
+; whether EG Bias is enabled, and contributes their input accordingly.
+; The overall arithmetic formula used here isn't well understood.
+; It's totally arbitrary, and calculates the index into a LUT, from which the
+; value sent to the EGS is retrieved.
 ;
 ; ==============================================================================
 mod_amp_update:                                 SUBROUTINE
@@ -47,10 +52,16 @@ mod_amp_update:                                 SUBROUTINE
     MUL
     STAA    .breath_controller_input_scaled
 
+; Set up EG Bias offset.
+; The effect of the following code is that if the EG Bias for a particular
+; modulation source (Mod Wheel/Breath Controller) is enabled, the range for
+; that source will contribute to the total modulation amount.
     CLRA
+
     TST     mod_wheel_eg_bias
     BEQ     .is_breath_control_eg_bias_enabled
 
+; Convert the 0-99 variable range to 0-255.
     LDAA    mod_wheel_range
     JSR     patch_convert_serialised_value_to_internal
 
@@ -58,96 +69,108 @@ mod_amp_update:                                 SUBROUTINE
     TST     breath_control_eg_bias
     BEQ     .store_total_bias_amount
 
-; If breath control EG bias is enabled, add the MSB of the scaled range value
-; to this register.
     STAA    .mod_amount_total
+
+; Convert the 0-99 variable range to 0-255.
     LDAA    breath_control_range
     JSR     patch_convert_serialised_value_to_internal
+
     ADDA    .mod_amount_total
     BCC     .store_total_bias_amount
 
-    LDAA    #$FF
+    LDAA    #$FF        ; Clamp at 0xFF.
 
 .store_total_bias_amount:
     COMA
     STAA    .mod_amount_total
 
+; Set up the EG Biased input.
+; The following section tests whether EG Bias is enabled for a particular
+; source. If so, the scaled input is added to the total.
     CLRA
+
+; If EG Bias for this modulation source is enabled, add the scaled input value.
     TST     mod_wheel_eg_bias
-    BEQ     loc_D6CE
+    BEQ     .is_breath_control_eg_bias_enabled_2
 
     LDAA    .mod_wheel_input_scaled
 
-loc_D6CE:
+.is_breath_control_eg_bias_enabled_2:
+; If EG Bias for this modulation source is enabled, add the scaled input value.
     TST     breath_control_eg_bias
-    BEQ     loc_D6D9
+    BEQ     ..add_current_total_to_bias_input
 
     ADDA    .breath_controller_input_scaled
-    BCC     loc_D6D9
+    BCC     ..add_current_total_to_bias_input
 
-    LDAA    #$FF
+    LDAA    #$FF        ; Clamp at 0xFF.
 
-loc_D6D9:
+..add_current_total_to_bias_input:
     ADDA    .mod_amount_total
-    BCC     loc_D6DF
+    BCC     .store_total_with_bias_input
 
-    LDAA    #$FF
+    LDAA    #$FF        ; Clamp at 0xFF.
 
-loc_D6DF:
+.store_total_with_bias_input:
     COMA
     STAA    .mod_amount_total
+
+; Test whether amplitude modulation is enabled for each modulation source.
+; If so, the scaled input for each is added to the total amp modulation input.
     CLRA
     TST     mod_wheel_amp
-    BEQ     loc_D6EA
+    BEQ     is_breath_control_amp_mod_enabled
 
     LDAA    .mod_wheel_input_scaled
 
-loc_D6EA:
+is_breath_control_amp_mod_enabled:
     TST     breath_control_amp
-    BEQ     .get_scaled_depth_factor
+    BEQ     .get_scaled_lfo_depth_factor
 
     ADDA    .breath_controller_input_scaled
-    BCC     .get_scaled_depth_factor
+    BCC     .get_scaled_lfo_depth_factor
 
-    LDAA    #$FF
+    LDAA    #$FF        ; Clamp at 0xFF.
 
-.get_scaled_depth_factor:
+; The following section calculates the total LFO amp modulation.
+
+.get_scaled_lfo_depth_factor:
 ; Scale the LFO amp modulation depth by the LFO scale-in factor.
     PSHA
     LDAA    <lfo_mod_depth_amp
     LDAB    <lfo_delay_fadein_factor
     MUL
 
-; Add the amp mod amount to the MSB of the product.
     PULB
     ABA
-    BCC     loc_D701
+    BCC     .add_scaled_lfo_fadein_factor_to_total
 
-; If the product overflows, clamp at 0xFF.
-    LDAA    #$FF
+    LDAA    #$FF        ; Clamp at 0xFF.
 
-loc_D701:
-; If the amp mod factor overflows, clamp at 0xFF.
-; Otherwise branch.
+.add_scaled_lfo_fadein_factor_to_total:
     ADDA    .mod_amount_total
     BCC     .calculate_lfo_amp_mod
 
-    LDAA    #$FF
+    LDAA    #$FF        ; Clamp at 0xFF.
 
 .calculate_lfo_amp_mod:
     SUBA    .mod_amount_total
-; @TODO: Invert LFO amplitude, then invert polarity?
+
+; Invert the LFO amplitude by getting a one's complement of the value,
+; and then inverting the sign-bit.
     LDAB    <lfo_amplitude
     COMB
     EORB    #$80
+
     MUL
     ADDA    .mod_amount_total
     BCC     .write_amp_mod_to_egs
 
-    LDAA    #$FF
+    LDAA    #$FF        ; Clamp at 0xFF.
 
 .write_amp_mod_to_egs:
     COMA
+
     LDX     #table_egs_amp_mod_input
     TAB
     ABX
@@ -156,7 +179,11 @@ loc_D701:
 
     RTS
 
-
+; ==============================================================================
+; This lookup table contains the values sent to the EGS Amplitude Modulation
+; register. Refer to the 'Yamaha DX7 Technical Analysis' document page 63 for a
+; detailed look at what level of modulation the final values correspond to.
+; ==============================================================================
 table_egs_amp_mod_input:
     DC.B $FF, $FF, $E0, $CD, $C0    ; 0
     DC.B $B5, $AD, $A6, $A0, $9A    ; 5
@@ -237,19 +264,19 @@ mod_pitch_update:                               SUBROUTINE
     STAA    .mod_wheel_input_scaled
 
     TST     breath_control_pitch
-    BEQ     .get_scaled_depth_factor
+    BEQ     .get_scaled_lfo_depth_factor
 
     LDAA    breath_control_range
     JSR     patch_convert_serialised_value_to_internal
     LDAB    analog_input_breath_controller
     MUL
     ADDA    .mod_wheel_input_scaled
-    BCC     .get_scaled_depth_factor
+    BCC     .get_scaled_lfo_depth_factor
 
 ; If this value overflows, clamp at 0xFF.
     LDAA    #$FF
 
-.get_scaled_depth_factor:
+.get_scaled_lfo_depth_factor:
 ; ACCA now contains the sum of the scaled mod wheel, and breath controller
 ; inputs. Clamped at 0xFF.
     PSHA

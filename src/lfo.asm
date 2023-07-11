@@ -203,7 +203,6 @@ lfo_process_square:                             SUBROUTINE
 ; half of its full period.
 ; If it is in the first half, return a positive polarity signal (127).
 ; If not, return a negative polarity.
-; @TODO: Understand why this value is 0x80, and not 0xFF.
     ANDA    #%10000000
     BMI     .store_value
 
