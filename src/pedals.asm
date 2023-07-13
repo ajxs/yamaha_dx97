@@ -41,10 +41,10 @@ PEDAL_INPUT_SUSTAIN:                            EQU 1 << 7
 ; * ACCA, ACCB
 ;
 ; RETURNS:
-; * ACCB: An integer indicating the status of the peripherals.
-;         0 = No pedals active.
-;         1 = Sustain active.
-;         2 = Portamento active.
+; * ACCB: An integer indicating which pedal has changed.
+;         0 = No pedals state changes.
+;         1 = Sustain pedal state has changed.
+;         2 = Portamento pedal state has changed.
 ;
 ; ==============================================================================
 pedals_update:                                  SUBROUTINE
