@@ -10,6 +10,8 @@
 ; ==============================================================================
 ; test/switch.asm
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; This file contains the subroutines related to the synth's front-panel switch
 ; diagnostic testing.
@@ -17,12 +19,6 @@
 
     .PROCESSOR HD6303
 
-; ==============================================================================
-; TEST_SWITCH
-; ==============================================================================
-; DESCRIPTION:
-; @TODO
-; ==============================================================================
 test_switch:                                    SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
@@ -56,7 +52,15 @@ test_switch:                                    SUBROUTINE
     CMPA    #26
     BNE     .test_incomplete
 
-    JMP     .test_successful
+; If the test is complete, reset and exit.
+    LDAA    #$FE
+    STAA    <.test_switch_expected_input
+
+    JSR     lcd_clear_line_2
+    LDX     #str_ok
+    JSR     lcd_strcpy
+    JSR     lcd_update
+    BRA     .exit
 
 .test_incomplete:
 ; If the test stage is equal to, or above 26, exit.
@@ -85,10 +89,7 @@ test_switch:                                    SUBROUTINE
     CLRB
     INCA
     JSR     lcd_print_number_two_digits
-
-.lcd_update:
-    JSR     lcd_update
-    BRA     .is_test_stage_pedals
+    BRA     .lcd_update
 
 .test_stage_buttons_main:
 ; Sub-stage 20 - 25.
@@ -100,7 +101,9 @@ test_switch:                                    SUBROUTINE
     ABX
     LDX     0,x
     JSR     lcd_strcpy
-    BRA     .lcd_update
+
+.lcd_update:
+    JSR     lcd_update
 
 .is_test_stage_pedals:
 ; Test whether the sub-stage is above 24.
@@ -153,8 +156,7 @@ test_switch:                                    SUBROUTINE
     INC     .test_switch_expected_input
     JSR     pedals_update
 
-.exit_2:
-    RTS
+    BRA     .exit
 
 .test_pedals:
 ; 24 = Test whether sustain pedal is active.
@@ -164,12 +166,12 @@ test_switch:                                    SUBROUTINE
 
 ; The carry being set indicates that a 0 result has been returned,
 ; indicating no pedal. So return and loop to wait.
-    BCS     .exit_2
+    BCS     .exit
 
     BHI     .compare_pedal_against_expected_input
 
     TIMD   #PEDAL_INPUT_SUSTAIN, pedal_status_current
-    BEQ     .exit_2
+    BEQ     .exit
 
 .compare_pedal_against_expected_input:
 ; Add 23 to the pedal state change recorded in ACCB, since the portamento pedal,
@@ -179,16 +181,6 @@ test_switch:                                    SUBROUTINE
     BNE     .test_error
 
     BRA     .update_expected_input
-
-.test_successful:
-    LDAA    #$FE
-    STAA    <.test_switch_expected_input
-
-    JSR     lcd_clear_line_2
-    LDX     #str_ok
-    JSR     lcd_strcpy
-    JSR     lcd_update
-    BRA     .exit_2
 
 .test_error:
     TBA
@@ -210,7 +202,7 @@ test_switch:                                    SUBROUTINE
     BNE     .delay_loop
 
     DEC     .test_switch_delay_counter
-    BRA     .exit_2
+    BRA     .exit
 
 
 table_str_pointer_test_switches_stage:
