@@ -31,10 +31,9 @@ test_lcd:                                       SUBROUTINE
     BEQ     .test_initialised
 
 ; Initialise the test.
-    JSR     lcd_clear
-    JSR     lcd_update
     CLR     test_stage_sub
-    BRA     .exit
+    JSR     lcd_clear
+    BRA     .update_and_exit
 
 .test_initialised:
     LDAA    <test_stage_sub_2
