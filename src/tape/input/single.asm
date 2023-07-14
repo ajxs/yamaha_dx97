@@ -186,9 +186,7 @@ tape_input_single:                              SUBROUTINE
     LDAA    #EVENT_HALT_VOICES_RELOAD_PATCH
     STAA    main_patch_event_flag
     CLI
-    JSR     midi_sysex_tx_tape_incoming_single_patch
-
-    RTS
+    JMP     midi_sysex_tx_tape_incoming_single_patch
 
 .exit_abort:
     JSR     tape_remote_output_low

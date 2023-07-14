@@ -131,9 +131,7 @@ tape_output_bit_one:
 
     JSR     tape_output_pulse_length_16
     JSR     tape_output_pulse_length_16
-    JSR     tape_output_pulse_length_16
-
-    RTS
+    JMP     tape_output_pulse_length_16
 
 
 ; ==============================================================================
@@ -160,9 +158,7 @@ tape_output_bit_zero:
     LDAB    #33
     DELAY_SINGLE
     NOP
-    JSR     tape_output_pulse
-
-    RTS
+    JMP     tape_output_pulse
 
 
 ; ==============================================================================

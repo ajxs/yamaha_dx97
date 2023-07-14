@@ -170,7 +170,6 @@ portamento_process:                             SUBROUTINE
     SUBD    <.voice_final_portamento_frequency
     BMI     .frequency_below_target
 
-.frequency_above_target:
 ; If the current glissando frequency is above the target frequency,
 ; calculate the portamento frequency decrement, and subtract it from the
 ; current frequency.

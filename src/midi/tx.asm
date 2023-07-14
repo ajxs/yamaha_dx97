@@ -42,9 +42,7 @@ midi_tx_note_on:                                SUBROUTINE
 
 ; Send output MIDI velocity.
     LDAA    #127
-    JSR     midi_tx
-
-    RTS
+    JMP     midi_tx
 
 
 ; ==============================================================================
@@ -72,9 +70,7 @@ midi_tx_note_off:                               SUBROUTINE
 
 ; Send output MIDI velocity.
     CLRA
-    JSR     midi_tx
-
-    RTS
+    JMP     midi_tx
 
 
 ; ==============================================================================
@@ -104,9 +100,7 @@ midi_tx_analog_input_event:                     SUBROUTINE
     JSR     midi_tx
     PULA
     LSRA
-    JSR     midi_tx
-
-    RTS
+    JMP     midi_tx
 
 
 ; ==============================================================================
@@ -140,8 +134,7 @@ midi_tx_analog_input_sustain_porta:             SUBROUTINE
     COMA
 
 .send_input_event:
-    JSR     midi_tx_analog_input_event
-    RTS
+    JMP     midi_tx_analog_input_event
 
 
 ; ==============================================================================
@@ -228,7 +221,5 @@ midi_tx_pitch_bend:                             SUBROUTINE
     JSR     midi_tx
     TBA
     LSRA
-    JSR     midi_tx
-
-    RTS
+    JMP     midi_tx
 

@@ -12,6 +12,10 @@
 ; ==============================================================================
 ; DESCRIPTION:
 ; Contains definitions, and functionality related to the synth's UI.
+; @NOTE: Be mindful when modifying any of the JSR/RTS calls in the synth's UI.
+; Some of the synth's functionality, such as the Test/Cassette routines, use
+; manual stack pointer manipulation as a way to 'Go Back'.
+; This has not been extensively tested for errors.
 ; ==============================================================================
 
     .PROCESSOR HD6303
