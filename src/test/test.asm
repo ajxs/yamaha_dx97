@@ -214,8 +214,7 @@ test_entry_get_input_increment_stage:           SUBROUTINE
 test_entry_store_updated_stage:                 SUBROUTINE
     STAB    <test_stage_current
 
-    JSR     voice_reset_egs
-    JSR     voice_reset_frequency_data
+    JSR     voice_reset
 
 ; Reset peripherals, and sustain status.
     CLRB
@@ -240,9 +239,7 @@ test_entry_store_updated_stage:                 SUBROUTINE
     INCA
     CLRB
     JSR     lcd_print_number_two_digits
-    JSR     lcd_update
-
-    RTS
+    JMP     lcd_update
 
 
 ; ==============================================================================
@@ -329,7 +326,6 @@ test_entry_get_user_input_read_buttons:         SUBROUTINE
 
 .exit:
     RTS
-
 
 
 ; ==============================================================================

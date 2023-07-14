@@ -37,6 +37,8 @@ test_volume:                                    SUBROUTINE
 
     LDAB    #69
     JSR     voice_add
+
+; Clear this flag so that the voice will only be added once.
     CLR     test_stage_sub
 
 .exit:
