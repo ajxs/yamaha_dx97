@@ -26,11 +26,9 @@ To initialise all of the synth's parameters and voice data, hold down the **FUNC
 
 ## What is the current status of the ROM?
 
-This firmware is currently highly experimental. The main features are fully working, however testing and bugfixing are ongoing. Installing the firmware for everyday general use isn't recommended just yet. This situation will improve over time as additional testing is performed. If you still want to use the ROM, please be sure to read the section on reporting issues.
+This alternative firmware ROM has been thoroughly tested, and is considered ready for everyday use. The possibility of minor bugs does still exist however. Please be sure to read the section on *reporting issues*.
 
-Development, and testing of the cassette interface is ongoing, and at this point it should only be used for testing purposes.
-
-The risk of any harm coming to your DX9 as a result of using this ROM is incredibly, *incredibly* small, however the developers take no responsibility for any issues that may arise as a result of using this alternate firmware. All care has been taken, and considerable testing has been performed, however the developers accept no liability for any issues.
+The risk of any harm coming to your DX9 as a result of using this ROM is incredibly, *incredibly* small, however the developers take no responsibility for any issues that may arise as a result of using this alternate firmware. All care has been taken, and considerable testing has been performed, however you are using this software at your own risk.
 
 ## Known Issues
 * Despite this firmware making the DX9 patch-compatible with the DX7, it can't emulate *all* of the DX7's functionality. While your DX9 might think that it's actually a DX7, your patch editor might not be so easily fooled. Some SysEx functionality just can't be emulated in any reasonable way, such as triggering DX7-specific button-presses, and changes to the DX7-specific function parameters. This might cause issues communicating with some patch editors.
@@ -38,6 +36,11 @@ Receiving individual/bulk patch dumps via SysEx *does* work, however. Every effo
 
 * In some cases pitch-bend input is updated at a slightly lower frequency than in the original ROM. If the pitch bend wheel is moved quickly this can result in a noticeable gradation in pitch transition. This is due to the pitch-bend input being processed as part of the main periodic timer interrupt. 
 In the DX7 the analog pitch-bend wheel is wired to the sub-CPU, and its input is read, and transmitted to the main CPU periodically. The input is parsed by the main CPU only when it is updated. In the DX9 the pitch-bend's analog input is wired directly to the CPU's I/O ports, and is parsed periodically as part of the OCF interrupt routine. This routine may be further optimised to mitigate this issue in the future.
+
+## Currently Not Implemented
+* Pitch-bend step
+* MIDI Output Channel Selection
+* Patch name editing
 
 ## Reporting Issues
 
