@@ -308,13 +308,10 @@ ui_button_edit_play:                            SUBROUTINE
 ui_button_play:                                 SUBROUTINE
     LDAA    #UI_MODE_PLAY
     STAA    ui_mode_memory_protect_state
-    RESET_OPERATOR_STATUS
 
-; Load the previous 'Store Mode' numeric key, and then jump to the
-; numeric button handler.
-    LDAB    ui_btn_numeric_previous_store_mode
-    JMP     ui_button_numeric
-
+; The original DX9 reset the On/Off status of each operator when changing to
+; play mode. This functionality has been removed.
+    RTS
 
 ; ==============================================================================
 ; UI_BUTTON_EDIT_SAVE_PREVIOUS
@@ -326,7 +323,6 @@ ui_button_play:                                 SUBROUTINE
 ; was in 'Edit' mode.
 ;
 ; MEMORY MODIFIED:
-; * ui_btn_numeric_previous_store_mode
 ; * ui_btn_numeric_previous_edit_mode
 ;
 ; REGISTERS MODIFIED:
@@ -336,15 +332,6 @@ ui_button_play:                                 SUBROUTINE
 ui_button_edit_save_previous:                   SUBROUTINE
     LDAA    ui_btn_numeric_last_pressed
     STAA    ui_btn_numeric_previous_edit_mode
-    CMPA    #BUTTON_EDIT_6_LFO_WAVE
-    BCS     .exit
-
-    CMPA    #BUTTON_EDIT_10_MOD_SENS
-    BCC     .exit
-
-    STAA    ui_btn_numeric_previous_store_mode
-
-.exit:
     CLR     key_transpose_set_mode_active
     RTS
 
@@ -360,7 +347,6 @@ ui_button_edit_save_previous:                   SUBROUTINE
 ; @TODO: There are several behaviours not well understood here.
 ;
 ; MEMORY MODIFIED:
-; * ui_btn_numeric_previous_store_mode
 ; * ui_btn_numeric_previous_fn_mode
 ;
 ; REGISTERS MODIFIED:
@@ -368,7 +354,8 @@ ui_button_edit_save_previous:                   SUBROUTINE
 ;
 ; ==============================================================================
 ui_button_function_save_previous:               SUBROUTINE
-; Don't save the button state as the test entry button combination.
+; If the test mode button combination state was previously set, don't save this
+; state as the last-pressed button state.
 ; Decrement A to save this as function mode button 20 instead.
     LDAA    ui_btn_numeric_last_pressed
     CMPA    #BUTTON_TEST_ENTRY_COMBO
@@ -378,20 +365,5 @@ ui_button_function_save_previous:               SUBROUTINE
 
 .store_previous_function_mode_button:
     STAA    ui_btn_numeric_previous_fn_mode
-
-    CMPA    #BUTTON_FUNCTION_6
-    BCS     .store_previous_store_mode_button
-
-    CMPA    #BUTTON_FUNCTION_11
-    BCS     .clear_test_mode_button_input_state
-
-    CMPA    #BUTTON_FUNCTION_19
-    BCC     .clear_test_mode_button_input_state
-
-; @TODO: Why does this occur?
-.store_previous_store_mode_button:
-    STAA    ui_btn_numeric_previous_store_mode
-
-.clear_test_mode_button_input_state:
     CLR     ui_test_mode_button_combo_state
     RTS

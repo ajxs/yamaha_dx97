@@ -59,14 +59,21 @@ patch_deserialise_current_to_edit:
 ; The flag is then set to force the activation of the newly loaded patch.
 ; This subroutine is the main point of loading a patch into memory.
 ; The loaded patch will also be validated in this routine.
+; Unlike in the original DX9 firmware, the patch load handler resets the
+; operator On/Off status. This more closely matches the behavior of the DX7.
 ;
 ; ARGUMENTS:
 ; Registers:
 ; * IX:   A pointer to the patch buffer to deserialise.
 ;
+; REGISTERS MODIFIED:
+; * ACCA, ACCB, IX
+;
 ; ==============================================================================
 patch_deserialise_to_edit_from_ptr_and_reload:  SUBROUTINE
     STX     <memcpy_ptr_src
+
+    RESET_OPERATOR_STATUS
 
 ; The destination pointer is stored in the deserialise routine below.
     LDX     #patch_buffer_edit

@@ -383,7 +383,6 @@ ui_mode_memory_protect_state:                   DS 1
 ui_btn_numeric_last_pressed:                    DS 1
 ui_btn_numeric_previous_fn_mode:                DS 1
 ui_btn_numeric_previous_edit_mode:              DS 1
-ui_btn_numeric_previous_store_mode:             DS 1
 
 operator_selected_src:                          DS 1
 operator_selected_dest:                         DS 1

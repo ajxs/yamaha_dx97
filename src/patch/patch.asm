@@ -221,7 +221,8 @@ patch_get_ptr:                                  SUBROUTINE
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
 ; Serialises the currently loaded patch in the edit buffer to the compare
-; buffer, and deserialises the contents of the compare buffer.
+; buffer, then loads the 'current' patch (based off the selected patch index)
+; into the edit buffer.
 ;
 ; ==============================================================================
 patch_copy_edit_to_compare_and_load_current:    SUBROUTINE
