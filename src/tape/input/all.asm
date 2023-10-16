@@ -30,17 +30,15 @@ tape_input_all:                                 SUBROUTINE
 
 ; Test for button 10 = 'Remote'.
     CMPB    #INPUT_BUTTON_10
-    BNE     .test_for_no_button
+    BNE     .test_for_no_button_press
 
     JMP     .toggle_remote_polarity
 
-.test_for_no_button:
+.test_for_no_button_press:
+; Test for the 'NO' button being pressed, which will cancel the process.
     CMPB    #INPUT_BUTTON_NO
-    BEQ     .no_button_pressed
+    BNE     .test_for_yes_button_press
 
-    BRA     .test_for_yes_button_press
-
-.no_button_pressed:
     JMP     .exit
 
 .test_for_yes_button_press:
@@ -54,28 +52,14 @@ tape_input_all:                                 SUBROUTINE
     TSTA
     BNE     .exit_memory_protected
 
-; Fill the last 6 spaces in the LCD buffer with 0x14.
-; @TODO: Understand why this happens.
-    LDX     #(lcd_buffer_next + 26)
-    LDAA    #$14
-    LDAB    #6
+    JSR     tape_input_reset
 
-.clear_lcd_loop:
-    STAA    0,x
-    INX
-    DECB
-    BNE     .clear_lcd_loop
-
-    JSR     lcd_update
-    JSR     tape_remote_output_high
-
-    CLR     tape_error_flag
     CLRA
     STAA    tape_patch_index
 
-.recieve_patch_loop:
+.receive_patch_loop:
 ; Print the incoming patch number.
-    LDX     #(lcd_buffer_next+$1D)
+    LDX     #(lcd_buffer_next + 29)
     STX     <memcpy_ptr_dest
     INCA
     JSR     lcd_print_number_three_digits
@@ -121,7 +105,7 @@ tape_input_all:                                 SUBROUTINE
     INCA
     STAA    tape_patch_index
     CMPA    #20
-    BNE     .recieve_patch_loop
+    BNE     .receive_patch_loop
 
     JSR     tape_remote_output_low
     CLI
@@ -138,7 +122,7 @@ tape_input_all:                                 SUBROUTINE
 .exit_memory_protected:
     CLI
 
-; Trigger the front-panel button press for 'Memory Protect'.
+; Trigger the front-panel button press for 'Memory Protect', and exit.
     LDAB    #INPUT_BUTTON_20
     INS
     INS
@@ -165,6 +149,8 @@ tape_input_all:                                 SUBROUTINE
     JSR     main_input_handler_dispatch
 
 ; Adding '7' to this number converts it to a numeric button index.
+; This will trigger a button-press for that patch selection.
+; If this is above the maximum supported patch index, nothing should happen.
     LDAB    tape_patch_index
     ADDB    #7
     INS
@@ -179,16 +165,6 @@ tape_input_all:                                 SUBROUTINE
     RTS
 
 .print_error:
-    LDX     #lcd_buffer_next_line_2
-    STX     <memcpy_ptr_dest
-    LDX     #str_error
-    JSR     lcd_strcpy
-    JSR     lcd_update
-    JSR     tape_remote_output_low
-
-.wait_for_input_and_retry:
-    JSR     input_read_front_panel
-    TSTB
-    BEQ     .wait_for_input_and_retry
+    JSR     tape_print_error_and_wait_for_retry
 
     JMP     tape_input_all

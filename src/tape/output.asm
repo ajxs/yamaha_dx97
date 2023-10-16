@@ -21,14 +21,17 @@
 ; Outputs a single patch from the temporary tape output buffer via the synth's
 ; cassette interface.
 ;
-; MEMORY MODIFIED:
-; * tape_byte_counter
-;
 ; ==============================================================================
 tape_output_patch:                              SUBROUTINE
+; ==============================================================================
+; LOCAL TEMPORARY VARIABLES
+; ==============================================================================
+.tape_output_byte_counter:                      EQU #temp_variables
+
+; ==============================================================================
     LDX     #patch_buffer_incoming
     LDAB    #67
-    STAB    <tape_byte_counter
+    STAB    .tape_output_byte_counter
     JSR     tape_output_pilot_tone
     LDAB    #28
 
@@ -43,7 +46,7 @@ tape_output_patch:                              SUBROUTINE
     LDAB    #27
     DELAY_SINGLE
     INX
-    DEC     tape_byte_counter
+    DEC     .tape_output_byte_counter
     BNE     .output_byte_loop
 
     RTS
@@ -57,6 +60,7 @@ tape_output_patch:                              SUBROUTINE
 ; DESCRIPTION:
 ; Outputs the pilot tone played before sending a patch.
 ;
+; ARGUMENTS:
 ; Memory:
 ; * patch_tape_counter: If this is the first patch being sent over the
 ;    tape interface, an extra long pilot tone is output.

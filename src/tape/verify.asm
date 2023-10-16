@@ -125,11 +125,22 @@ tape_verify:                                    SUBROUTINE
     DECB
     BNE     .delay_loop
 
-    JSR     lcd_clear
-    LDX     #str_function_control_verify
+; Print the verification complete message.
+    LDX     #lcd_buffer_next
+    STX     <memcpy_ptr_dest
+
+    LDX     #str_function_control
     JSR     lcd_strcpy
+
+    LDX     #lcd_buffer_next_line_2
+    STX     <memcpy_ptr_dest
+
+    LDX     #str_verify_complete
+    JSR     lcd_strcpy
+
     JSR     lcd_update
 
+; Exit to the main menu.
     CLI
     INS
     INS

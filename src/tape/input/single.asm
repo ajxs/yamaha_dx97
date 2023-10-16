@@ -25,7 +25,7 @@ tape_input_single:                              SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
-.tape_input_selected_patch:                     EQU #temp_variables
+.tape_input_selected_patch:                     EQU #temp_variables + 2
 
 ; ==============================================================================
     LDX     #lcd_buffer_next
@@ -34,30 +34,23 @@ tape_input_single:                              SUBROUTINE
     JSR     lcd_strcpy
     JSR     lcd_update
 
-.wait_for_input_loop:
+.wait_for_patch_index_selection_loop:
     JSR     input_read_front_panel
     CMPB    #INPUT_BUTTON_NO
-    BEQ     .no_button_pressed
+    BNE     .is_valid_index_selection
 
-    BRA     .is_yes_button_pressed
-
-.no_button_pressed:
     JMP     .exit_abort
 
-.is_yes_button_pressed:
-    CMPB    #INPUT_BUTTON_YES
-    BEQ     .yes_button_pressed
+.is_valid_index_selection:
+; If the button selection was higher than the total available patch indexes,
+; loop back.
+    CMPB    #INPUT_BUTTON_10
+    BHI     .wait_for_patch_index_selection_loop
 
-    BRA     .is_incoming_patch_index_valid
-
-.yes_button_pressed:
-    JMP     .load_incoming_patch_to_edit_buffer
-
-.is_incoming_patch_index_valid:
 ; Test whether the selected patch index is valid
 ; If '8' is higher than the code of the button pressed, loop.
     SUBB    #8
-    BCS     .wait_for_input_loop
+    BCS     .wait_for_patch_index_selection_loop
 
     STAB    .tape_input_selected_patch
 
@@ -69,47 +62,28 @@ tape_input_single:                              SUBROUTINE
     INCA
     JSR     lcd_print_number_three_digits
 
-    LDX     #str_ready
+    LDX     #str_fragment_ready
     JSR     lcd_strcpy
     JSR     lcd_update
 
-.wait_for_input_loop_2:
+.wait_for_start_input_loop:
     JSR     input_read_front_panel
     CMPB    #INPUT_BUTTON_10
-    BEQ     .button_10_pressed
+    BNE     .is_no_button_pressed
 
-    BRA     .is_no_button_pressed
-
-.button_10_pressed:
     JMP     .toggle_remote_polarity
 
 .is_no_button_pressed:
     CMPB    #INPUT_BUTTON_NO
-    BEQ     .no_button_pressed_abort
+    BNE     .is_yes_button_pressed
 
-    BRA     .is_yes_button_pressed_2
-
-.no_button_pressed_abort:
     JMP     .exit_abort
 
-.is_yes_button_pressed_2:
+.is_yes_button_pressed:
     CMPB    #INPUT_BUTTON_YES
-    BNE     .wait_for_input_loop_2
+    BNE     .wait_for_start_input_loop
 
-; @TODO: Understand why the LCD is cleared with 0x14.
-    LDX     #(lcd_buffer_next + 26)
-    LDAA    #$14
-    LDAB    #6
-
-.clear_lcd_loop:
-    STAA    0,x
-    INX
-    DECB
-    BNE     .clear_lcd_loop
-
-    JSR     lcd_update
-    JSR     tape_remote_output_high
-    CLR     tape_error_flag
+    JSR     tape_input_reset
 
 .input_patch_loop:
     JSR     tape_input_patch
@@ -120,19 +94,19 @@ tape_input_single:                              SUBROUTINE
 ; received checksum.
     JSR     tape_calculate_patch_checksum
     SUBD    patch_tape_checksum
+
+    LDX     #(lcd_buffer_next + 29)
+    STX     <memcpy_ptr_dest
+
     BEQ     .checksum_valid
 
 ; Print the error message.
-    LDX     #(lcd_buffer_next + 29)
-    STX     <memcpy_ptr_dest
     LDX     #str_err
     JSR     lcd_strcpy
     JSR     lcd_update
     BRA     .input_patch_loop
 
 .checksum_valid:
-    LDX     #(lcd_buffer_next + 29)
-    STX     <memcpy_ptr_dest
     LDAA    patch_tape_counter
     INCA
     JSR     lcd_print_number_three_digits
@@ -144,21 +118,23 @@ tape_input_single:                              SUBROUTINE
     BEQ     .finished_reading_selected_patch
 
 ; Test whether the selected patch has been missed, if so an error has occurred.
-    LDAA    patch_tape_counter
-    CMPA    .tape_input_selected_patch
-    BCS     .input_patch_loop
+; This will exit the loop in the case that the patch is never found, once the
+; 'patch_tape_counter' counter variable reaches a value over the maximum index
+; of '10'.
+    BCC     .print_error
 
-    BRA     .print_error
+    BRA     .input_patch_loop
 
 .finished_reading_selected_patch:
     JSR     tape_remote_output_low
 
-.load_incoming_patch_to_edit_buffer:
 ; Convert the patch from the serialised DX9 format to the DX7 format.
     LDX     #patch_buffer_incoming
     STX     <memcpy_ptr_src
+
     LDX     #patch_buffer_tape_conversion
     STX     <memcpy_ptr_dest
+
     JSR     patch_convert_from_dx9_format
 
 ; Deserialise the patch into the edit buffer.
@@ -191,20 +167,10 @@ tape_input_single:                              SUBROUTINE
 
 .toggle_remote_polarity:
     JSR     tape_remote_toggle_output_polarity
-    JMP     .wait_for_input_loop_2
+    JMP     .wait_for_start_input_loop
 
 .print_error:
-    LDX     #lcd_buffer_next_line_2
-    STX     <memcpy_ptr_dest
-    LDX     #str_error
-    JSR     lcd_strcpy
-    JSR     lcd_update
-    JSR     tape_remote_output_low
-
-.wait_for_input_and_retry:
-    JSR     input_read_front_panel
-    TSTB
-    BEQ     .wait_for_input_and_retry
+    JSR     tape_print_error_and_wait_for_retry
 
     LDX     #lcd_buffer_next_line_2
     STX     <memcpy_ptr_dest

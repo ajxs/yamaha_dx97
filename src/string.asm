@@ -62,6 +62,9 @@ str_eg_level:                           DC.B STR_FRAGMENT_OFFSET_EG
                                         DC.B STR_FRAGMENT_OFFSET_LEVEL
                                         DC.B PRINT_PARAM_FUNCTION_NUMERIC
 
+str_err:                                DC "ERR", 0
+str_error:                              DC "ERROR!", 0
+
 str_feedback:                           DC "FEEDBACK"
                                         DC.B PRINT_PARAM_FUNCTION_NUMERIC
 
@@ -71,7 +74,16 @@ str_freq_coarse:                        DC "F COARSE"
 str_freq_fine:                          DC "F FINE"
                                         DC.B PRINT_PARAM_FUNCTION_OSC_FREQ
 
+str_from_mem_to_tape:                   DC "from MEM to TAPEall      "
+                                        DC.B STR_FRAGMENT_OFFSET_READY
+
+str_from_tape_to_mem:                   DC "from TAPE to MEMall      "
+                                        DC.B STR_FRAGMENT_OFFSET_READY
+
+str_from_tape_to_buf:                   DC "from TAPE to BUFsingle  ? (1-10)", 0
+
 str_function_control:                   DC "FUNCTION CONTROL", 0
+
 str_glissando:                          DC "GLISSANDO"
                                         DC.B PRINT_PARAM_FUNCTION_BOOLEAN
 
@@ -181,9 +193,9 @@ str_porta_full_time:                    DC "FULL TIME "
 str_porta_fingered:                     DC "FINGERED "
                                         DC.B STR_FRAGMENT_OFFSET_PORTA, 0
 
-str_porta_retain:                       DC.B STR_FRAGMENT_SUS_KEY
+str_porta_retain:                       DC.B STR_FRAGMENT_OFFSET_SUS_KEY
                                         DC "RETAIN", 0
-str_porta_follow:                       DC.B STR_FRAGMENT_SUS_KEY
+str_porta_follow:                       DC.B STR_FRAGMENT_OFFSET_SUS_KEY
                                         DC "FOLLOW", 0
 
 str_porta_time:                         DC.B STR_FRAGMENT_OFFSET_PORTA
@@ -198,6 +210,8 @@ str_rate_scaling:                       DC.B STR_FRAGMENT_OFFSET_RATE
 str_sys_info:                           DC "SYS INFO "
                                         DC.B PRINT_PARAM_FUNCTION_AVAIL_UNAVAIL
 
+str_single:                             DC "single", 0
+
 str_sys_info_unavail:                   DC "UNAVAIL", 0
 
 str_tape_save:                          DC "SAVE TO TAPE ?", 0
@@ -211,7 +225,10 @@ str_tape_remote:                        DC "TAPE REMOTE", 0
 str_test_mode_prompt:                   DC "V0.9.6 24-Sep-23"
 str_test_mode_prompt_line_2:            DC " Test Entry ?", 0
 
+str_verify_complete:                    DC "VERIFY COMPLETED", 0
+str_verify_tape:                        DC "VERIFY      TAPE          ready?", 0
 str_voice_init:                         DC "VOICE INIT ?", 0
+
 str_welcome_message:                    DC "* YAMAHA DX9/7 *https://ajxs.me ", 0
 
 str_wheel_range:                        DC.B STR_FRAGMENT_OFFSET_WHEEL
@@ -270,6 +287,7 @@ str_fragment_store:                     DC "STORE", 0
 str_fragment_tune:                      DC "TUNE", 0
 str_fragment_wheel:                     DC "WHEEL ", 0
 str_fragment_sus_key:                   DC "SUS-KEY P ", 0
+str_fragment_ready:                     DC " ready?", 0
 
 STR_FRAGMENT_OFFSET_ALG                 EQU (str_fragment_alg - #string_fragment_offset_start)
 STR_FRAGMENT_OFFSET_AMP                 EQU (str_fragment_amp - #string_fragment_offset_start)
@@ -290,4 +308,5 @@ STR_FRAGMENT_OFFSET_SELECT              EQU (str_fragment_select - #string_fragm
 STR_FRAGMENT_OFFSET_STORE               EQU (str_fragment_store - #string_fragment_offset_start)
 STR_FRAGMENT_OFFSET_TUNE                EQU (str_fragment_tune - #string_fragment_offset_start)
 STR_FRAGMENT_OFFSET_WHEEL               EQU (str_fragment_wheel - #string_fragment_offset_start)
-STR_FRAGMENT_SUS_KEY                    EQU (str_fragment_sus_key - #string_fragment_offset_start)
+STR_FRAGMENT_OFFSET_SUS_KEY             EQU (str_fragment_sus_key - #string_fragment_offset_start)
+STR_FRAGMENT_OFFSET_READY               EQU (str_fragment_ready - #string_fragment_offset_start)

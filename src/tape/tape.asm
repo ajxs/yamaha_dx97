@@ -186,14 +186,3 @@ tape_input_single_jump:
 ; ==============================================================================
 tape_exit_jump:
     JMP     tape_exit
-
-
-str_from_mem_to_tape:                   DC "from MEM to TAPEall       ready?", 0
-str_verify_tape:                        DC "VERIFY      TAPE          ready?", 0
-str_error:                              DC "ERROR!", 0
-str_from_tape_to_mem:                   DC "from TAPE to MEMall       ready?", 0
-str_from_tape_to_buf:                   DC "from TAPE to BUFsingle  ? (1-20)", 0
-str_ready:                              DC " ready?", 0
-str_err:                                DC "ERR", 0
-str_single:                             DC "single", 0
-str_function_control_verify:            DC "FUNCTION CONTROLVERIFY COMPLETED", 0

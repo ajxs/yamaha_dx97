@@ -84,7 +84,6 @@ note_frequency_previous:                        DS 2
 ; can be found quicker.
 voice_add_index:                                DS 1
 
-tape_byte_counter:                              DS 1
 tape_input_polarity_previous:                   DS 1
 tape_input_delay_length:                        DS 1
 tape_error_flag:                                DS 1
@@ -322,7 +321,7 @@ patch_buffer_tape_conversion:                   EQU *
 
 ; @TODO: Is it possible to use one buffer for both sending, and receiving of
 ; SysEx data? Is it possible for both to be used simultaneously?
-; @TODO: Is it possible to use these for tape data?
+; @TODO: Is it possible to use the same space as the 'incoming' patch buffer?
 midi_buffer_sysex_tx:                           DS PATCH_SIZE_UNPACKED_DX7
 midi_buffer_sysex_rx:                           DS PATCH_SIZE_UNPACKED_DX7
 

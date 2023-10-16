@@ -23,16 +23,22 @@
 ;
 ; ==============================================================================
 tape_input_patch:                               SUBROUTINE
+; ==============================================================================
+; LOCAL TEMPORARY VARIABLES
+; ==============================================================================
+.tape_input_byte_counter:                       EQU #temp_variables
+
+; ==============================================================================
     LDX     #patch_buffer_incoming
     LDAB    #67
-    STAB    <tape_byte_counter
+    STAB    .tape_input_byte_counter
     JSR     tape_input_pilot_tone
 
 .input_byte_loop:
     JSR     tape_input_byte
     STAA    0,x
     INX
-    DEC     tape_byte_counter
+    DEC     .tape_input_byte_counter
     BNE     .input_byte_loop
 
     RTS
@@ -50,7 +56,7 @@ tape_input_pilot_tone:                          SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
-.tape_input_pilot_tone_counter:                 EQU #temp_variables
+.tape_input_pilot_tone_counter:                 EQU #temp_variables + 1
 
 ; ==============================================================================
     PSHA
@@ -99,10 +105,12 @@ tape_input_pilot_tone:                          SUBROUTINE
 ;
 ; ARGUMENTS:
 ; Registers:
-; * ACCB: The number of 'pulses' previously read.
+; * ACCB: The number of 'samples' previously read.
 ;
 ; RETURNS:
 ; * ACCB: The length of the pulse read so far.
+;    Since the function calls itself to continue reading in the case of change
+;    in polarity, this will become the new input.
 ;
 ; ==============================================================================
 tape_input_read_pulse:                          SUBROUTINE
@@ -165,7 +173,7 @@ tape_input_byte:                                SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
-.tape_input_byte_result:                          EQU #temp_variables
+.tape_input_byte_result:                        EQU #temp_variables + 1
 
 ; ==============================================================================
     PSHB
@@ -183,8 +191,9 @@ tape_input_byte:                                SUBROUTINE
     CMPB    #13
     BCS     .finish_previous_pulse_loop
 
-; Delays the difference between the previous pulse length, which had to be
-; '13', or higher, and '29'.
+; The previous pulse length is stored in ACCB.
+; This call delays the difference between the previous pulse length, which had
+; to be '13', or higher, and '29'.
     LDAA    #29
     STAA    <tape_input_delay_length
     JSR     tape_input_delay
@@ -206,7 +215,7 @@ tape_input_byte:                                SUBROUTINE
     CMPB    #23
     TPA
 
-; XOR the carry-bit contents with '1'. This has the effect of setting th carry
+; XOR the carry-bit contents with '1'. This has the effect of setting the carry
 ; bit to '1' if the pulse length was under '23'.
     EORA    #1
     TAP
@@ -264,5 +273,54 @@ tape_input_delay:                               SUBROUTINE
     INCB
     CMPB    <tape_input_delay_length
     BCS     tape_input_delay
+
+    RTS
+
+
+; ==============================================================================
+; TAPE_INPUT_RESET
+; ==============================================================================
+; @TODO
+; ==============================================================================
+tape_input_reset:                               SUBROUTINE
+; Clear the last 6 spaces in the LCD buffer.
+    LDX     #(lcd_buffer_next + 26)
+    LDAA    #'
+    LDAB    #6
+
+.clear_lcd_loop:
+    STAA    0,x
+    INX
+    DECB
+    BNE     .clear_lcd_loop
+
+    JSR     lcd_update
+    JSR     tape_remote_output_high
+
+    CLR     tape_error_flag
+
+    RTS
+
+
+; ==============================================================================
+; TAPE_PRINT_ERROR_AND_WAIT_FOR_RETRY
+; ==============================================================================
+; @TODO
+; ==============================================================================
+tape_print_error_and_wait_for_retry:            SUBROUTINE
+    LDX     #lcd_buffer_next_line_2
+    STX     <memcpy_ptr_dest
+
+    LDX     #str_error
+    JSR     lcd_strcpy
+    JSR     lcd_update
+
+    JSR     tape_remote_output_low
+; Falls-through below.
+
+tape_wait_for_input_and_retry:                  SUBROUTINE
+    JSR     input_read_front_panel
+    TSTB
+    BEQ     tape_wait_for_input_and_retry
 
     RTS

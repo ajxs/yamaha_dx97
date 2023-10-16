@@ -97,7 +97,7 @@ patch_convert_from_dx9_format:                  SUBROUTINE
     BNE     .clear_first_12_bytes_loop
 
 ; Set the detune value to '7'.
-    LDAA    #%111000
+    LDAA    #7
     STAA    0,x
     INX
 
