@@ -95,27 +95,30 @@ tape_input_single:                              SUBROUTINE
     JSR     tape_calculate_patch_checksum
     SUBD    patch_tape_checksum
 
-    LDX     #(lcd_buffer_next + 29)
-    STX     <memcpy_ptr_dest
-
     BEQ     .checksum_valid
 
 ; Print the error message.
+    LDX     #(lcd_buffer_next + 29)
+    STX     <memcpy_ptr_dest
+
     LDX     #str_err
     JSR     lcd_strcpy
     JSR     lcd_update
     BRA     .input_patch_loop
 
 .checksum_valid:
+    LDX     #(lcd_buffer_next + 29)
+    STX     <memcpy_ptr_dest
+
+; Print the incoming patch number.
     LDAA    patch_tape_counter
     INCA
     JSR     lcd_print_number_three_digits
     JSR     lcd_update
 
-; Test whether the current patch is the 'selected' patch.
+; Test whether the incoming patch is the 'selected' patch.
     LDAA    .tape_input_selected_patch
     CMPA    patch_tape_counter
-    BEQ     .finished_reading_selected_patch
 
 ; Test whether the selected patch has been missed, if so an error has occurred.
 ; This will exit the loop in the case that the patch is never found, once the
@@ -123,12 +126,14 @@ tape_input_single:                              SUBROUTINE
 ; of '10'.
     BCC     .print_error
 
-    BRA     .input_patch_loop
+; If not over the selected patch index, and not equal, jump back to receive
+; the next patch.
+    BNE     .input_patch_loop
 
-.finished_reading_selected_patch:
+; If this point is reached the selected patch has been received.
     JSR     tape_remote_output_low
 
-; Convert the patch from the serialised DX9 format to the DX7 format.
+; Convert the incoming patch from the serialised DX9 format to the DX7 format.
     LDX     #patch_buffer_incoming
     STX     <memcpy_ptr_src
 

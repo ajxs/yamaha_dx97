@@ -54,22 +54,8 @@ tape_verify:                                    SUBROUTINE
     BNE     .wait_for_user_input
 
 ; Initialise the verification process.
-; Clear a space in the LCD buffer with 0x14 (@TODO: Verify?)
-; Pull the tape remote output high, clear any tape error flags, and clear
-; the verify patch index.
-    LDX     #(lcd_buffer_next + 26)
-    LDAA    #$14
-    LDAB    #6
+    JSR     tape_input_reset
 
-.clear_lcd_loop:
-    STAA    0,x
-    INX
-    DECB
-    BNE     .clear_lcd_loop
-
-    JSR     lcd_update
-    JSR     tape_remote_output_high
-    CLR     tape_error_flag
     CLRA
     STAA    tape_patch_index
 
@@ -94,10 +80,10 @@ tape_verify:                                    SUBROUTINE
     SUBD    patch_tape_checksum
     BNE     .print_error_message
 
+    JSR     tape_verify_patch
 ; This flag being set indicates an error condition returned from the
 ; previous function call. If a received byte was found to be non-equal when
 ; compared against the current patch, the zero CPU flag will not be set.
-    JSR     tape_verify_patch
     BNE     .print_error_message
 
     LDAA    tape_patch_index
@@ -113,7 +99,7 @@ tape_verify:                                    SUBROUTINE
     JSR     lcd_strcpy
     JSR     lcd_update
 
-; Loop for 8 * 0xFFFF, then exit the tape routines
+; Loop for 8 * 0x10000, then exit the tape routines
     JSR     tape_remote_output_low
     LDAB    #8
     LDX     #0

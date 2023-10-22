@@ -75,8 +75,7 @@ tape_input_all:                                 SUBROUTINE
     CMPA    patch_tape_counter
     BNE     .print_error
 
-; Calculate the checksum of the received patch, and compare it against the
-; received checksum.
+; Calculate the checksum of the received patch, compare against the received checksum.
     JSR     tape_calculate_patch_checksum
     SUBD    patch_tape_checksum
     BNE     .print_error

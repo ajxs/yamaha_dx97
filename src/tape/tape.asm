@@ -186,3 +186,28 @@ tape_input_single_jump:
 ; ==============================================================================
 tape_exit_jump:
     JMP     tape_exit
+
+
+; ==============================================================================
+; TAPE_INPUT_RESET
+; ==============================================================================
+; @TODO
+; ==============================================================================
+tape_input_reset:                               SUBROUTINE
+; Clear the last 6 spaces in the LCD buffer.
+    LDX     #(lcd_buffer_next + 26)
+    LDAA    #'
+    LDAB    #6
+
+.clear_lcd_loop:
+    STAA    0,x
+    INX
+    DECB
+    BNE     .clear_lcd_loop
+
+    JSR     lcd_update
+    JSR     tape_remote_output_high
+
+    CLR     tape_error_flag
+
+    RTS

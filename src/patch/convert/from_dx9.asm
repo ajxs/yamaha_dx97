@@ -37,6 +37,7 @@ patch_convert_from_dx9_format:                  SUBROUTINE
     LDAA    #$F
     CLRB
     STD     0,x
+
     LDX     <memcpy_ptr_src
     LDAA    0,x
     LDAB    #4
