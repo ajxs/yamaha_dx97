@@ -7,12 +7,16 @@
 ; tape/input/single.asm
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Reads a single patch over the synth's cassette interface into the
 ; synth's edit buffer.
 ; First the user needs to select which patch number to read using the
 ; front-panel numeric switches. Then the cassette interface 'reads' each
 ; incoming patch until the selected one is read.
+; @NOTE: Even though the DX9/7 firmware can only receive the first 10 patches
+; when receiving a bulk patch dump from the cassette interface, this function
+; can recieve any individual patch of the 20 patch dump.
 ;
 ; ==============================================================================
 
@@ -42,13 +46,9 @@ tape_input_single:                              SUBROUTINE
     JMP     .exit_abort
 
 .is_valid_index_selection:
-; If the button selection was higher than the total available patch indexes,
-; loop back.
-    CMPB    #INPUT_BUTTON_10
-    BHI     .wait_for_patch_index_selection_loop
-
 ; Test whether the selected patch index is valid
-; If '8' is higher than the code of the button pressed, loop.
+; If the code of the button pressed is below '8', loop.
+; This ensures that a numerical button was pressed.
     SUBB    #8
     BCS     .wait_for_patch_index_selection_loop
 
@@ -67,11 +67,14 @@ tape_input_single:                              SUBROUTINE
     JSR     lcd_update
 
 .wait_for_start_input_loop:
+; If the 'Remote' button was pressed, toggle the remote output polarity,
+; and loop back to wait for further input.
     JSR     input_read_front_panel
     CMPB    #INPUT_BUTTON_10
     BNE     .is_no_button_pressed
 
-    JMP     .toggle_remote_polarity
+    JSR     tape_remote_toggle_output_polarity
+    BRA     .wait_for_start_input_loop
 
 .is_no_button_pressed:
     CMPB    #INPUT_BUTTON_NO
@@ -122,9 +125,8 @@ tape_input_single:                              SUBROUTINE
 
 ; Test whether the selected patch has been missed, if so an error has occurred.
 ; This will exit the loop in the case that the patch is never found, once the
-; 'patch_tape_counter' counter variable reaches a value over the maximum index
-; of '10'.
-    BCC     .print_error
+; 'patch_tape_counter' counter variable reaches a value over the maximum index.
+    BCS     .print_error
 
 ; If not over the selected patch index, and not equal, jump back to receive
 ; the next patch.
@@ -169,10 +171,6 @@ tape_input_single:                              SUBROUTINE
     JSR     tape_remote_output_low
     CLI
     RTS
-
-.toggle_remote_polarity:
-    JSR     tape_remote_toggle_output_polarity
-    JMP     .wait_for_start_input_loop
 
 .print_error:
     JSR     tape_print_error_and_wait_for_retry

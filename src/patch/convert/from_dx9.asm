@@ -24,59 +24,118 @@
 ; PATCH_CONVERT_FROM_DX9_FORMAT
 ; =============================================================================
 patch_convert_from_dx9_format:                  SUBROUTINE
+; ==============================================================================
+; LOCAL TEMPORARY VARIABLES
+; ==============================================================================
+.temp_variable:                                 EQU #temp_variables + 6
+
+; ==============================================================================
 ; Convert each operator.
     LDAB    #4
 
 .convert_operator_loop:
     PSHB
 
-; Copy first 8 bytes (Operator EG).
+; Copy first bytes 0-7 (Operator EG).
     LDAB    #8
     JSR     memcpy
 
-    LDAA    #$F
-    CLRB
-    STD     0,x
+    LDX     <memcpy_ptr_dest
+; DX9 patches don't store a breakpoint, so clear this byte.
+    CLR     0,x
+; DX9 patches don't store a left level scaling depth, so clear this byte.
+    CLR     1,x
 
+    INX
+    INX
+    STX     <memcpy_ptr_dest
+
+; Load Keyboard level scaling - byte 8.
     LDX     <memcpy_ptr_src
     LDAA    0,x
-    LDAB    #4
-    LDX     <memcpy_ptr_dest
-    STD     2,x
-    LDX     <memcpy_ptr_src
-    LDAA    1,x
-    ANDA    #7
-    LDAB    5,x
-    ASLB
-    ASLB
-    ASLB
-    ABA
-    LDX     <memcpy_ptr_dest
-    STAA    4,x
-    LDX     <memcpy_ptr_src
-    LDAA    1,x
-    LSRA
-    LSRA
-    LSRA
-    ANDA    #3
-    LDX     <memcpy_ptr_dest
-    STAA    5,x
-    LDX     <memcpy_ptr_src
-    LDD     2,x
-    ASLB
-    LDX     <memcpy_ptr_dest
-    STD     6,x
-    LDX     <memcpy_ptr_src
-    LDAA    4,x
-    LDX     <memcpy_ptr_dest
-    STAA    8,x
-    LDX     <memcpy_ptr_src
-    LDAB    #6
-    ABX
+    INX
     STX     <memcpy_ptr_src
+
+; Store the keyboard level scaling as the keyboard scaling right depth.
     LDX     <memcpy_ptr_dest
-    LDAB    #9
-    ABX
+    STAA    0,x
+
+; Clear the left/right scaling curves.
+    CLR     1,x
+
+    INX
+    INX
+    STX     <memcpy_ptr_dest
+
+; Load Keyboard rate scaling / amp mod sens - byte 9.
+    LDX     <memcpy_ptr_src
+    LDAA    0,x
+; Load Detune - byte 13.
+    LDAB    4,x
+    INX
+    STX     <memcpy_ptr_src
+
+; Combine the keyboard rate scaling, and detune bytes.
+    PSHA
+    ANDA    #%111
+    STAA    .temp_variable
+
+    ASLB
+    ASLB
+    ASLB
+    ADDB    .temp_variable
+
+    LDX     <memcpy_ptr_dest
+    STAB    0,x
+
+; Store the Amp Mod Sens byte. The DX9 doesn't store any key velocity
+; sensitivity, so this field remains clear.
+    PULA
+    LSRA
+    LSRA
+    LSRA
+    STAA    1,x
+
+    INX
+    INX
+    STX     <memcpy_ptr_dest
+
+; Output Level - byte 10.
+    LDX     <memcpy_ptr_src
+    LDAA    0,x
+    INX
+    STX     <memcpy_ptr_src
+
+; Store output level - byte 14
+    LDX     <memcpy_ptr_dest
+    STAA    0,x
+    INX
+    STX     <memcpy_ptr_dest
+
+    LDX     <memcpy_ptr_src
+; Freq coarse - byte 11.
+    LDAA    0,x
+; Freq fine - byte 12.
+    LDAB    1,x
+    INX
+    INX
+; Add 1 to take into account the detune loaded earlier.
+    INX
+    STX     <memcpy_ptr_src
+
+    LDX     <memcpy_ptr_dest
+; Store freq coarse - byte 15.
+; The DX9 doesn't store the oscillator mode, so this field is clear.
+    ASLA
+    STAA    0,x
+
+; Store freq fine - byte 16.
+    STAB    1,x
+
+    INX
+    INX
+    STX     <memcpy_ptr_dest
+
     PULB
     DECB
     BNE     .convert_operator_loop
@@ -87,28 +146,36 @@ patch_convert_from_dx9_format:                  SUBROUTINE
 .clear_operator_1_2_loop:
     PSHB
 
-
-    LDAB    #$C
-    CLRA
-
-.clear_first_12_bytes_loop:
+; Set the operator EG rates, and levels to their maximum (99).
+    LDAB    #7
+.clear_operator_eg_loop:
+    LDAA    #99
     STAA    0,x
     INX
     DECB
-    BNE     .clear_first_12_bytes_loop
+    BNE     .clear_operator_eg_loop
 
-; Set the detune value to '7'.
-    LDAA    #7
+; Clear the final operator EG level.
+    CLR     0,x
+    INX
+
+    LDAB    #4
+.clear_scaling_bytes_loop:
+    CLR     0,x
+    INX
+    DECB
+    BNE     .clear_scaling_bytes_loop
+
+; Set the detune value to '7', rate scaling to '0.
+    LDAA    #$38
     STAA    0,x
     INX
 
 ; Clear the remaining fields by storing '0' in the fine/coarse freq,
 ; and setting the modulation sense, and output level to '0'.
     LDAB    #4
-    CLRA
-
 .clear_operator_fields_loop:
-    STAA    0,x
+    CLR     0,x
     INX
     DECB
     BNE     .clear_operator_fields_loop
@@ -165,6 +232,8 @@ patch_convert_from_dx9_format:                  SUBROUTINE
     INX
     INX
     STX     <memcpy_ptr_dest
+
+; Copy in the dummy patch name.
     LDX     #str_dx9_patch_name
     JSR     lcd_strcpy
 

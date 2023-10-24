@@ -468,15 +468,21 @@ midi_sysex_tx_bulk_data_single_patch:           SUBROUTINE
 ; MIDI_SYSEX_TX_TAPE_INCOMING_SINGLE_PATCH
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
-; @TODO
-; This needs to be reimplemented from scratch.
+; Sends the latest patch received via the cassette interface.
 ;
 ; ==============================================================================
 midi_sysex_tx_tape_incoming_single_patch:   SUBROUTINE
     TST     sys_info_avail
     BEQ     .exit
+
+    LDX     #patch_buffer_tape_conversion
+    STX     <memcpy_ptr_src
+    LDX     #midi_buffer_sysex_tx
+    JSR     patch_deserialise
+
+    JMP     midi_sysex_tx_bulk_data_single_patch_send
 
 .exit:
     RTS
