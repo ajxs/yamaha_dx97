@@ -46,20 +46,28 @@ In the DX7 the analog pitch-bend wheel is wired to the sub-CPU, and its input is
 
 If you encounter any issues, or discrepancies while using this ROM, please report them using either the 'Issues' tab in Github, or by emailing the lead maintainer (@ajxs). 
 
-When reporting issues, please describe the expected result, and any steps necessary to recreate the issue.
-
 ## Contributing
 
-Contributions to the codebase, or documentation are definitely welcome! The preferred way to contribute to the project is by raising a Pull Request on Github. If you do not have a Github account, please send a patch to the lead maintainer (@ajxs).
+Contributions to the codebase, or documentation are definitely welcome! The preferred way to contribute to the project is by raising a *Pull Request* on Github. If you do not have a Github account, feel free to send a patch to the lead maintainer (@ajxs).
 
 ## Build Dependencies
 
-* GNU Make
-* Dasm Assembler
+* [GNU Make](https://www.gnu.org/software/make)
+* [Dasm Assembler](https://dasm-assembler.github.io/)
 
 ## Build instructions
 
-Simply run `make` from the root directory to produce the final binary.
+To build the firmware, run `make` from the root directory to produce the final binary: `build/yamaha_dx97.bin`.
+
+If you are unable to use GNU Make, you can build the executable by invoking dasm directly on the command line:
+
+```shell
+dasm src/yamaha_dx97.asm -f3 -v4 -obuild/yamaha_dx97.bin
+```
+
+If you use a Unix-based system, and the [Minipro](https://gitlab.com/DavidGriffith/minipro/) software, several convenience recipes exist in the makefile to help with burning the binary to an EPROM chip (`burn`, `burn_verify`, `burn_pin_test`).
+The `EPROM_TYPE` variable in the makefile can be altered as needed to select the correct EPROM chip type.
+For more information refer to the `Makefile`.
 
 ## FAQ
 **Q: How do I install this new ROM in my DX9?**
@@ -68,12 +76,9 @@ Simply run `make` from the root directory to produce the final binary.
 According to the DX7/9 Service Manual, early model DX9s had the ROM installed on two 2764 series EPROM chips (IC4, and IC5), with later revisions using a single 27128-series EPROM. Replacement with a single EPROM chip socket will likely be necessary for installing a new ROM.
 Fortunately most DX9s feature a single socketed ROM chip which makes replacement much simpler. The firmware can be flashed to any 27128-series EPROM for installation.
 
-Note: This ROM is still highly experimental, and is not recommended for everyday use. Refer to the *What is the current status of the ROM?* message above.
+**Q: Are you selling programmed EPROM chips?**
 
-**Q: Are you selling programmed EPROM chips, or distributing binaries?**
-
-**A:** Not at this point, unfortunately. Once the ROM reaches a V1.0 release binaries will be distributed, until then users will need to compile their own binaries, and flash it to an EPROM chip themselves.
-With regards to selling programmed EPROM chips, this is currently not on the project's roadmap. This may be considered in the future, as reliability improves.
+**A:** Not at this point. Once the ROM reaches a V1.0 release the possibility of distributing programmed EPROM chips might be reconsidered. At this point bugs are still being found and fixed, and the binary is changing too often to consider distributing pre-programmed EPROMs with pre-release versions.
 
 **Q: Will editing of all DX7 parameters be possible from the front-panel?**
 
