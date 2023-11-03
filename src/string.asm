@@ -220,7 +220,7 @@ str_tape_remote:                        DC "TAPE REMOTE", 0
 
 ; Note that this string is not null-terminated.
 ; The test UI routine will copy both lines to the LCD buffer.
-str_test_mode_prompt:                   DC "V0.9.7 24-Oct-23"
+str_test_mode_prompt:                   DC "V0.9.8 04-Nov-23"
 str_test_mode_prompt_line_2:            DC " Test Entry ?", 0
 
 str_verify_complete:                    DC "VERIFY COMPLETED", 0

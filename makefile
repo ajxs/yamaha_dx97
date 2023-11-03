@@ -12,8 +12,6 @@ INPUT_ASM      := ${SRC_DIR}/yamaha_dx97.asm
 LISTING_TXT    := listing.txt
 SYMBOLS_TXT    := symbols.txt
 
-FLASH_BIN      := ~/src/EPROM-EMU-NG/Software/EPROM_NG_v2.0rc3.py
-
 EPROM_TYPE     := M27128A@DIP28
 
 all: ${BIN_OUTPUT}
