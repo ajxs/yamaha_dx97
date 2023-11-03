@@ -128,7 +128,7 @@ tape_remote_output_low_signal:
 ; Initiates the tape-related function specified by the last keypress.
 ; This subroutine is initiated by pressing the 'Yes' front-panel switch to
 ; confirm a prompt raised by pressing the tape-related keys in function mode.
-; Note: This functions masks all interrupts.
+; Note: This function masks all interrupts.
 ;
 ; ==============================================================================
 tape_ui_jumpoff:                                SUBROUTINE
@@ -191,7 +191,12 @@ tape_exit_jump:
 ; ==============================================================================
 ; TAPE_INPUT_RESET
 ; ==============================================================================
-; @TODO
+; DESCRIPTION:
+; This utility routine pulls the remote output high, clears space in the LCD,
+; and clears the 'Tape function aborted' flag. This was adapted from the
+; common code called prior to all of the cassette interface input functions in
+; the original DX9 ROM.
+;
 ; ==============================================================================
 tape_input_reset:                               SUBROUTINE
 ; Clear the last 6 spaces in the LCD buffer.
@@ -208,6 +213,84 @@ tape_input_reset:                               SUBROUTINE
     JSR     lcd_update
     JSR     tape_remote_output_high
 
-    CLR     tape_error_flag
+    CLR     tape_function_aborted_flag
+
+    RTS
+
+
+; ==============================================================================
+; TAPE_PRINT_ERROR_AND_WAIT_FOR_RETRY
+; ==============================================================================
+; DESCRIPTION:
+; This routine is called when any of the cassette interface routines
+; encounter an error state. It prints an error message string to the LCD, and
+; then polls the user for input to proceed.
+;
+; ==============================================================================
+tape_print_error_and_wait_for_retry:            SUBROUTINE
+    LDX     #lcd_buffer_next_line_2
+    STX     <memcpy_ptr_dest
+
+    LDX     #str_error
+    JSR     lcd_strcpy
+    JSR     lcd_update
+
+    JSR     tape_remote_output_low
+; Falls-through below.
+
+tape_wait_for_input_and_retry:                  SUBROUTINE
+    JSR     input_read_front_panel
+    TSTB
+    BEQ     tape_wait_for_input_and_retry
+
+    RTS
+
+
+; ==============================================================================
+; TAPE_EXIT
+; ==============================================================================
+; DESCRIPTION:
+; Exits the tape function user-interface.
+; This re-enables interrupts and sets the tape output low.
+;
+; ==============================================================================
+tape_exit:                                      SUBROUTINE
+    JSR     tape_remote_output_low
+    CLI
+    RTS
+
+
+; ==============================================================================
+; TAPE_WAIT_FOR_START_INPUT
+; ==============================================================================
+; DESCRIPTION:
+; All of the cassette interface UI functions have a common interface.
+; This function processes this user input. It checks for either the 'Remote',
+; button being pressed, which toggles the remote port polarity, the 'Yes'
+; button being pressed which causes the function to proceed, or the 'No' button
+; which will exit the tape UI function.
+; ==============================================================================
+tape_wait_for_start_input:
+; Read front-panel input to determine the next action.
+; If 'No' is pressed, the tape UI actions are aborted.
+; If 'Yes' is pressed, the operation proceeeds.
+; If the 'Remote' button is pressed, toggle the remote output polarity,
+; and loop back to wait for further input.
+    JSR     input_read_front_panel
+    CMPB    #INPUT_BUTTON_10
+    BNE     .is_no_button_pressed
+
+    JSR     tape_remote_toggle_output_polarity
+    BRA     tape_wait_for_start_input
+
+.is_no_button_pressed:
+    CMPB    #INPUT_BUTTON_NO
+    BNE     .is_yes_button_pressed
+
+    JMP     tape_exit
+
+.is_yes_button_pressed:
+    CMPB    #INPUT_BUTTON_YES
+    BNE     tape_wait_for_start_input
 
     RTS

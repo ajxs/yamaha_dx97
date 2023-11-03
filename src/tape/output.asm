@@ -23,15 +23,9 @@
 ;
 ; ==============================================================================
 tape_output_patch:                              SUBROUTINE
-; ==============================================================================
-; LOCAL TEMPORARY VARIABLES
-; ==============================================================================
-.tape_output_byte_counter:                      EQU #temp_variables
-
-; ==============================================================================
     LDX     #patch_buffer_incoming
     LDAB    #67
-    STAB    .tape_output_byte_counter
+    STAB    tape_byte_counter
     JSR     tape_output_pilot_tone
     LDAB    #28
 
@@ -46,7 +40,7 @@ tape_output_patch:                              SUBROUTINE
     LDAB    #27
     DELAY_SINGLE
     INX
-    DEC     .tape_output_byte_counter
+    DEC     tape_byte_counter
     BNE     .output_byte_loop
 
     RTS
@@ -215,7 +209,7 @@ tape_output_pulse:                              SUBROUTINE
 
 .abort:
     LDAA    #1
-    STAA    <tape_error_flag
+    STAA    <tape_function_aborted_flag
 
 ; Add 11 bytes to the stack pointer to return higher up in the call chain.
     TSX
@@ -305,20 +299,6 @@ tape_output_byte:                               SUBROUTINE
 
 
 ; ==============================================================================
-; TAPE_EXIT
-; ==============================================================================
-; DESCRIPTION:
-; Exits the tape UI functions.
-; This re-enables interrupts and sets the tape output low.
-;
-; ==============================================================================
-tape_exit:                                      SUBROUTINE
-    JSR     tape_remote_output_low
-    CLI
-    RTS
-
-
-; ==============================================================================
 ; TAPE_OUTPUT_ALL
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
@@ -353,28 +333,8 @@ tape_output_all:                                SUBROUTINE
     JSR     lcd_strcpy
     JSR     lcd_update
 
-.wait_for_user_input:
-; Read front-panel input to determine the next action.
-; If 'No' is pressed, the tape UI actions are aborted.
-; If 'Remote' is pressed, the output port polarity is flipped.
-; If 'Yes' is pressed, the operation proceeeds.
-    JSR     input_read_front_panel
-    CMPB    #INPUT_BUTTON_10
-    BEQ     .remote_button_pressed
+    JSR     tape_wait_for_start_input
 
-    CMPB    #INPUT_BUTTON_NO
-    BEQ     tape_exit
-
-    CMPB    #INPUT_BUTTON_YES
-    BNE     .wait_for_user_input
-
-    BRA     .clear_cd_output_number
-
-.remote_button_pressed:
-    JSR     tape_remote_toggle_output_polarity
-    BRA     .wait_for_user_input
-
-.clear_cd_output_number:
 ; Clear a space at the end of the LCD buffer for the number of the patch
 ; being output.
     LDX     #(lcd_buffer_next + 26)
@@ -389,7 +349,7 @@ tape_output_all:                                SUBROUTINE
 
     JSR     lcd_update
     JSR     tape_remote_output_high
-    CLR     tape_error_flag
+    CLR     tape_function_aborted_flag
 
 ; The following section loops for 4 * 0xFFFF cycles.
 ; IX is decremented so it wraps around to 0xFFFF, then loops until it reaches
@@ -400,8 +360,11 @@ tape_output_all:                                SUBROUTINE
 .wait_for_abort_loop:
 ; If the 'No' button is pressed, abort.
     TIMD   #KEY_SWITCH_LINE_0_BUTTON_NO, key_switch_scan_driver_input
-    BNE     .exit
+    BEQ     .wait_for_abort_loop_decrement
 
+    JMP     tape_exit
+
+.wait_for_abort_loop_decrement:
     DEX
     BNE     .wait_for_abort_loop
 
@@ -436,10 +399,13 @@ tape_output_all:                                SUBROUTINE
     STD     patch_tape_checksum
     JSR     tape_output_patch
 
-; If any error occurred, exit.
-    TST     tape_error_flag
-    BNE     .exit
+; If the operation has been aborted by the user, exit.
+    TST     tape_function_aborted_flag
+    BEQ     .increment_incoming_patch_counter
 
+    JMP     tape_exit
+
+.increment_incoming_patch_counter:
     LDAA    patch_tape_counter
     INCA
     STAA    patch_tape_counter
@@ -449,6 +415,3 @@ tape_output_all:                                SUBROUTINE
 ; If the output process is finished, proceed to verification.
     JSR     tape_remote_output_low
     BRA     tape_verify
-
-.exit:
-    JMP     tape_exit

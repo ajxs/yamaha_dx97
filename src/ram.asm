@@ -196,6 +196,8 @@ test_button_input:                              EQU #midi_sysex_byte_count_lsb_p
 ; processed with each iteration. This variable controls which half.
 portamento_voice_toggle:                        DS 1
 
+tape_byte_counter:                              DS 1
+tape_input_selected_patch_index:                DS 1
 updated_input_source:                           DS 1
 
 ; Temporary variables used in the various interrupt routines.

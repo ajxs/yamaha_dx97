@@ -9,6 +9,9 @@
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
 ; Reads all 20 patches from the cassette interface.
+; @NOTE: Even though there is only enough storage space for ten patches, this
+; routine will simply overwrite the hidden 'incoming' patch buffer with
+; patches 11-20.
 ;
 ; ==============================================================================
 
@@ -24,28 +27,7 @@ tape_input_all:                                 SUBROUTINE
     JSR     lcd_strcpy
     JSR     lcd_update
 
-.wait_for_input_loop:
-; Read the front panel button input.
-    JSR     input_read_front_panel
-
-; Test for button 10 = 'Remote'.
-    CMPB    #INPUT_BUTTON_10
-    BNE     .test_for_no_button_press
-
-    JMP     .toggle_remote_polarity
-
-.test_for_no_button_press:
-; Test for the 'NO' button being pressed, which will cancel the process.
-    CMPB    #INPUT_BUTTON_NO
-    BNE     .test_for_yes_button_press
-
-    JMP     .exit
-
-.test_for_yes_button_press:
-; Test for the 'YES' button being pressed.
-; If not, loop back waiting for user input.
-    CMPB    #INPUT_BUTTON_YES
-    BNE     .wait_for_input_loop
+    JSR     tape_wait_for_start_input
 
 ; Test if memory is protected. If so, exit.
     LDAA    memory_protect
@@ -57,7 +39,7 @@ tape_input_all:                                 SUBROUTINE
     CLRA
     STAA    tape_patch_index
 
-.receive_patch_loop:
+.input_patch_loop:
 ; Print the incoming patch number.
     LDX     #(lcd_buffer_next + 29)
     STX     <memcpy_ptr_dest
@@ -68,8 +50,8 @@ tape_input_all:                                 SUBROUTINE
 ; Read the patch over the cassette interface.
 ; If an error occurred, exit.
     JSR     tape_input_patch
-    TST     tape_error_flag
-    BNE     .exit_input_error
+    TST     tape_function_aborted_flag
+    BNE     .exit_cancelled_by_user
 
     LDAA    tape_patch_index
     CMPA    patch_tape_counter
@@ -104,7 +86,7 @@ tape_input_all:                                 SUBROUTINE
     INCA
     STAA    tape_patch_index
     CMPA    #20
-    BNE     .receive_patch_loop
+    BNE     .input_patch_loop
 
     JSR     tape_remote_output_low
     CLI
@@ -113,10 +95,6 @@ tape_input_all:                                 SUBROUTINE
     LDAB    #0
     JSR     patch_load_store_edit_buffer_to_compare
     JMP     ui_print_update_led_and_menu
-
-.toggle_remote_polarity:
-    JSR     tape_remote_toggle_output_polarity
-    JMP     .wait_for_input_loop
 
 .exit_memory_protected:
     CLI
@@ -129,12 +107,18 @@ tape_input_all:                                 SUBROUTINE
     INS
     JMP     main_input_handler_dispatch
 
-.exit_input_error:
+.exit_cancelled_by_user:
     JSR     tape_remote_output_low
-    LDAA    tape_patch_index
-    BEQ     .exit
 
-    LDAA    #20
+; Test whether any patches were successfully read over the cassette interface.
+; If so, load the last received patch. Otherwise exit.
+    LDAA    tape_patch_index
+    BNE     .load_last_receieved_patch
+
+    JMP     tape_exit
+
+.load_last_receieved_patch:
+    LDAA    #PATCH_INCOMING_BUFFER_INDEX
     STAA    patch_index_current
 
     LDAA    #EVENT_HALT_VOICES_RELOAD_PATCH
@@ -157,11 +141,6 @@ tape_input_all:                                 SUBROUTINE
     INS
     INS
     JMP     main_input_handler_dispatch
-
-.exit:
-    JSR     tape_remote_output_low
-    CLI
-    RTS
 
 .print_error:
     JSR     tape_print_error_and_wait_for_retry

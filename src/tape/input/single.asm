@@ -26,12 +26,6 @@
 ; TAPE_INPUT_SINGLE
 ; ==============================================================================
 tape_input_single:                              SUBROUTINE
-; ==============================================================================
-; LOCAL TEMPORARY VARIABLES
-; ==============================================================================
-.tape_input_selected_patch:                     EQU #temp_variables + 2
-
-; ==============================================================================
     LDX     #lcd_buffer_next
     STX     <memcpy_ptr_dest
     LDX     #str_from_tape_to_buf
@@ -43,7 +37,7 @@ tape_input_single:                              SUBROUTINE
     CMPB    #INPUT_BUTTON_NO
     BNE     .is_valid_index_selection
 
-    JMP     .exit_abort
+    JMP     tape_exit
 
 .is_valid_index_selection:
 ; Test whether the selected patch index is valid
@@ -52,9 +46,8 @@ tape_input_single:                              SUBROUTINE
     SUBB    #8
     BCS     .wait_for_patch_index_selection_loop
 
-    STAB    .tape_input_selected_patch
+    STAB    tape_input_selected_patch_index
 
-.begin_input_process:
 ; Print the index of the selected patch.
     LDX     #(lcd_buffer_next + 22)
     STX     <memcpy_ptr_dest
@@ -66,33 +59,18 @@ tape_input_single:                              SUBROUTINE
     JSR     lcd_strcpy
     JSR     lcd_update
 
-.wait_for_start_input_loop:
-; If the 'Remote' button was pressed, toggle the remote output polarity,
-; and loop back to wait for further input.
-    JSR     input_read_front_panel
-    CMPB    #INPUT_BUTTON_10
-    BNE     .is_no_button_pressed
-
-    JSR     tape_remote_toggle_output_polarity
-    BRA     .wait_for_start_input_loop
-
-.is_no_button_pressed:
-    CMPB    #INPUT_BUTTON_NO
-    BNE     .is_yes_button_pressed
-
-    JMP     .exit_abort
-
-.is_yes_button_pressed:
-    CMPB    #INPUT_BUTTON_YES
-    BNE     .wait_for_start_input_loop
+    JSR     tape_wait_for_start_input
 
     JSR     tape_input_reset
 
 .input_patch_loop:
     JSR     tape_input_patch
-    TST     tape_error_flag
-    BNE     .exit_abort
+    TST     tape_function_aborted_flag
+    BEQ     .test_checksum
 
+    JMP     tape_exit
+
+.test_checksum:
 ; Calculate the checksum of the received patch, and compare it against the
 ; received checksum.
     JSR     tape_calculate_patch_checksum
@@ -120,13 +98,13 @@ tape_input_single:                              SUBROUTINE
     JSR     lcd_update
 
 ; Test whether the incoming patch is the 'selected' patch.
-    LDAA    .tape_input_selected_patch
+    LDAA    tape_input_selected_patch_index
     CMPA    patch_tape_counter
 
 ; Test whether the selected patch has been missed, if so an error has occurred.
 ; This will exit the loop in the case that the patch is never found, once the
 ; 'patch_tape_counter' counter variable reaches a value over the maximum index.
-    BCS     .print_error
+    BCS     .print_error_message
 
 ; If not over the selected patch index, and not equal, jump back to receive
 ; the next patch.
@@ -167,18 +145,7 @@ tape_input_single:                              SUBROUTINE
     CLI
     JMP     midi_sysex_tx_tape_incoming_single_patch
 
-.exit_abort:
-    JSR     tape_remote_output_low
-    CLI
-    RTS
-
-.print_error:
+.print_error_message:
     JSR     tape_print_error_and_wait_for_retry
 
-    LDX     #lcd_buffer_next_line_2
-    STX     <memcpy_ptr_dest
-    LDX     #str_single
-    JSR     lcd_strcpy
-
-    LDAB    .tape_input_selected_patch
-    JMP     .begin_input_process
+    JMP     tape_input_single

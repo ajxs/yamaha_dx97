@@ -16,7 +16,7 @@
 ; ==============================================================================
 ; TAPE_VERIFY
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Reads all 10 patches from the cassette interface, verifying each one as it is
 ; input. An error message will be printed in the case that verification fails.
@@ -29,29 +29,7 @@ tape_verify:                                    SUBROUTINE
     JSR     lcd_strcpy
     JSR     lcd_update
 
-; Loop while waiting for user input.
-; If the 'REMOTE' front-panel button is pressed, toggle the remote port
-; polarity to start/stop tape playback.
-; If the 'YES' key is pressed, start the verification process.
-; If the 'NO' key is pressed, cancel the process.
-.wait_for_user_input:
-    JSR     input_read_front_panel
-    CMPB    #INPUT_BUTTON_10
-    BEQ     .remote_button_pressed
-
-    BRA     .was_no_button_pressed
-
-.remote_button_pressed:
-    JMP     .toggle_remote_output_polarity
-
-.was_no_button_pressed:
-    CMPB    #INPUT_BUTTON_NO
-    BNE     .was_yes_button_pressed
-    JMP     .cancel_and_exit
-
-.was_yes_button_pressed:
-    CMPB    #INPUT_BUTTON_YES
-    BNE     .wait_for_user_input
+    JSR     tape_wait_for_start_input
 
 ; Initialise the verification process.
     JSR     tape_input_reset
@@ -69,9 +47,12 @@ tape_verify:                                    SUBROUTINE
     JSR     lcd_update
     JSR     tape_input_patch
 
-    TST     tape_error_flag
-    BNE     .cancel_and_exit
+    TST     tape_function_aborted_flag
+    BEQ     .check_incoming_patch_index
 
+    JMP     tape_exit
+
+.check_incoming_patch_index:
     LDAA    tape_patch_index
     CMPA    patch_tape_counter
     BNE     .print_error_message
@@ -101,9 +82,9 @@ tape_verify:                                    SUBROUTINE
 
 ; Loop for 8 * 0x10000, then exit the tape routines
     JSR     tape_remote_output_low
+
     LDAB    #8
     LDX     #0
-
 .delay_loop:
     DEX
     BNE     .delay_loop
@@ -134,30 +115,8 @@ tape_verify:                                    SUBROUTINE
     INS
     JMP     led_print_patch_number
 
-.cancel_and_exit:
-    JSR     tape_remote_output_low
-    CLI
-    RTS
-
-.toggle_remote_output_polarity:
-    JSR     tape_remote_toggle_output_polarity
-    JMP     .wait_for_user_input
-
 .print_error_message:
-    LDX     #lcd_buffer_next_line_2
-    STX     <memcpy_ptr_dest
-
-    LDX     #str_error
-    JSR     lcd_strcpy
-    JSR     lcd_update
-    JSR     tape_remote_output_low
-
-; Loop while waiting for user input.
-; Any button press will exit, and proceed to the verification routine.
-.wait_for_input_loop:
-    JSR     input_read_front_panel
-    TSTB
-    BEQ     .wait_for_input_loop
+    JSR     tape_print_error_and_wait_for_retry
 
     JMP     tape_verify
 
@@ -165,17 +124,17 @@ tape_verify:                                    SUBROUTINE
 ; ==============================================================================
 ; TAPE_VERIFY_PATCH
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; @PRIVATE
 ; DESCRIPTION:
 ; Verifies an individual incoming patch by comparing it against its associated
 ; index in the patch buffer.
-; @NOTE: This will automatically convert the incoming patch to the DX7 format,
+; @NOTE: This will convert the original patch to the DX9 format,
 ; storing it in a temporary buffer overlaid with the SysEx transmit buffer.
 ;
 ; ARGUMENTS:
 ; Memory:
-; * patch_tape_counter: The patch index being verified.
+; * tape_patch_index: The patch index being verified.
 ;
 ; MEMORY MODIFIED:
 ; * copy_counter
@@ -189,28 +148,32 @@ tape_verify:                                    SUBROUTINE
 ;
 ; ==============================================================================
 tape_verify_patch:                              SUBROUTINE
-; Convert the patch from the serialised DX9 format to the DX7 format.
-    LDX     #patch_buffer_incoming
-    STX     <copy_ptr_src
-    LDX     #patch_buffer_tape_conversion
-    STX     <memcpy_ptr_dest
-    JSR     patch_convert_from_dx9_format
-
-; Set the converted patch as a source for the verification operation.
-    LDX     #patch_buffer_tape_conversion
-    STX     <copy_ptr_src
-
-; Setup destination pointer.
+; Convert the original patch, prior to being output, to the DX9 format,
+; and then compare this against what was received. This is done instead of
+; converting the result read from tape because the conversion process can be
+; destructive in some cases.
+; Get the offset of the original unconverted patch.
 ; Construct this by multiplying the incoming patch number by the patch size,
 ; then adding the patch buffer offset.
-    LDAA    patch_tape_counter
-    LDAB    #PATCH_SIZE_PACKED_DX7
-    MUL
-    ADDD    #patch_buffer
-    STD     <copy_ptr_dest
+    LDAB    tape_patch_index
+    JSR     patch_get_ptr
+    STX     <memcpy_ptr_src
 
-; Setup counter. This is 64 WORDS, since it is comparing against the DX7 format.
-    LDAB    #64
+    LDX     #patch_buffer_tape_conversion
+    STX     <memcpy_ptr_dest
+
+    JSR     patch_convert_to_dx9_format
+
+; Compare the converted original patch, and the contents of the incoming
+; patch buffer.
+    LDX     #patch_buffer_tape_conversion
+    STX     <copy_ptr_src
+
+    LDX     #patch_buffer_incoming
+    STX     <copy_ptr_dest
+
+; Setup counter. This is 32 WORDS, since it is comparing against the DX9 format.
+    LDAB    #32
     STAB    <copy_counter
 
 .compare_word_loop:
@@ -231,8 +194,8 @@ tape_verify_patch:                              SUBROUTINE
     INX
     INX
     STX     <copy_ptr_dest
-    DEC     copy_counter
 
+    DEC     <copy_counter
     BNE     .compare_word_loop
 
 .exit:
