@@ -74,10 +74,10 @@ str_freq_coarse:                        DC "F COARSE"
 str_freq_fine:                          DC "F FINE"
                                         DC.B PRINT_PARAM_FUNCTION_OSC_FREQ
 
-str_from_mem_to_tape:                   DC "from MEM to TAPEall      "
+str_from_mem_to_tape:                   DC "from MEM to TAPEall       "
                                         DC.B STR_FRAGMENT_OFFSET_READY
 
-str_from_tape_to_mem:                   DC "from TAPE to MEMall      "
+str_from_tape_to_mem:                   DC "from TAPE to MEMall       "
                                         DC.B STR_FRAGMENT_OFFSET_READY
 
 str_from_tape_to_buf:                   DC "from TAPE to BUFsingle  ? (1-20)", 0
@@ -210,8 +210,6 @@ str_rate_scaling:                       DC.B STR_FRAGMENT_OFFSET_RATE
 str_sys_info:                           DC "SYS INFO "
                                         DC.B PRINT_PARAM_FUNCTION_AVAIL_UNAVAIL
 
-str_single:                             DC "single", 0
-
 str_sys_info_unavail:                   DC "UNAVAIL", 0
 
 str_tape_save:                          DC "SAVE TO TAPE ?", 0
@@ -222,11 +220,13 @@ str_tape_remote:                        DC "TAPE REMOTE", 0
 
 ; Note that this string is not null-terminated.
 ; The test UI routine will copy both lines to the LCD buffer.
-str_test_mode_prompt:                   DC "V0.9.7 24-Oct-23"
+str_test_mode_prompt:                   DC "V0.9.8 04-Nov-23"
 str_test_mode_prompt_line_2:            DC " Test Entry ?", 0
 
 str_verify_complete:                    DC "VERIFY COMPLETED", 0
-str_verify_tape:                        DC "VERIFY      TAPE          ready?", 0
+str_verify_tape:                        DC "VERIFY      TAPE          "
+                                        DC.B STR_FRAGMENT_OFFSET_READY
+
 str_voice_init:                         DC "VOICE INIT ?", 0
 
 str_welcome_message:                    DC "* YAMAHA DX9/7 *https://ajxs.me ", 0
@@ -287,7 +287,7 @@ str_fragment_store:                     DC "STORE", 0
 str_fragment_tune:                      DC "TUNE", 0
 str_fragment_wheel:                     DC "WHEEL ", 0
 str_fragment_sus_key:                   DC "SUS-KEY P ", 0
-str_fragment_ready:                     DC " ready?", 0
+str_fragment_ready:                     DC "ready?", 0
 
 STR_FRAGMENT_OFFSET_ALG                 EQU (str_fragment_alg - #string_fragment_offset_start)
 STR_FRAGMENT_OFFSET_AMP                 EQU (str_fragment_amp - #string_fragment_offset_start)

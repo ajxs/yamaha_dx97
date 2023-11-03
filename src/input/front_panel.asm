@@ -17,6 +17,7 @@
 ; ==============================================================================
 ; INPUT_READ_FRONT_PANEL
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xDBD4
 ; DESCRIPTION:
 ; This subroutine reads the key/switch scan driver to get the state of the
 ; synth's front-panel swith input.
@@ -141,7 +142,7 @@ input_read_front_panel_source_updated:          SUBROUTINE
 ; ==============================================================================
 ; INPUT_READ_FRONT_PANEL_NUMERIC_SWITCHES
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDC03
 ; @PRIVATE
 ; DESCRIPTION:
 ; Scans a particular input line to update the numeric front-panel switches.
@@ -165,12 +166,6 @@ input_read_front_panel_source_updated:          SUBROUTINE
 ;
 ; ==============================================================================
 input_read_front_panel_numeric_switches:        SUBROUTINE
-; ==============================================================================
-; LOCAL TEMPORARY VARIABLES
-; ==============================================================================
-.updated_input_source:                          EQU #temp_variables
-
-; ==============================================================================
 ; Shift the source left 3 times to create an offset so that the buttons can be
 ; grouped sequentially in groups of 8.
 ; i.e: Front-panel button 1 has value '8', and is read by input source 1.
@@ -208,24 +203,24 @@ input_read_front_panel_numeric_switches:        SUBROUTINE
 ; It's not particularly necessary to understand the logic here. The aim of this
 ; code is simply to transform the result read from the key/switch scan driver
 ; into the appropriate button code for the firmware.
-    CLR     .updated_input_source
+    CLR     updated_input_source
 
 ; Rotate the updated source right, incrementing the result source byte so it
 ; becomes an offset from the previously created base.
 .convert_source_to_offset_loop:
-    INC     .updated_input_source
+    INC     updated_input_source
     LSRA
     BCC     .convert_source_to_offset_loop
 
     PULB
-    ADDB    .updated_input_source
+    ADDB    updated_input_source
     CLRA
 
 ; Recreate the input line bitmask, and store it.
     SEC
 .create_bitmask_loop:
     ROLA
-    DEC     .updated_input_source
+    DEC     updated_input_source
     BNE     .create_bitmask_loop
 
     ORAA    0,x

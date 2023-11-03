@@ -23,22 +23,16 @@
 ;
 ; ==============================================================================
 tape_input_patch:                               SUBROUTINE
-; ==============================================================================
-; LOCAL TEMPORARY VARIABLES
-; ==============================================================================
-.tape_input_byte_counter:                       EQU #temp_variables
-
-; ==============================================================================
     LDX     #patch_buffer_incoming
     LDAB    #67
-    STAB    .tape_input_byte_counter
+    STAB    tape_byte_counter
     JSR     tape_input_pilot_tone
 
 .input_byte_loop:
     JSR     tape_input_byte
     STAA    0,x
     INX
-    DEC     .tape_input_byte_counter
+    DEC     tape_byte_counter
     BNE     .input_byte_loop
 
     RTS
@@ -56,7 +50,7 @@ tape_input_pilot_tone:                          SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
-.tape_input_pilot_tone_counter:                 EQU #temp_variables + 1
+.tape_input_pilot_tone_counter:                 EQU #temp_variables
 
 ; ==============================================================================
     PSHA
@@ -138,9 +132,9 @@ tape_input_read_pulse:                          SUBROUTINE
     RTS
 
 .read_aborted:
-; Set the tape error flag.
+; Set the tape function aborted flag.
     LDAA    #1
-    STAA    <tape_error_flag
+    STAA    <tape_function_aborted_flag
 
 ; Add '8' to the stack to exit the tape read functionality.
     TSX
@@ -173,7 +167,7 @@ tape_input_byte:                                SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
-.tape_input_byte_result:                        EQU #temp_variables + 1
+.tape_input_byte_result:                        EQU #temp_variables
 
 ; ==============================================================================
     PSHB
@@ -273,29 +267,5 @@ tape_input_delay:                               SUBROUTINE
     INCB
     CMPB    <tape_input_delay_length
     BCS     tape_input_delay
-
-    RTS
-
-
-; ==============================================================================
-; TAPE_PRINT_ERROR_AND_WAIT_FOR_RETRY
-; ==============================================================================
-; @TODO
-; ==============================================================================
-tape_print_error_and_wait_for_retry:            SUBROUTINE
-    LDX     #lcd_buffer_next_line_2
-    STX     <memcpy_ptr_dest
-
-    LDX     #str_error
-    JSR     lcd_strcpy
-    JSR     lcd_update
-
-    JSR     tape_remote_output_low
-; Falls-through below.
-
-tape_wait_for_input_and_retry:                  SUBROUTINE
-    JSR     input_read_front_panel
-    TSTB
-    BEQ     tape_wait_for_input_and_retry
 
     RTS

@@ -15,7 +15,7 @@
 ; ==============================================================================
 ; JUMPOFF
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDC32
 ; DESCRIPTION:
 ; This subroutine pops a reference to a jump-table from the subroutine's
 ; return pointer on the stack, then unconditionally 'jumps' to the relative
@@ -61,7 +61,7 @@ jumpoff:                                        SUBROUTINE
 ; ==============================================================================
 ; JUMPOFF_INDEXED_FROM_ACCA
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDC46
 ; DESCRIPTION:
 ; Jumps to a relative function offset loaded from a relative offset
 ; supplied in the ACCA register argument.
@@ -84,7 +84,7 @@ jumpoff_indexed_from_acca:
 ; ==============================================================================
 ; JUMPOFF_INDEXED
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDC4B
 ; DESCRIPTION:
 ; Jumps to a relative function offset loaded from a relative offset
 ; supplied in the ACCB register argument.

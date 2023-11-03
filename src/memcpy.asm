@@ -16,7 +16,7 @@
 ; ==============================================================================
 ; MEMCPY_STORE_DEST_AND_COPY_ACCB_BYTES
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDC54
 ; DESCRIPTION:
 ; This subroutine is used throughout the DX9 firmware to set the destination,
 ; and then begin the copy procedure.
@@ -35,7 +35,7 @@ memcpy_store_dest_and_copy_accb_bytes:          SUBROUTINE
 ; ==============================================================================
 ; MEMCPY
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDC56
 ; DESCRIPTION:
 ; Copies ACCB bytes from the address in the source pointer to the address in
 ; the destination pointer.

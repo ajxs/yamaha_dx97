@@ -86,7 +86,8 @@ voice_add_index:                                DS 1
 
 tape_input_polarity_previous:                   DS 1
 tape_input_delay_length:                        DS 1
-tape_error_flag:                                DS 1
+; This flag is set when a particular tape function is aborted by the user.
+tape_function_aborted_flag:                     DS 1
 
 portamento_rate_scaled:                         DS 1
 
@@ -195,6 +196,10 @@ test_button_input:                              EQU #midi_sysex_byte_count_lsb_p
 ; processed with each iteration. This variable controls which half.
 portamento_voice_toggle:                        DS 1
 
+tape_byte_counter:                              DS 1
+tape_input_selected_patch_index:                DS 1
+updated_input_source:                           DS 1
+
 ; Temporary variables used in the various interrupt routines.
 ; Refer to the documentation of 'temp_variables'.
 interrupt_temp_variables:                       DS 18
@@ -216,8 +221,8 @@ patch_buffer:                                   DS PATCH_BUFFER_SIZE_BYTES
 patch_buffer_incoming:                          DS PATCH_SIZE_PACKED_DX7
 
 ; Patches input via the cassette interface shared the incoming patch buffer,
-; bute are only 64 bytes in size, followed by 3 bytes for the counter, and
-; checksum.
+; but are only 64 bytes in size, followed by one byte for the counter, and two
+; bytes for the checksum.
 patch_tape_counter:                             EQU (#patch_buffer_incoming + 64)
 patch_tape_checksum:                            EQU (#patch_buffer_incoming + 65)
 
