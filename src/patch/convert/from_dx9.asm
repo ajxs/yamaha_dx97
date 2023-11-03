@@ -24,12 +24,6 @@
 ; PATCH_CONVERT_FROM_DX9_FORMAT
 ; =============================================================================
 patch_convert_from_dx9_format:                  SUBROUTINE
-; ==============================================================================
-; LOCAL TEMPORARY VARIABLES
-; ==============================================================================
-.temp_variable:                                 EQU #temp_variables + 6
-
-; ==============================================================================
 ; Convert each operator.
     LDAB    #4
 
@@ -78,15 +72,14 @@ patch_convert_from_dx9_format:                  SUBROUTINE
 ; Combine the keyboard rate scaling, and detune bytes.
     PSHA
     ANDA    #%111
-    STAA    .temp_variable
 
     ASLB
     ASLB
     ASLB
-    ADDB    .temp_variable
+    ABA
 
     LDX     <memcpy_ptr_dest
-    STAB    0,x
+    STAA    0,x
 
 ; Store the Amp Mod Sens byte. The DX9 doesn't store any key velocity
 ; sensitivity, so this field remains clear.

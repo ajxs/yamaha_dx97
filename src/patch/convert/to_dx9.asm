@@ -6,18 +6,23 @@
 ; ==============================================================================
 ; patch/convert/to_dx9.asm
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE: 0xF698
+; @TAKEN_FROM_DX9_FIRMWARE:0xF698
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Converts a DX7 bulk packed patch (128 bytes) to the equivalent
 ; DX9 format (64 bytes).
+; @NOTE: Due to the likelihood of incompatible algorithm, and operator
+; combinations, there is no guarantee that a functional patch will be produced.
+; In the original DX9 firmware, if an equivalent algorithm cannot be found,
+; the conversion routine would be cancelled. In this ROM, a default
+; value of '0' for the algorithm is selected. This is due to the relatively
+; higher likelihood that an incompatible algorithm from a DX7 patch could be
+; selected.
 ;
 ; ARGUMENTS:
 ; Memory:
 ; * memcpy_ptr_src: The source patch in DX7 format.
 ; * memcpy_ptr_dest: The destination buffer to store the converted patch in.
-;
-; RETURNS:
-; The carry bit is set in the case of a failure in the conversion process.
 ;
 ; ==============================================================================
 
@@ -48,16 +53,14 @@ patch_convert_to_dx9_format:                    SUBROUTINE
     CMPB    #8
     BCS     .convert_algorithm_loop
 
-; If the correct algorithm cannot be found, set the carry flag to
-; indicate the error state, and exit.
-    SEC
-    BRA     .exit
+; If the correct algorithm cannot be found, select a value of '0' as a default.
+    LDAB    #0
 
 .store_algorithm:
     LDX     <memcpy_ptr_dest
     STAB    PATCH_DX9_PACKED_ALGORITHM,x
 
-; Convert each operator.
+; Convert the first 4 operators.
     LDAB    #4
 
 .convert_operator_loop:
@@ -66,16 +69,16 @@ patch_convert_to_dx9_format:                    SUBROUTINE
 ; Copy first 8 bytes (Operator EG).
     LDAB    #8
     JSR     memcpy
-    STX     <memcpy_ptr_dest
-    LDX     <memcpy_ptr_src
 
 ; Load breakpoint right depth, and store.
+    LDX     <memcpy_ptr_src
     LDAA    2,x
+
     LDX     <memcpy_ptr_dest
     STAA    0,x
-    LDX     <memcpy_ptr_src
 
 ; Load oscillator rate scale.
+    LDX     <memcpy_ptr_src
     LDAA    4,x
     ANDA    #%111
 
@@ -120,6 +123,8 @@ patch_convert_to_dx9_format:                    SUBROUTINE
     LDX     <memcpy_ptr_dest
     LDAB    #6
     ABX
+    STX     <memcpy_ptr_dest
+
     PULB
 
 ; Decrement the operator index.
@@ -163,12 +168,9 @@ patch_convert_to_dx9_format:                    SUBROUTINE
 
 .store_transpose:
 ; Store the key transpose value.
-; Clear the carry bit to indicate the patch has been successfully parsed.
     LDX     <memcpy_ptr_dest
     STD     0,x
-    CLC
 
-.exit:
     RTS
 
 
