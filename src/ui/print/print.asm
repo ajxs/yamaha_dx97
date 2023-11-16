@@ -320,6 +320,7 @@ ui_print_function_mode:                         SUBROUTINE
 ; If the 'TEST MODE ENTRY' prompt is active, print this message and exit.
     CMPB    #BUTTON_TEST_ENTRY_COMBO
     BNE     .print_header
+
     LDX     #str_test_mode_prompt
     JSR     lcd_strcpy
     JMP     lcd_update
@@ -386,7 +387,7 @@ ui_print_parameter:                             SUBROUTINE
 ; Test the value of the Edit Button 5 sub-status.
 ; 0 = Algorithm, 1 = Feedback.
     TST     ui_btn_edit_5_sub_function
-    BEQ     .test_if_param_is_printable
+    BEQ     .print_parameter_name
 
 .is_edit_button_9:
     CMPB    #BUTTON_EDIT_9 - 4
@@ -416,9 +417,8 @@ ui_print_parameter:                             SUBROUTINE
     LDAB    #39
     BRA     .print_parameter_name
 
-; Increment the triggering button number to get the string pointer.
-
 .increment_and_print:
+; Increment the triggering button number to get the string pointer.
     INCB
     BRA     .test_if_param_is_printable
 
@@ -430,7 +430,7 @@ ui_print_parameter:                             SUBROUTINE
 ; Test the value of the Edit Button 14 sub-status.
 ; 0 = Detune, 1 = Oscillator Sync.
     LDAA    ui_btn_edit_14_sub_function
-    BEQ     .test_if_param_is_printable
+    BEQ     .print_parameter_name
 
     CMPA    #1
     BEQ     .parameter_osc_key_sync
@@ -452,7 +452,7 @@ ui_print_parameter:                             SUBROUTINE
 ; Test the value of the Function Button 4 sub-status.
 ; 0 = Portamento Mode, 1 = Glissando Enabled.
     LDAA    ui_btn_function_4_sub_function
-    BEQ     .test_if_param_is_printable
+    BEQ     .print_parameter_name
 
 ; Load the string table offset for 'Glissando'.
     LDAB    #45
@@ -466,7 +466,7 @@ ui_print_parameter:                             SUBROUTINE
 ; Test the value of the Function Button 6 sub-status.
 ; 0 = MIDI Channel, 1 = Sys Info, 2 = MIDI Transmit.
     LDAA    ui_btn_function_6_sub_function
-    BEQ     .test_if_param_is_printable
+    BEQ     .print_parameter_name
 
     CMPA    #1
     BNE     .print_midi_transmit
@@ -488,7 +488,7 @@ ui_print_parameter:                             SUBROUTINE
 ; Test the value of the Function Button 7 sub-status.
 ; 0 = Save Tape, 1 = Verify Tape.
     TST     ui_btn_function_7_sub_function
-    BEQ     .test_if_param_is_printable
+    BEQ     .print_parameter_name
 
 ; Load the string table offset for 'VERIFY TAPE ?'.
     LDAB    #42
@@ -502,7 +502,7 @@ ui_print_parameter:                             SUBROUTINE
 ; Test the value of the Function Button 19 sub-status.
 ; 0 = Edit Recall, 1 = Voice Init, 2 = Battery Voltage.
     LDAA    ui_btn_function_19_sub_function
-    BEQ     .test_if_param_is_printable
+    BEQ     .print_parameter_name
 
     DECA
     BNE     .print_battery_voltage
@@ -517,7 +517,7 @@ ui_print_parameter:                             SUBROUTINE
     BRA     .print_parameter_name
 
 .test_if_param_is_printable:
-; If the string offset number is over 44, the param is not printable.
+; If the string offset number is over 46, the param is not printable.
 ; In this case, clear ACCB.
     CMPB    #46
     BCS     .print_parameter_name

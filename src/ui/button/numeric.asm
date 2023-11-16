@@ -621,12 +621,13 @@ ui_button_edit_get_active_parameter_address:    SUBROUTINE
 ui_button_function_4:                           SUBROUTINE
 ; If this button has been pressed twice in succession, cycle the sub-function.
     CMPB    ui_btn_numeric_last_pressed
-    BNE     ui_button_function_set_active_parameter
+    BNE     .set_active_parameter
 
     TOGGLE_BUTTON_SUB_FUNCTION ui_btn_function_4_sub_function
 
     TBA
 
+.set_active_parameter:
     TST     ui_btn_function_4_sub_function
     BEQ     ui_button_function_set_active_parameter
 

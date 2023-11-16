@@ -261,7 +261,7 @@ ui_print_parameter_value_mono_poly:             SUBROUTINE
 ; * memcpy_pointer_dest: The destination in memory to copy the string to.
 ;
 ; ==============================================================================
-ui_lcd_copy_and_update:
+ui_lcd_copy_and_update:                         SUBROUTINE
     JSR     lcd_strcpy
     JMP     lcd_update
 
