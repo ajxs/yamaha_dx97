@@ -117,8 +117,8 @@ input_read_front_panel_source_updated:          SUBROUTINE
 
 ; Test whether input line 0, bit 4 has changed.
 ; Branch if a button other than 'Store' was pushed.
-    ANDA    #%100
     EORA    0,x
+    ANDA    #%100
     PULA
     BEQ     input_read_front_panel_numeric_switches
 
