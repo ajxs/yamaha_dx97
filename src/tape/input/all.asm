@@ -55,12 +55,12 @@ tape_input_all:                                 SUBROUTINE
 
     LDAA    tape_patch_index
     CMPA    patch_tape_counter
-    BNE     .print_error
+    BNE     .print_error_message
 
 ; Calculate the checksum of the received patch, compare against the received checksum.
     JSR     tape_calculate_patch_checksum
     SUBD    patch_tape_checksum
-    BNE     .print_error
+    BNE     .print_error_message
 
 ; Set up the source, and destination pointers for patch conversion.
     LDX     #patch_buffer_incoming
@@ -142,7 +142,7 @@ tape_input_all:                                 SUBROUTINE
     INS
     JMP     main_input_handler_dispatch
 
-.print_error:
+.print_error_message:
     JSR     tape_print_error_and_wait_for_retry
 
     JMP     tape_input_all

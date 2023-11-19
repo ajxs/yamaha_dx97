@@ -177,8 +177,8 @@ handler_ocf_compare_mode_led_blink:             SUBROUTINE
 ;
 ; ==============================================================================
 handler_ocf:                                    SUBROUTINE
-    CLRA
-    STAA    <timer_ctrl_status
+    CLR     <timer_ctrl_status
+
 ; Clear the OCF interrupt flag by reading from the timer control register.
     LDAA    <timer_ctrl_status
 

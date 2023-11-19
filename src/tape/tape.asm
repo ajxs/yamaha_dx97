@@ -225,6 +225,8 @@ tape_input_reset:                               SUBROUTINE
 ; This routine is called when any of the cassette interface routines
 ; encounter an error state. It prints an error message string to the LCD, and
 ; then polls the user for input to proceed.
+; This has been adapted from the wait loop that appears at 0xEBD1 in the
+; DX9 ROM, among other places.
 ;
 ; ==============================================================================
 tape_print_error_and_wait_for_retry:            SUBROUTINE
@@ -270,7 +272,7 @@ tape_exit:                                      SUBROUTINE
 ; button being pressed which causes the function to proceed, or the 'No' button
 ; which will exit the tape UI function.
 ; ==============================================================================
-tape_wait_for_start_input:
+tape_wait_for_start_input:                      SUBROUTINE
 ; Read front-panel input to determine the next action.
 ; If 'No' is pressed, the tape UI actions are aborted.
 ; If 'Yes' is pressed, the operation proceeeds.

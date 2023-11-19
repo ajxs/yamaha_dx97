@@ -498,9 +498,15 @@ analog_input_breath_controller:                 EQU (#analog_input_current + 2)
 analog_input_slider:                            EQU (#analog_input_current + 3)
 analog_input_battery_voltage:                   EQU (#analog_input_current + 4)
 
+; This buffer stores the LCD screen's _current_ contents.
+; During writing the string buffer to the LCD, if the current char to be
+; written matches the one in there, the character copy process is skipped.
 lcd_buffer_current:                             DS 32
 lcd_buffer_current_end:                         EQU *
 
+; This buffer stores the LCD screen's _next_ contents.
+; These are the contents that will be printed to the LCD screen the next time
+; the LCD screen is updated.
 lcd_buffer_next:                                DS 32
 lcd_buffer_next_line_2:                         EQU (#lcd_buffer_next + 16)
 lcd_buffer_next_end:                            EQU *
