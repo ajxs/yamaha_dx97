@@ -125,7 +125,7 @@ handler_sci:                                    SUBROUTINE
     BRA     .handler_sci_exit
 
 .tx_buffer_empty:
-    LDAA    #(SCI_CTRL_TE | SCI_CTRL_RE | SCI_CTRL_RIE)
+    LDAA    #(SCI_CTRL_TE | SCI_CTRL_RE | SCI_CTRL_RIE | SCI_CTRL_TDRE)
     STAA    <sci_ctrl_status
     BRA     .handler_sci_exit
 

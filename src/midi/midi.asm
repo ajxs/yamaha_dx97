@@ -77,7 +77,7 @@ midi_init:                                      SUBROUTINE
     LDAA    #(RATE_MODE_CTRL_CC0 | RATE_MODE_CTRL_CC1)
     STAA    <rate_mode_ctrl
 
-    LDAA    #(SCI_CTRL_TE | SCI_CTRL_RE | SCI_CTRL_RIE)
+    LDAA    #(SCI_CTRL_TE | SCI_CTRL_RE | SCI_CTRL_RIE | SCI_CTRL_TDRE)
     STAA    <sci_ctrl_status
 
 ; Reading STATUS, then reading RECEIVE will clear Status[RDRF].
@@ -261,7 +261,7 @@ midi_tx:                                        SUBROUTINE
     STX     <midi_buffer_ptr_tx_write
 
 ; Enable TX, RX, TX interrupts, and RX interrupts.
-    LDAA    #(SCI_CTRL_TE | SCI_CTRL_RE | SCI_CTRL_TIE | SCI_CTRL_RIE)
+    LDAA    #(SCI_CTRL_TE | SCI_CTRL_TIE | SCI_CTRL_RE | SCI_CTRL_RIE | SCI_CTRL_TDRE)
     STAA    <sci_ctrl_status
 
     RTS
