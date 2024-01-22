@@ -43,7 +43,9 @@ tape_input_patch:                               SUBROUTINE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
-; @TODO
+; Reads the cassette interface 'pilot tone', played before each patch in the
+; cassette storage.
+; @TODO: This function needs more documentation to explain how it works.
 ;
 ; ==============================================================================
 tape_input_pilot_tone:                          SUBROUTINE
@@ -95,7 +97,7 @@ tape_input_pilot_tone:                          SUBROUTINE
 ; input interface.
 ; It polls the cassette input port, to test for the polarity changing,
 ; waiting until either the polarity changes, and the 'NO' button is pressed,
-; which aborts the proess.
+; which aborts the process.
 ;
 ; ARGUMENTS:
 ; Registers:

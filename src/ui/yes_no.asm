@@ -209,7 +209,7 @@ ui_yes_no_fn_btn_19:                            SUBROUTINE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
-; @TODO
+; Performs the Patch 'Initialise'/'Recall' user-interface functionality.
 ;
 ; ==============================================================================
 ui_patch_init_recall:                           SUBROUTINE

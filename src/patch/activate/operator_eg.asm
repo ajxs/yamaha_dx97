@@ -71,7 +71,9 @@ patch_activate_operator_eg_rate:                SUBROUTINE
 ; @TAKEN_FROM_DX7_FIRMWARE
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
-; @TODO
+; This function parses the patch's operator EG values, converting the
+; serialised values stored in the patch to the internal representation. It then
+; loads the parsed values to the EGS chip.
 ;
 ; ARGUMENTS:
 ; Memory:

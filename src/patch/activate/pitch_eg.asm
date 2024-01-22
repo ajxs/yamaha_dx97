@@ -88,8 +88,8 @@ patch_activate_pitch_eg:                        SUBROUTINE
 
 
 ; ==============================================================================
-; This is used to quantise the patch pitch EG rate values from
-; their serialised 0-99 range, to the 0-255 range of values required by the EGS.
+; This is used to scale the patch pitch EG rate values from
+; their serialised 0-99 range, to the 0-255 range used internally.
 ; ==============================================================================
 table_pitch_eg_rate:
     DC.B 1, 2, 3, 3, 4, 4, 5
@@ -114,7 +114,7 @@ table_pitch_eg_rate:
 
 
 ; ==============================================================================
-; This table is used to quantise the patch pitch EG level values from their
+; This table is used to scale the patch pitch EG level values from their
 ; 0-99 range,to the 0-255 range of values required for the final
 ; frequency calculation.
 ; ==============================================================================

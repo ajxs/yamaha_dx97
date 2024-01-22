@@ -174,7 +174,7 @@ midi_sysex_rx_active_flag:                      DS 1
 ; feature has been enabled.
 midi_active_sensing_tx_counter:                 DS 1
 ; When this flag is cleared, an active sensing message can be transmitted.
-midi_active_sensing_send_flag:                  DS 1
+midi_active_sensing_tx_pending_flag:            DS 1
 ; Decides whether the active sensing counter is enabled.
 midi_active_sensing_rx_counter_enabled:         DS 1
 midi_active_sensing_rx_counter:                 DS 1
@@ -347,7 +347,9 @@ pitch_eg_current_step:                          DS 16
 ; level.
 pitch_eg_current_frequency:                     DS 32
 
-; @TODO: Document this.
+; When a patch is loaded, the serialised pitch EG rate/level values are
+; converted into the format used internally to process the pitch EG, and stored
+; to these two buffers.
 ; The code depends on these two arrays being in this sequential order.
 pitch_eg_parsed_rate:                           DS 4
 pitch_eg_parsed_level:                          DS 4

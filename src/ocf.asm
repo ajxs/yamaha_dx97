@@ -89,7 +89,7 @@ active_sensing_update_tx_counter:               SUBROUTINE
 
 ; This CLRA/STRA combination is used to save CPU cycles.
     CLRA
-    STAA    <midi_active_sensing_send_flag
+    STAA    <midi_active_sensing_tx_pending_flag
     STAA    <midi_active_sensing_tx_counter
 
 .exit:
