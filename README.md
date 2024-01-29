@@ -6,6 +6,12 @@ DX9/7 is an alternative firmware ROM for the Yamaha DX9 synthesiser. Its aim is 
 
 This is not a patch for the existing DX9 firmware, it is an entirely new firmware ROM. It has been assembled from the original binary, together with code from the DX7's V1.8 ROM, as well as new code written from scratch.
 
+**Where to get the ROM**
+
+You can download the pre-compiled ROM binary from the [Releases](https://github.com/ajxs/yamaha_dx97) tab on the [Yamaha DX9/7 Github page](https://github.com/ajxs/yamaha_dx97/releases).
+For more information on how to install the ROM in your DX9, see the entry in the FAQ below.
+If you would like to try this firmware ROM, but you're unable to flash this ROM to an EPROM chip yourself, feel free to contact me (@ajxs) directly.
+
 ### New Features:
 * Makes the DX9 able to play DX7 patches.
 * Restores the use of all six operators.
@@ -34,8 +40,8 @@ The risk of any harm coming to your DX9 as a result of using this ROM is incredi
 * Despite this firmware making the DX9 patch-compatible with the DX7, it can't emulate *all* of the DX7's functionality. While your DX9 might think that it's actually a DX7, your patch editor might not be so easily fooled. Some SysEx functionality just can't be emulated in any reasonable way, such as triggering DX7-specific button-presses, and changes to the DX7-specific function parameters. This might cause issues communicating with some patch editors.
 Receiving individual/bulk patch dumps via SysEx *does* work, however. Every effort is being made to make the ROM as compatible as possible, however some discrepancies will inevitably remain.
 
-* In some cases pitch-bend input is updated at a slightly lower frequency than in the original ROM. If the pitch bend wheel is moved quickly this can result in a noticeable gradation in pitch transition. This is due to the pitch-bend input being processed as part of the main periodic timer interrupt. 
-In the DX7 the analog pitch-bend wheel is wired to the sub-CPU, and its input is read, and transmitted to the main CPU periodically. The input is parsed by the main CPU only when it is updated. In the DX9 the pitch-bend's analog input is wired directly to the CPU's I/O ports, and is parsed periodically as part of the OCF interrupt routine. This routine may be further optimised to mitigate this issue in the future.
+* In some cases pitch-bend input is updated at a slightly lower frequency than in the original ROM. If the pitch-bend wheel is moved quickly this can result in a noticeable gradation in the pitch transition. This is due to differences in how the DX7 and DX9 read the analog input from the pitch-bend wheel.
+In the DX7 the analog pitch-bend wheel input is read by the sub-CPU and transmitted to the main CPU periodically. The input is parsed by the main CPU only when it is updated. In the DX9 the pitch-bend's analog input is wired directly to the CPU's I/O ports, and is parsed periodically as part of the OCF interrupt routine. This routine may be further optimised to mitigate this issue in the future.
 
 ## Currently Not Implemented
 * Pitch-bend step
@@ -72,7 +78,7 @@ For more information refer to the `Makefile`.
 ## FAQ
 **Q: How do I install this new ROM in my DX9?**
 
-**A:** To install this new ROM, you'll need to flash the firmware onto an EPROM chip, and install it into your DX9 synthesiser in place of the DX9's original mask ROM chip.
+**A:** To install this new ROM, you'll need to write the firmware onto an EPROM chip, and install it into your DX9 synthesiser in place of the DX9's original mask ROM chip.
 According to the DX7/9 Service Manual, early model DX9s had the ROM installed on two 2764 series EPROM chips (IC4, and IC5), with later revisions using a single 27128-series EPROM. Replacement with a single EPROM chip socket will likely be necessary for installing a new ROM.
 Fortunately most DX9s feature a single socketed ROM chip which makes replacement much simpler. The firmware can be flashed to any 27128-series EPROM for installation.
 
