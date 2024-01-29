@@ -112,11 +112,11 @@ test_eg_op_load_next_test_stage:                SUBROUTINE
     JSR     voice_reset_frequency_data
 
 ; Load the test patch.
-    LDX     #test_eg_op_patch_buffer
     LDAB    <test_stage_sub_2
     LDAA    #PATCH_SIZE_PACKED_DX7
     MUL
-    ABX
+    ADDD    #test_eg_op_patch_buffer
+    XGDX
     JSR     patch_deserialise_to_edit_from_ptr_and_reload
     JSR     patch_activate
 
@@ -246,14 +246,6 @@ test_eg_op_patch_buffer:
 ; Operator 6.
     DEFAULT_OPERATOR
 ; Operator 5.
-    DEFAULT_OPERATOR
-; Operator 4.
-    DEFAULT_OPERATOR
-; Operator 3.
-    DEFAULT_OPERATOR
-; Operator 2.
-    DEFAULT_OPERATOR
-; Operator 1.
     DC.B $32
     DC.B $63
     DC.B $63
@@ -271,6 +263,47 @@ test_eg_op_patch_buffer:
     DC.B $63
     DC.B 2
     DC.B 0
+; Operator 4.
+    DC.B $32
+    DC.B $63
+    DC.B $63
+    DC.B $38
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B $38
+    DC.B 0
+    DC.B $63
+    DC.B 2
+    DC.B 0
+; Operator 3.
+    DC.B $32
+    DC.B $63
+    DC.B $63
+    DC.B $38
+    DC.B $63
+    DC.B $63
+    DC.B $63
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B 0
+    DC.B $38
+    DC.B 0
+    DC.B $63
+    DC.B 2
+    DC.B 0
+; Operator 2.
+    DEFAULT_OPERATOR
+; Operator 1.
+    DEFAULT_OPERATOR
+
 ; Pitch EG Rate.
     DC.B $63
     DC.B $63
@@ -282,7 +315,7 @@ test_eg_op_patch_buffer:
     DC.B $32
     DC.B $32
 ; Algorithm.
-    DC.B 7
+    DC.B 31
 ; Oscillator Key Sync/Feedback.
     DC.B 8
 ; LFO Speed.
@@ -304,10 +337,6 @@ test_eg_op_patch_buffer:
 ; Operator 5.
     DEFAULT_OPERATOR
 ; Operator 4.
-    DEFAULT_OPERATOR
-; Operator 3.
-    DEFAULT_OPERATOR
-; Operator 2.
     DC.B $43
     DC.B $32
     DC.B $20
@@ -325,7 +354,7 @@ test_eg_op_patch_buffer:
     DC.B $5B
     DC.B 2
     DC.B 0
-; Operator 1.
+; Operator 3.
     DC.B $63
     DC.B $63
     DC.B $63
@@ -343,6 +372,10 @@ test_eg_op_patch_buffer:
     DC.B $63
     DC.B 2
     DC.B 0
+; Operator 2.
+    DEFAULT_OPERATOR
+; Operator 1.
+    DEFAULT_OPERATOR
 ; Pitch EG Rate.
     DC.B $63
     DC.B $63
@@ -376,10 +409,6 @@ test_eg_op_patch_buffer:
 ; Operator 5.
     DEFAULT_OPERATOR
 ; Operator 4.
-    DEFAULT_OPERATOR
-; Operator 3.
-    DEFAULT_OPERATOR
-; Operator 2.
     DC.B $4B
     DC.B $36
     DC.B $23
@@ -397,7 +426,7 @@ test_eg_op_patch_buffer:
     DC.B $44
     DC.B 2
     DC.B 0
-; Operator 1.
+; Operator 3.
     DC.B $63
     DC.B $63
     DC.B $63
@@ -415,6 +444,10 @@ test_eg_op_patch_buffer:
     DC.B $63
     DC.B 2
     DC.B 0
+; Operator 2.
+    DEFAULT_OPERATOR
+; Operator 1.
+    DEFAULT_OPERATOR
 ; Pitch EG Rate.
     DC.B $63
     DC.B $63
@@ -426,7 +459,7 @@ test_eg_op_patch_buffer:
     DC.B $32
     DC.B $32
 ; Algorithm.
-    DC.B 2
+    DC.B 7
 ; Oscillator Key Sync/Feedback.
     DC.B $F
 ; LFO Speed.
