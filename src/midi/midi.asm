@@ -60,6 +60,8 @@ MIDI_CC_DATA_ENTRY                              EQU 6
 ; ==============================================================================
 ; MIDI_INIT
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xEF80
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Initialises the synth's MIDI interface.
 ; This sets up the SCI to enable interrupts, and initialises the synth's
@@ -225,7 +227,7 @@ midi_print_error_message:                       SUBROUTINE
 ; ==============================================================================
 ; MIDI_TX
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xEFB4
 ; DESCRIPTION:
 ; Pushes a MIDI message byte to the MIDI TX ring buffer.
 ; This message will be sent in the next SIO interrupt handler event.

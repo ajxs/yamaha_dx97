@@ -6,7 +6,7 @@
 ; ==============================================================================
 ; event.asm
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC410
 ; DESCRIPTION:
 ; This subroutine processes some of the synth's periodic events, as well as
 ; triggering the reloading of patch data to the voice chips based upon the

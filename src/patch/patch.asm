@@ -106,7 +106,7 @@ PATCH_INCOMING_BUFFER_INDEX                     EQU PATCH_BUFFER_COUNT
 ; ==============================================================================
 ; PATCH_OPERATOR_GET_PTR_TO_SELECTED
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDD9B
 ; DESCRIPTION:
 ; Gets a pointer to the selected operator's data in the patch edit buffer.
 ;
@@ -125,6 +125,7 @@ patch_operator_get_ptr_to_selected:             SUBROUTINE
 ; ==============================================================================
 ; PATCH_OPERATOR_GET_PTR
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xDD9E
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Gets a pointer to the specified operator's data in the patch edit buffer.
@@ -166,7 +167,7 @@ patch_operator_get_ptr:                         SUBROUTINE
 ; ==============================================================================
 ; PATCH_GET_PTR_TO_CURRENT
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDD89
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Gets a pointer to the currently selected patch in the synth's memory.
@@ -406,7 +407,7 @@ patch_operator_eg_copy:                         SUBROUTINE
 ; ==============================================================================
 ; PATCH_CONVERT_SERIALISED_VALUE_TO_INTERNAL
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD005
 ; DESCRIPTION:
 ; Scales a particular patch value from its serialised range of 0-99, to its
 ; scaled 16-bit representation. Returning the result in ACCD.

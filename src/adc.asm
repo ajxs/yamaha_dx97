@@ -27,7 +27,7 @@ ADC_SOURCE_BATTERY:                             EQU 4
 ; ==============================================================================
 ; ADC_SET_SOURCE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD912
 ; DESCRIPTION:
 ; Sets the code of the next A/D input source to be read by the synth's A/D
 ; converter circuitry.
@@ -50,7 +50,7 @@ adc_set_source:                                 SUBROUTINE
 ; ==============================================================================
 ; ADC_READ
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD93C
 ; DESCRIPTION:
 ; Reads data from the synth's analog/digital converter.
 ; This subroutine is part of the larger 'ADC_PROCESS' routine. The source from
@@ -75,7 +75,7 @@ adc_read:                                       SUBROUTINE
 ; ==============================================================================
 ; ADC_UPDATE_INPUT_SOURCE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD919
 ; DESCRIPTION:
 ; This subroutine updates a particular analog input source.
 ; It reads an individual input source, then tests to see how much the source
@@ -161,7 +161,7 @@ adc_update_input_source:                        SUBROUTINE
 ; ==============================================================================
 ; ADC_PROCESS
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC37D
 ; DESCRIPTION:
 ; Processes the synth's analog input.
 ; This subroutine will process the currently selected analog input source,

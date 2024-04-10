@@ -396,11 +396,13 @@ handler_reset:                                  SUBROUTINE
 ; Synth firmware executive main loop.
 ; This is where the bulk of the synth's functionaly is implemented.
 ; The keyboard, and pedal input are first scanned here. Unlike other Yamaha
-; FM synthesisers, the 'Note On', and 'Note Off' functionaliy is implemented
-; via a flag set in the keyboard scan routine. This flag records whether a
-; key on, or off event has occurred, and which key triggered it. After the
-; input scan routine is completed, the 'Note On', and 'Note Off' handlers are
-; invoked. which check this flag, and action key events accordingly.
+; FM synthesisers, the DX9's 'Note On', and 'Note Off' functionaliy
+; are implemented via a flag set in the keyboard scan routine.
+; This flag records whether a key on, or off event has occurred, and which key
+; triggered it. After the input scan routine is completed, the keyboard event
+; handler is invoked. This checks this flag, and actions key events accordingly.
+; In the DX7 the keyboard event handling routines are triggered inside the
+; main IRQ handler, which reads the physical keyboard input.
 ;
 ; ==============================================================================
 main_loop:

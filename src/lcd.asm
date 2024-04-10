@@ -38,7 +38,7 @@ LCD_SET_POSITION:                               EQU 1 << 7
 ; ==============================================================================
 ; LCD_WAIT_FOR_READY
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDDFB
 ; DESCRIPTION:
 ; Polls the LCD controller until it returns a status indicating that it is
 ; ready to accept new data.
@@ -53,7 +53,7 @@ lcd_wait_for_ready:                             SUBROUTINE
 ; ==============================================================================
 ; LCD_UPDATE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDE01
 ; DESCRIPTION:
 ; Updates the LCD screen with the contents of the LCD 'Next Contents' buffer.
 ; This compares the next contents against the current contents to determine
@@ -136,7 +136,7 @@ lcd_update:                                     SUBROUTINE
 ; ==============================================================================
 ; LCD_CLEAR_LINE_2
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Clears the second line of the LCD (next) buffer.
 ;
@@ -158,6 +158,7 @@ lcd_clear_line_2:                               SUBROUTINE
 ; ==============================================================================
 ; LCD_CLEAR
 ; ==============================================================================
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Clears the LCD (next) buffer.
 ;
@@ -202,6 +203,8 @@ lcd_fill_chars:                                 SUBROUTINE
 ; ==============================================================================
 ; LCD_INIT
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xDAE7
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Initialises the synth's LCD screen, and the LCD 'current contents' buffer.
 ;
@@ -265,12 +268,12 @@ lcd_init:                                       SUBROUTINE
 ; ==============================================================================
 ; LCD_STRCPY
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDDD8
 ; DESCRIPTION:
 ; Prints either a null-terminated string, or string sequence to a destination
 ; string buffer.
 ; The DX9 firmware supports the idea of a 'String Sequence', consisting of a
-; series off offsets from an arbitrary location stored with the string. If
+; series of offsets from an arbitrary location stored with the string. If
 ; these are encountered, a new string will be recursively loaded from this
 ; relative position, and printed until a terminating null character is found.
 ; This supports combining a series of strings into a sequence.
@@ -330,7 +333,7 @@ lcd_strcpy:                                     SUBROUTINE
 ; ==============================================================================
 ; LCD_STORE_CHARACTER_AND_INCREMENT_POINTER
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDDF1
 ; DESCRIPTION:
 ; Copies an individual character to the address stored in the memcpy
 ; destination pointer, then increments and stores the pointer. This routine is
@@ -364,7 +367,7 @@ lcd_store_character_and_increment_ptr:          SUBROUTINE
 ; ==============================================================================
 ; LCD_PRINT_NUMBER_THREE_DIGITS
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDDA9
 ; DESCRIPTION:
 ; Prints a number with three digits to a string buffer.
 ; This subroutine will print the most-significant digit, and automatically
@@ -388,7 +391,7 @@ lcd_print_number_three_digits:                  SUBROUTINE
 ; ==============================================================================
 ; LCD_PRINT_NUMBER_TWO_DIGITS
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDDB0
 ; DESCRIPTION:
 ; Prints a number with two digits to a string buffer.
 ; This subroutine will print the most-significant digit, and automatically
@@ -412,7 +415,7 @@ lcd_print_number_two_digits:                    SUBROUTINE
 ; ==============================================================================
 ; LCD_PRINT_NUMBER_SINGLE_DIGIT
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDDB6
 ; DESCRIPTION:
 ; Prints a single digit number to a string buffer.
 ;
@@ -434,7 +437,7 @@ lcd_print_number_single_digit:                  SUBROUTINE
 ; ==============================================================================
 ; LCD_PRINT_NUMBER_GET_DIGIT
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDDBB
 ; DESCRIPTION:
 ; This subroutine converts one digit of a number to its ASCII equivalent.
 ; This is used as part of the 'lcd_print_number' routines.
@@ -477,7 +480,6 @@ lcd_print_number_get_digit:                     SUBROUTINE
 
 ; Is the number in ACCA less than the divisor?
 ; This tests whether the remaining number is divisible by the divisor.
-
 .is_number_divisable:
     CMPA    <lcd_print_number_divisor
     BCS     .is_number_zero

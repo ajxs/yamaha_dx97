@@ -13,14 +13,14 @@
     .PROCESSOR HD6303
 
 ; The period between the synth's periodic interrupts.
-; This value is taken from the DX7 ROM.
+; This value is taken from the DX9 ROM.
 SYSTEM_TICK_PERIOD:                             EQU 3140
 
 
 ; ==============================================================================
 ; ACTIVE_SENSING_TEST_FOR_TIMEOUT
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD8AA
 ; @CHANGED_FOR_6_OP
 ; @NEEDS_TESTING
 ; @PRIVATE
@@ -63,9 +63,9 @@ active_sensing_test_for_timeout:             SUBROUTINE
 
 
 ; ==============================================================================
-; ACTIVE_SENSING_UPDATE_COUNTER
+; ACTIVE_SENSING_UPDATE_TX_COUNTER
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD89B
 ; @PRIVATE
 ; DESCRIPTION:
 ; This subroutine is run as part of the periodic 'OCF' interrupt.
@@ -84,7 +84,7 @@ active_sensing_update_tx_counter:               SUBROUTINE
 
 ; Test whether this counter byte has reached 64.
 ; If so, clear.
-    TIMD   #%1000000, midi_active_sensing_tx_counter
+    TIMD    #%1000000, midi_active_sensing_tx_counter
     BEQ     .exit
 
 ; This CLRA/STRA combination is used to save CPU cycles.
@@ -99,7 +99,7 @@ active_sensing_update_tx_counter:               SUBROUTINE
 ; ==============================================================================
 ; HANDLER_OCF_COMPARE_MODE_LED_BLINK
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD875
 ; DESCRIPTION:
 ; Facilitates the 'blinking' of the LED panel when the synth is in 'compare
 ; patch' mode.
@@ -155,7 +155,7 @@ handler_ocf_compare_mode_led_blink:             SUBROUTINE
 ; ==============================================================================
 ; HANDLER_OCF
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC7B3
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Handles the OCF (Output Compare Counter) timer interrupt (IRQ2).

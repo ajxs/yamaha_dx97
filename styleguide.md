@@ -2,17 +2,13 @@
 
 ## File Header
 
-If you are adding a new file to the project, please add this header with the GPL3 license. Feel free to add your own details to the copyright notice.
+If you are adding a new file to the project, please add this header with the GPL3 license SPDX identifier string. Feel free to add your own details to the copyright notice.
 
 	; ==============================================================================
 	; YAMAHA DX9/7 FIRMWARE
 	; Copyright (C) 2022 AJXS (https://ajxs.me/)
 	;
-	; This program is free software: you can redistribute it and/or modify
-	; it under the terms of the GNU General Public License as published by
-	; the Free Software Foundation, either version 3 of the License, or
-	; (at your option) any later version.
-	;
+	; SPDX-License-Identifier: GPL-3.0-or-later
 	; ==============================================================================
 	; filename.asm
 	; ==============================================================================

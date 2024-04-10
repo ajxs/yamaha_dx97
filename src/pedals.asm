@@ -24,7 +24,7 @@ PEDAL_INPUT_SUSTAIN:                            EQU 1 << 7
 ; ==============================================================================
 ; PEDALS_UPDATE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD8DD
 ; DESCRIPTION:
 ; Updates the status of whether the synth's sustain, and portamento pedals are
 ; currently being pressed.

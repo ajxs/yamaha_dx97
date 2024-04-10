@@ -54,6 +54,8 @@ copy_ptr_src:                                   DS 2
 copy_ptr_dest:                                  DS 2
 copy_counter:                                   DS 1
 
+; When this flag is set the next keypress event will be used to set the
+; synth's key transpose.
 key_transpose_set_mode_active:                  DS 1
 
 keyboard_last_scanned_values:                   DS 12

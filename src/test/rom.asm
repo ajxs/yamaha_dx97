@@ -17,7 +17,7 @@
 ; ==============================================================================
 ; TEST_ROM
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xFD4D
 ; DESCRIPTION:
 ; The entry subroutine to the ROM diagnostic tests.
 ;
@@ -46,7 +46,7 @@ test_rom:                                       SUBROUTINE
 ; ==============================================================================
 ; TEST_ROM_INIT
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xFD58
 ; DESCRIPTION:
 ; This subroutine initialises the test stage variables used in the ROM test
 ; stage.
@@ -68,7 +68,7 @@ test_rom_init:                                  SUBROUTINE
 ; ==============================================================================
 ; TEST_ROM_GET_BLOCK_CHECKSUM
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xFD68
 ; DESCRIPTION:
 ; Calculates the checksum for a 256 byte 'block' of the ROM binary.
 ; This checksum is calculated by summing the individual bytes in the block,

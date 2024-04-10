@@ -86,7 +86,7 @@ ui_button_check_test_mode_combination:          SUBROUTINE
 ; ==============================================================================
 ; UI_BUTTON_CHECK_TEST_MODE_BUTTON_FUNCTION
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xE1A4
 ; @PRIVATE
 ; DESCRIPTION:
 ; Tests whether the 'Function' button is currently being pressed, as part of
@@ -114,7 +114,7 @@ ui_button_check_test_mode_button_function:      SUBROUTINE
 ; ==============================================================================
 ; UI_BUTTON_CHECK_TEST_MODE_BUTTON_10
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xE1B1
 ; @PRIVATE
 ; DESCRIPTION:
 ; Tests whether the '10' button is currently being pressed, as part of

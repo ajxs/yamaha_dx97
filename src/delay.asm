@@ -15,7 +15,7 @@
 ; ==============================================================================
 ; DELAY
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD000
 ; DESCRIPTION:
 ; Creates an artificial 'delay' in the system by pushing, and pulling from the
 ; stack.

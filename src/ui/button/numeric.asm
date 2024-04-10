@@ -812,6 +812,7 @@ ui_button_function_set_active_parameter:        SUBROUTINE
 ; ==============================================================================
 ; UI_LOAD_ACTIVE_PARAM_PTR_AND_MAX_VALUE
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xE100
 ; DESCRIPTION:
 ; Loads the active edit parameter pointer, and max value.
 ;
@@ -824,6 +825,7 @@ ui_load_active_param_ptr_and_max_value:         SUBROUTINE
 ; ==============================================================================
 ; UI_CHECK_EDIT_PARAMETER_AGAINST_MAX_VALUE
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xE106
 ; DESCRIPTION:
 ; Validates the currently selected 'edit parameter' against its maximum
 ; allowed value. If it has exceeded the maximum value, reset it to '0'.

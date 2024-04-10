@@ -67,7 +67,7 @@ tape_remote_toggle_output_polarity:             SUBROUTINE
 ; ==============================================================================
 ; TAPE_REMOTE_OUTPUT_SIGNAL
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDACF
 ; DESCRIPTION:
 ; Sets the tape 'remote' output port's polarity to either high, or low, based
 ; upon the remote port polarity global variable.
@@ -87,7 +87,7 @@ tape_remote_output_signal:                      SUBROUTINE
 ; ==============================================================================
 ; TAPE_REMOTE_OUTPUT_HIGH
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDAD6
 ; DESCRIPTION:
 ; Sets the tape 'remote' output port's polarity to 'HIGH'.
 ;
@@ -105,7 +105,7 @@ tape_remote_output_high_signal:
 ; ==============================================================================
 ; TAPE_REMOTE_OUTPUT_LOW
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDADF
 ; DESCRIPTION:
 ; Sets the tape 'remote' output port's polarity to 'LOW'.
 ;

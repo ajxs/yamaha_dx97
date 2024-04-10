@@ -16,7 +16,7 @@
 ; ==============================================================================
 ; UI_YES_NO
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC3CF
 ; DESCRIPTION:
 ; Handles user input when the button pressed was 'Yes', or 'No'.
 ;
@@ -70,7 +70,7 @@ ui_yes_no_exit_numeric_parameter:
 ; ==============================================================================
 ; UI_YES_NO_FN_BTN_6
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xE300
 ; DESCRIPTION:
 ; 'Yes/No' button handler when the synth is in function mode, and the previous
 ; front-panel button press was button '6'.
@@ -103,7 +103,7 @@ ui_yes_no_fn_btn_6:                             SUBROUTINE
 ; ==============================================================================
 ; UI_YES_NO_FN_BTN_7_8_9
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xE310
 ; DESCRIPTION:
 ; 'Yes/No' button handler when the synth is in function mode, and the previous
 ; front-panel button press was button '7', '8', or '9'.
@@ -146,7 +146,7 @@ ui_yes_no_fn_btn_7_8_9:                         SUBROUTINE
 ; ==============================================================================
 ; UI_YES_NO_FN_BTN_19
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xE32B
 ; DESCRIPTION:
 ; 'Yes/No' button handler when the synth is in function mode, and the previous
 ; front-panel button press was button '19'.
@@ -207,7 +207,7 @@ ui_yes_no_fn_btn_19:                            SUBROUTINE
 ; ==============================================================================
 ; UI_PATCH_INIT_RECALL
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xE1C0
 ; DESCRIPTION:
 ; Performs the Patch 'Initialise'/'Recall' user-interface functionality.
 ;
@@ -241,7 +241,7 @@ ui_patch_init_recall:                           SUBROUTINE
 ; ==============================================================================
 ; UI_YES_NO_TEST_ENTRY
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xE356
 ; DESCRIPTION:
 ; 'Yes/No' button handler when the synth is presenting the 'Test Mode' entry
 ; prompt. The 'Yes' button will initiate the synth's diagnosic mode.
