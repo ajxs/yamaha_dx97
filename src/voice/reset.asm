@@ -30,7 +30,7 @@ voice_reset:                                    SUBROUTINE
 ; ==============================================================================
 ; VOICE_RESET_FREQUENCY_DATA
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD00F
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Resets the synth's internal voice frequency data.
@@ -82,7 +82,7 @@ voice_reset_frequency_data:                     SUBROUTINE
 ; ==============================================================================
 ; VOICE_RESET_EGS
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD030
 ; DESCRIPTION:
 ; Resets all voices on the EGS chip.
 ; This involves resetting all of the operators to their default, maximum level,
@@ -115,10 +115,9 @@ voice_reset_egs:                                SUBROUTINE
 ; ==============================================================================
 ; VOICE_RESET_EGS_OPERATOR_LEVEL
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD045
 ; DESCRIPTION:
-; @TODO
-; Resets the level of each of the synth's four operators to their default
+; Resets the level of each of the synth's operators to their default
 ; maximum value.
 ; It does this by writing to the EGS chip's operator level array.
 ;
@@ -143,9 +142,8 @@ voice_reset_egs_operator_level:                 SUBROUTINE
 ; ==============================================================================
 ; VOICE_RESET_EGS_SEND_EVENT_FOR_ALL_VOICES
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD056
 ; DESCRIPTION:
-; @TODO
 ; Sends a particular 'event' byte to the EGS for all 16 voices.
 ; This is used in resetting the synth's voices.
 ;

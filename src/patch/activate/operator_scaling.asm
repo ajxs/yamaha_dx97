@@ -16,9 +16,9 @@
     .PROCESSOR HD6303
 
 ; ==============================================================================
-; PATCH_ACTIVATE_OPERATOR_KEYBOARD_SCALING
+; PATCH_ACTIVATE_OPERATOR_KEYBOARD_SCALING_RATE
 ; ==============================================================================
-; @TAKEN_FROM_DX7_FIRMWARE
+; @TAKEN_FROM_DX7_FIRMWARE:0xDF86
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Loads the 'Keyboard Rate Scaling' value for the current operator, and combines
@@ -35,7 +35,7 @@
 ; * ACCA, ACCB, IX
 ;
 ; ==============================================================================
-patch_activate_operator_keyboard_scaling:       SUBROUTINE
+patch_activate_operator_keyboard_scaling_rate:  SUBROUTINE
     LDX     #patch_buffer_edit
     LDAB    <patch_activate_operator_offset
     ABX
@@ -53,7 +53,7 @@ patch_activate_operator_keyboard_scaling:       SUBROUTINE
     ASLA
     ABA
 
-; Store the combined value in the appropriate EGS register.
+; Write the combined value to the appropriate EGS register.
     LDAB    patch_activate_operator_number
     LDX     #egs_operator_keyboard_scaling
     ABX
@@ -63,13 +63,13 @@ patch_activate_operator_keyboard_scaling:       SUBROUTINE
 
 
 ; ==============================================================================
-; PATCH_ACTIVATE_OPERATOR_PARSE_KEYBOARD_SCALING
+; PATCH_ACTIVATE_OPERATOR_KEYBOARD_SCALING_LEVEL
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
-; Parses the serialised keyboard scaling values, and constructs the operator
-; keyboard scaling curve for the selected operator.
+; Parses the serialised keyboard level scaling values, and constructs the
+; operator keyboard level scaling curve for the selected operator.
 ;
 ; ARGUMENTS:
 ; Memory:
@@ -78,13 +78,13 @@ patch_activate_operator_keyboard_scaling:       SUBROUTINE
 ;     patch memory.
 ;
 ; MEMORY MODIFIED:
-; * operator_keyboard_scaling
+; * operator_keyboard_scaling_level_curve_table
 ;
 ; REGISTERS MODIFIED:
 ; * ACCA, ACCB, IX
 ;
 ; ==============================================================================
-patch_activate_operator_parse_keyboard_scaling: SUBROUTINE
+patch_activate_operator_keyboard_scaling_level: SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
@@ -172,18 +172,19 @@ patch_activate_operator_parse_keyboard_scaling: SUBROUTINE
     LDAA    #KEYBOARD_SCALE_CURVE_LENGTH
     STAA    .scale_curve_index
 
-    LDX     #operator_keyboard_scaling_2
+; Get a pointer to the end of the first operator's level curve data.
+    LDX     #operator_keyboard_scaling_level_curve_table + KEYBOARD_SCALE_CURVE_LENGTH
     LDAB    patch_activate_operator_number
     LDAA    #KEYBOARD_SCALE_CURVE_LENGTH
     MUL
     ABX
 
-; The following loop computes the 43 byte keyboard scaling curve for the
+; The following loop computes the 43 byte keyboard scaling level curve for the
 ; currently selected operator.
 ; It checks whether each index is above, or below the breakpoint, loading
 ; the scaling curve accordingly. It then multiplies the scaling curve value
 ; by the appropriate depth value to compute the final keyboard scaling
-; value. This value is then stored in the 43 byte keyboard scaling curve.
+; value. This value is then stored in the 43 byte keyboard scaling level curve.
 .create_scaling_curve_loop:
     STX     .operator_current_pointer
     LDAB    .scale_curve_index

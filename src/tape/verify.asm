@@ -80,7 +80,7 @@ tape_verify:                                    SUBROUTINE
     JSR     lcd_strcpy
     JSR     lcd_update
 
-; Loop for 8 * 0x10000, then exit the tape routines
+; Loop for 8 * 0x10000, then exit the tape routines.
     JSR     tape_remote_output_low
 
     LDAB    #8

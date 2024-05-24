@@ -21,7 +21,8 @@ LFO_SAMPLE_AND_HOLD_PRIME_2:                    EQU 11
 ; ==============================================================================
 ; LFO_PROCESS
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD5D2
+; @CALLED_DURING_OCF_HANDLER
 ; DESCRIPTION:
 ; Calculates, and stores the instantaneous amplitude of the synth's LFO at its
 ; current phase, depending on the LFO delay, and LFO type.
@@ -71,12 +72,12 @@ lfo_process:                                    SUBROUTINE
 .store_fadein_factor:
     STD     <lfo_delay_fadein_factor
 
-; Increment the LFO phase accumulator.
 .increment_accumulator:
+; Increment the LFO phase accumulator.
     LDD     <lfo_phase_accumulator
     ADDD    <lfo_phase_increment
 
-; If the LFO phase accumulator overlfows after adding the LFO phase
+; If the LFO phase accumulator overflows after adding the LFO phase
 ; increment, set the flag to update the Sample and Hold LFO amplitude.
     BVC     .update_sample_and_hold
     OIMD    #%10000000, lfo_sample_and_hold_update_flag
@@ -106,7 +107,7 @@ lfo_process:                                    SUBROUTINE
 ; ==============================================================================
 ; LFO_PROCESS_TRI
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD60D
 ; DESCRIPTION:
 ; Calculates the instantaneous amplitude of the synth's LFO at its current
 ; phase when the 'Triangle' shape is selected.

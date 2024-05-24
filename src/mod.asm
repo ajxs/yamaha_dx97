@@ -16,6 +16,9 @@
 ; ==============================================================================
 ; MOD_AMP_UPDATE
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xD698
+; @CALLED_DURING_OCF_HANDLER
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; This subroutine calculates the total amplitude modulation input.
 ; This tests the various modulation sources (Mod Wheel/Breath Controller) for
@@ -94,14 +97,14 @@ mod_amp_update:                                 SUBROUTINE
 .is_breath_control_eg_bias_enabled_2:
 ; If EG Bias for this modulation source is enabled, add the scaled input value.
     TST     breath_control_eg_bias
-    BEQ     ..add_current_total_to_bias_input
+    BEQ     .add_current_total_to_bias_input
 
     ADDA    .breath_controller_input_scaled
-    BCC     ..add_current_total_to_bias_input
+    BCC     .add_current_total_to_bias_input
 
     LDAA    #$FF        ; Clamp at 0xFF.
 
-..add_current_total_to_bias_input:
+.add_current_total_to_bias_input:
     ADDA    .mod_amount_total
     BCC     .store_total_with_bias_input
 
@@ -115,11 +118,11 @@ mod_amp_update:                                 SUBROUTINE
 ; If so, the scaled input for each is added to the total amp modulation input.
     CLRA
     TST     mod_wheel_amp
-    BEQ     is_breath_control_amp_mod_enabled
+    BEQ     .is_breath_control_amp_mod_enabled
 
     LDAA    .mod_wheel_input_scaled
 
-is_breath_control_amp_mod_enabled:
+.is_breath_control_amp_mod_enabled:
     TST     breath_control_amp
     BEQ     .get_scaled_lfo_depth_factor
 
@@ -181,59 +184,61 @@ is_breath_control_amp_mod_enabled:
 ; detailed look at what level of modulation the final values correspond to.
 ; ==============================================================================
 table_egs_amp_mod_input:
-    DC.B $FF, $FF, $E0, $CD, $C0    ; 0
-    DC.B $B5, $AD, $A6, $A0, $9A    ; 5
-    DC.B $95, $91, $8D, $89, $86    ; 10
-    DC.B $82, $80, $7D, $7A, $78    ; 15
-    DC.B $75, $73, $71, $6F, $6D    ; 20
-    DC.B $6B, $69, $67, $66, $64    ; 25
-    DC.B $62, $61, $60, $5E, $5D    ; 30
-    DC.B $5B, $5A, $59, $58, $56    ; 35
-    DC.B $55, $54, $53, $52, $51    ; 40
-    DC.B $50, $4F, $4E, $4D, $4C    ; 45
-    DC.B $4B, $4A, $49, $48, $47    ; 50
-    DC.B $46, $46, $45, $44, $43    ; 55
-    DC.B $42, $42, $41, $40, $40    ; 60
-    DC.B $3F, $3E, $3D, $3D, $3C    ; 65
-    DC.B $3B, $3B, $3A, $39, $39    ; 70
-    DC.B $38, $38, $37, $36, $36    ; 75
-    DC.B $35, $35, $34, $33, $33    ; 80
-    DC.B $32, $32, $31, $31, $30    ; 85
-    DC.B $30, $2F, $2F, $2E, $2E    ; 90
-    DC.B $2D, $2D, $2C, $2C, $2B    ; 95
-    DC.B $2B, $2A, $2A, $2A, $29    ; 100
-    DC.B $29, $28, $28, $27, $27    ; 105
-    DC.B $26, $26, $26, $25, $25    ; 110
-    DC.B $24, $24, $24, $23, $23    ; 115
-    DC.B $22, $22, $22, $21, $21    ; 120
-    DC.B $21, $20, $20, $20, $1F    ; 125
-    DC.B $1F, $1E, $1E, $1E, $1D    ; 130
-    DC.B $1D, $1D, $1C, $1C, $1C    ; 135
-    DC.B $1B, $1B, $1B, $1A, $1A    ; 140
-    DC.B $1A, $19, $19, $19, $18    ; 145
-    DC.B $18, $18, $18, $17, $17    ; 150
-    DC.B $17, $16, $16, $16, $15    ; 155
-    DC.B $15, $15, $15, $14, $14    ; 160
-    DC.B $14, $13, $13, $13, $13    ; 165
-    DC.B $12, $12, $12, $12, $11    ; 170
-    DC.B $11, $11, $11, $10, $10    ; 175
-    DC.B $10, $10, $F, $F, $F       ; 180
-    DC.B $F, $E, $E, $E, $E, $D     ; 185
-    DC.B $D, $D, $D, $C, $C, $C     ; 191
-    DC.B $C, $B, $B, $B, $B, $A     ; 197
-    DC.B $A, $A, $A, 9, 9, 9        ; 203
-    DC.B 9, 8, 8, 8, 8, 8, 7        ; 209
-    DC.B 7, 7, 7, 6, 6, 6, 6        ; 216
-    DC.B 6, 5, 5, 5, 5, 5, 4        ; 223
-    DC.B 4, 4, 4, 4, 3, 3, 3        ; 230
-    DC.B 3, 3, 2, 2, 2, 2, 2        ; 237
-    DC.B 2, 1, 1, 1, 1, 1, 0        ; 244
-    DC.B 0, 0, 0, 0, 0              ; 251
+    DC.B $FF, $FF, $E0, $CD, $C0
+    DC.B $B5, $AD, $A6, $A0, $9A
+    DC.B $95, $91, $8D, $89, $86
+    DC.B $82, $80, $7D, $7A, $78
+    DC.B $75, $73, $71, $6F, $6D
+    DC.B $6B, $69, $67, $66, $64
+    DC.B $62, $61, $60, $5E, $5D
+    DC.B $5B, $5A, $59, $58, $56
+    DC.B $55, $54, $53, $52, $51
+    DC.B $50, $4F, $4E, $4D, $4C
+    DC.B $4B, $4A, $49, $48, $47
+    DC.B $46, $46, $45, $44, $43
+    DC.B $42, $42, $41, $40, $40
+    DC.B $3F, $3E, $3D, $3D, $3C
+    DC.B $3B, $3B, $3A, $39, $39
+    DC.B $38, $38, $37, $36, $36
+    DC.B $35, $35, $34, $33, $33
+    DC.B $32, $32, $31, $31, $30
+    DC.B $30, $2F, $2F, $2E, $2E
+    DC.B $2D, $2D, $2C, $2C, $2B
+    DC.B $2B, $2A, $2A, $2A, $29
+    DC.B $29, $28, $28, $27, $27
+    DC.B $26, $26, $26, $25, $25
+    DC.B $24, $24, $24, $23, $23
+    DC.B $22, $22, $22, $21, $21
+    DC.B $21, $20, $20, $20, $1F
+    DC.B $1F, $1E, $1E, $1E, $1D
+    DC.B $1D, $1D, $1C, $1C, $1C
+    DC.B $1B, $1B, $1B, $1A, $1A
+    DC.B $1A, $19, $19, $19, $18
+    DC.B $18, $18, $18, $17, $17
+    DC.B $17, $16, $16, $16, $15
+    DC.B $15, $15, $15, $14, $14
+    DC.B $14, $13, $13, $13, $13
+    DC.B $12, $12, $12, $12, $11
+    DC.B $11, $11, $11, $10, $10
+    DC.B $10, $10, $F, $F, $F
+    DC.B $F, $E, $E, $E, $E, $D
+    DC.B $D, $D, $D, $C, $C, $C
+    DC.B $C, $B, $B, $B, $B, $A
+    DC.B $A, $A, $A, 9, 9, 9
+    DC.B 9, 8, 8, 8, 8, 8, 7
+    DC.B 7, 7, 7, 6, 6, 6, 6
+    DC.B 6, 5, 5, 5, 5, 5, 4
+    DC.B 4, 4, 4, 4, 3, 3, 3
+    DC.B 3, 3, 2, 2, 2, 2, 2
+    DC.B 2, 1, 1, 1, 1, 1, 0
+    DC.B 0, 0, 0, 0, 0
 
 
 ; ==============================================================================
 ; MOD_PITCH_UPDATE
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xD821
+; @CALLED_DURING_OCF_HANDLER
 ; DESCRIPTION:
 ; Calculates the final pitch modulation amount, and writes it to the
 ; associated EGS register.

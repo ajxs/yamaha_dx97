@@ -15,7 +15,7 @@
 ; ==============================================================================
 ; PATCH_ACTIVATE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD064
 ; DESCRIPTION:
 ; This subroutine is responsible for 'activating' the patch that is currently
 ; loaded into the synth's edit buffer.
@@ -41,7 +41,7 @@ patch_activate:                                 SUBROUTINE
     JSR     patch_activate_call_function_per_operator
 
 ; Load the operator keyboard scaling.
-    LDX     #patch_activate_operator_parse_keyboard_scaling
+    LDX     #patch_activate_operator_keyboard_scaling_level
     JSR     patch_activate_call_function_per_operator
 
 ; Load the operator detune.
@@ -53,7 +53,7 @@ patch_activate:                                 SUBROUTINE
     JSR     patch_activate_call_function_per_operator
 
 ; Load operator keyboard rate scaling.
-    LDX     #patch_activate_operator_keyboard_scaling
+    LDX     #patch_activate_operator_keyboard_scaling_rate
     JSR     patch_activate_call_function_per_operator
 
 ; Load operator keyboard velocity sensitivity.
@@ -77,7 +77,7 @@ patch_activate:                                 SUBROUTINE
 ; ==============================================================================
 ; PATCH_ACTIVATE_CALL_FUNCTION_PER_OPERATOR
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD09B
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; This subroutine is used to call a particular function once per each of the
@@ -136,6 +136,7 @@ patch_activate_call_function_per_operator:      SUBROUTINE
 ; ==============================================================================
 ; PATCH_ACTIVATE_LOAD_MODE_ALGORITHM_FEEDBACK_TO_OPS
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMARE:0xD0B9
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Called as part of the 'Patch Activation' routine.
@@ -158,6 +159,7 @@ patch_activate_mode_algorithm_feedback:         SUBROUTINE
     LDAA    #%110000
     TST     patch_edit_oscillator_sync
     BNE     .load_mode_alg_to_ops
+
     ADDA    #%100000
 
 .load_mode_alg_to_ops:
@@ -169,7 +171,7 @@ patch_activate_mode_algorithm_feedback:         SUBROUTINE
 ; ==============================================================================
 ; PATCH_ACTIVATE_OPERATOR_DETUNE
 ; ==============================================================================
-; @CHANGED_FOR_6_OP
+; @TAKEN_FROM_DX9_FIRMWARE:0xD285
 ; DESCRIPTION:
 ; Loads operator detune values to the EGS operator detune buffer.
 ; Note: This subroutine differs from how the DX7's implementation in how it
@@ -208,6 +210,7 @@ patch_activate_operator_detune:                 SUBROUTINE
     BRA     .load_detune_value_to_egs
 
 .detune_value_positive:
+; If the detune value is positive, subtract 7 to start at 0.
     SUBA    #7
 
 .load_detune_value_to_egs:

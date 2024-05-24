@@ -1,7 +1,7 @@
 ; ==============================================================================
 ; PATCH_ACTIVATE_OPERATOR_EG_RATE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD29F
 ; DESCRIPTION:
 ; Loads and parses the current operator's EG rate values, then sends these
 ; values to the appropriate registers in the EGS.
@@ -46,7 +46,8 @@ patch_activate_operator_eg_rate:                SUBROUTINE
     LDAA    0,x
 
 ; The EG rate value (stored in range 0 - 99) is multiplied by 164, and then
-; (effectively) shifted >> 8. This quantises it to a value between 0-64.
+; only the MSB is kept. This effectively shifts it >> 8. Effectively scaling
+; it to a value between 0-64.
     LDAB    #164
     MUL
 
@@ -68,12 +69,20 @@ patch_activate_operator_eg_rate:                SUBROUTINE
 ; ==============================================================================
 ; PATCH_ACTIVATE_OPERATOR_EG_LEVEL
 ; ==============================================================================
-; @TAKEN_FROM_DX7_FIRMWARE
+; @TAKEN_FROM_DX7_FIRMWARE:0xDBE8
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; This function parses the patch's operator EG values, converting the
 ; serialised values stored in the patch to the internal representation. It then
 ; loads the parsed values to the EGS chip.
+;
+; Note that this differs from how the DX9 calculates operator EG level.
+; The DX7 uses the serialised patch EG levels as an index into the logarithmic
+; curve table, then scales the result to a value between 0-63, with a lower
+; level indicating a louder operator volume.
+; The DX9 uses a simple algorithm to scale the serialised EG level (0-99) to a
+; linear level between 63-0.
+; ~(((operator_eg_level × 165) >> 8) + 0xC0)
 ;
 ; ARGUMENTS:
 ; Memory:
@@ -122,6 +131,9 @@ patch_activate_operator_eg_level:               SUBROUTINE
     LDX     #table_curve_log
     ABX
     LDAA    0,x
+
+; Shift right to convert the loaded value to a value between 0-63, as the
+; operator EG level is stored on the EGS as a 6-bit number.
     LSRA
 
 ; Use the loop index (0 .. 3) as an offset to determine where to store the

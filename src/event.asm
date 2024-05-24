@@ -46,8 +46,7 @@ main_process_events:                            SUBROUTINE
 
 .send_remote_signal:
 ; I'm not sure why the tape remote signal is set here in the main loop.
-; Possibly this is ideally performed a certain number of cycles _before_ the
-; MIDI processing occurs?
+; Is this because reading the ADC disrupts the status of the output lines?
     JSR     tape_remote_output_signal
 
     TST     midi_active_sensing_tx_pending_flag

@@ -81,8 +81,6 @@ portamento_calculate_rate:                      SUBROUTINE
 ; @NOTE: As in the DX7 ROM, this subroutine processes half of the synth's
 ; 16 voices with each call, alternating each time.
 ; In the DX9 ROM this subroutine is called once every two interrupts.
-; The effect is the same: The portamento for each individual voice is processed
-; once every two interrupts.
 ;
 ; MEMORY MODIFIED:
 ; * voice_frequency_target

@@ -72,7 +72,7 @@ test_kbd:                                       SUBROUTINE
     ANDB    #$7F
     JSR     voice_add
 
-; Subtract 36 from the note number, and store.
+; Subtract 36 from the note number, and compare against the expected note.
     LDAB    <note_number
     ANDB    #$7F
     SUBB    #36

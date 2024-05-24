@@ -27,7 +27,6 @@
 ; * IX:   The destination address.
 ;
 ; ==============================================================================
-
 memcpy_store_dest_and_copy_accb_bytes:          SUBROUTINE
     STX     memcpy_ptr_dest
 ; Falls-through below.

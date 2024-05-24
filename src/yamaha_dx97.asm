@@ -105,7 +105,7 @@
 ; It loops over each byte in the ROM in 256 byte blocks, adding the value of
 ; each byte to a total checksum byte. This checksum is expected to add up, with
 ; integer overflow, to '0'. This byte placed here is the final remainder byte
-; that will cause the ROM  checksum to total to '0'.
+; that will cause the ROM checksum to total to '0'.
 ; To calculate this value for the ROM, set this value to '0', build the ROM,
 ; then run the associated script to generate the remainder byte.
 ; Refer to the external documentation for the tools used to calculate this.

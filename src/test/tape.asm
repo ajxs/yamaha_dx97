@@ -141,6 +141,7 @@ test_tape_delay:                                SUBROUTINE
 ; ==============================================================================
 ; TEST_TAPE_READ_INPUT
 ; ==============================================================================
+; @TAKEN_FROM_DX9_ROM:0xFBB1
 ; DESCRIPTION:
 ; Reads the tape input over an arbitrary period of 12 cycles, incrementing the
 ; test sub stage variable to count the number of 'pulses' that occur within

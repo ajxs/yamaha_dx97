@@ -35,6 +35,7 @@ The various annotations can be used to categorise functions that need additional
 	; @NEW_FUNCTIONALITY
 	; @NEEDS_TESTING
 	; @NEEDS_FIXING
+	; @CALLED_DURING_OCF_HANDLER
 	; @PRIVATE
 	; DESCRIPTION:
 	; These annotations are used so that subroutines can be easily searched by

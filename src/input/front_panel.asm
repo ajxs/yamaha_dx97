@@ -109,10 +109,10 @@ input_read_front_panel_source_updated:          SUBROUTINE
 ; Only input sources 0-3 are updated in this routine.
     ANDB    #%11
 
-; If source is input line 1/2/3...
+; If source is input line 1/2/3 - The 'numeric' front-panel switches.
     BNE     input_read_front_panel_numeric_switches
 
-; If source is input line 0.
+; If source is input line 0 - The 'main' front-panel switches.
     PSHA
 
 ; Test whether input line 0, bit 4 has changed.
@@ -178,7 +178,7 @@ input_read_front_panel_numeric_switches:        SUBROUTINE
 ; Load previous value...
     LDAB    0,x
 
-; Store updated value?
+; Store updated value.
     STAA    0,x
 
 ; If the inverted old value, AND the new value is not equal to 0, it shows this

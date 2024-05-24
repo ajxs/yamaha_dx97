@@ -156,7 +156,7 @@ voice_add_operator_level_voice_frequency:       SUBROUTINE
     LDAA    #KEYBOARD_SCALE_CURVE_LENGTH
     MUL
 
-    LDX     #operator_keyboard_scaling
+    LDX     #operator_keyboard_scaling_level_curve_table
     ABX
 
 ; Use the MSB of the note pitch as an index into the keyboard scaling curve.

@@ -55,7 +55,7 @@ midi_rx_control_code:                           SUBROUTINE
     DC.B 5
     DC.B midi_rx_cc_5_portamento_time - *
     DC.B 6
-    DC.B midi_rx_cc_6_function_data_input - *
+    DC.B midi_rx_cc_6_data_entry - *
     DC.B 7
 ; Unlike the DX7, MIDI Volume is not supported on the DX9.
 ; As best I can tell the DAC's volume port is not wired into the CPU's IO
@@ -102,7 +102,7 @@ midi_rx_cc_unsupported:                         SUBROUTINE
 ; ==============================================================================
 ; MIDI_RX_CC_1_MOD_WHEEL
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC4F3
 ; DESCRIPTION:
 ; Handles a MIDI CC event where the event number is '1'.
 ; This being a mod wheel event.
@@ -121,7 +121,7 @@ midi_rx_cc_1_mod_wheel:                         SUBROUTINE
 ; ==============================================================================
 ; MIDI_RX_CC_2_BREATH_CONTROLLER
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC52C
 ; DESCRIPTION:
 ; Handles a MIDI CC event where the event number is '2'.
 ; This being a breath controller event.
@@ -140,7 +140,7 @@ midi_rx_cc_2_breath_controller:                 SUBROUTINE
 ; ==============================================================================
 ; MIDI_RX_CC_5_PORTAMENTO_TIME
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC531
 ; DESCRIPTION:
 ; Handles a MIDI CC event where the event number is '5'.
 ; This being an update to the synth's portamento time.
@@ -171,9 +171,9 @@ midi_rx_cc_5_portamento_time:                   SUBROUTINE
 
 
 ; ==============================================================================
-; MIDI_RX_CC_6_FUNCTION_DATA_INPUT
+; MIDI_RX_CC_6_DATA_ENTRY
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC545
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Handles a MIDI Control Code event of type '6'.
@@ -192,7 +192,7 @@ midi_rx_cc_5_portamento_time:                   SUBROUTINE
 ; * ACCA, ACCB
 ;
 ; ==============================================================================
-midi_rx_cc_6_function_data_input:               SUBROUTINE
+midi_rx_cc_6_data_entry:                        SUBROUTINE
     LDAB    ui_btn_numeric_last_pressed
     CMPB    #BUTTON_FUNCTION_1
     BNE     .exit
@@ -209,7 +209,7 @@ midi_rx_cc_6_function_data_input:               SUBROUTINE
 ; ==============================================================================
 ; MIDI_RX_CC_64_SUSTAIN
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC550
 ; DESCRIPTION:
 ; Handles a MIDI control code message with a type of '64'.
 ; This is the command to affect the sustain pedal.
@@ -248,7 +248,7 @@ midi_rx_cc_64_sustain:                          SUBROUTINE
 ; ==============================================================================
 ; MIDI_RX_CC_65_PORTAMENTO
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC550
 ; DESCRIPTION:
 ; Handles a MIDI control code message with a type of '65'.
 ; This is the command to affect the portamento pedal.
@@ -287,6 +287,7 @@ midi_rx_cc_65_portamento:                       SUBROUTINE
 ; ==============================================================================
 ; MIDI_RX_CC_96_97_DATA_INCREMENT_DECREMENT
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC570
 ; DESCRIPTION:
 ; Handles a MIDI control code message with a type of '96', or '97.
 ; These are the MIDI commands to increment, or decrement the currently
@@ -344,6 +345,7 @@ midi_rx_cc_123_all_notes_off:                   SUBROUTINE
 ; ==============================================================================
 ; MIDI_RX_CC_126_MODE_MONO
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC590
 ; DESCRIPTION:
 ; Handles a MIDI control code message with a type of '126'.
 ; This is the command to set the synth to monophonic mode.
@@ -381,6 +383,7 @@ midi_rx_polyphony_reset_voices:
 ; ==============================================================================
 ; MIDI_RX_CC_127_MODE_POLY
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC5AE
 ; DESCRIPTION:
 ; Handles a MIDI Control Code message with a type of '127'.
 ; This sets the synth to polyphonic mode.

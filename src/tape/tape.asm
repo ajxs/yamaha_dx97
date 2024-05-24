@@ -16,7 +16,6 @@
 ; TAPE_CALCULATE_PATCH_CHECKSUM
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; Calculates the checksum for an individual patch before it is output over the
 ; synth's cassette interface.

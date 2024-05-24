@@ -123,8 +123,7 @@ str_lvl_scaling:                        DC.B "LVL "
 
 str_master_tune:                        DC "MASTER "
                                         DC.B STR_FRAGMENT_OFFSET_TUNE
-                                        DC.B $20 ; Space
-                                        DC "ADJ", 0
+                                        DC " ADJ", 0
 
 str_mem_protect:                        DC "MEM. PROTECT"
                                         DC.B PRINT_PARAM_FUNCTION_BOOLEAN
@@ -199,8 +198,7 @@ str_porta_follow:                       DC.B STR_FRAGMENT_OFFSET_SUS_KEY
                                         DC "FOLLOW", 0
 
 str_porta_time:                         DC.B STR_FRAGMENT_OFFSET_PORTA
-                                        DC.B $20 ; Space
-                                        DC "TIME"
+                                        DC " TIME"
                                         DC.B PRINT_PARAM_FUNCTION_NUMERIC
 
 str_rate_scaling:                       DC.B STR_FRAGMENT_OFFSET_RATE

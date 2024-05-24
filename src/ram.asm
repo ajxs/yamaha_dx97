@@ -362,15 +362,14 @@ pitch_eg_parsed_level_final:                    EQU (#pitch_eg_parsed_level + 3)
 ; @TODO: Document
 patch_operator_velocity_sensitivity:            DS 12
 
-; The operator keyboard scaling curve data.
-; When the keyboard scaling for an operator is parsed from the patch data,
+; The operator keyboard scaling level curve data.
+; When the keyboard scaling level for an operator is parsed from the patch data,
 ; this curve data is created with the amplitude scaling factor for the full
 ; keyboard range.
 ; The MSB of the note frequency word is used as an index into this curve data
 ; when looking up the scaling factor for a particular note.
 ; Length: 6 * 43.
-operator_keyboard_scaling:                      DS (6 * KEYBOARD_SCALE_CURVE_LENGTH)
-operator_keyboard_scaling_2:                    EQU (#operator_keyboard_scaling + KEYBOARD_SCALE_CURVE_LENGTH)
+operator_keyboard_scaling_level_curve_table:    DS (6 * KEYBOARD_SCALE_CURVE_LENGTH)
 
 ; This array contains the final volume value for each operator for a voice.
 ; This is the value that will be loaded to the EGS.

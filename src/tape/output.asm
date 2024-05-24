@@ -271,6 +271,8 @@ tape_output_byte:                               SUBROUTINE
     LDAB    #13
     JSR     tape_output_bit_one
 ; @TODO: This branch statement can likely be removed.
+; This hasn't been removed on account of the specific timing requirements of
+; the tape interface code. Removing this would require re-testing.
     BRA     *+2
 
 .decrement_bit_loop_counter:

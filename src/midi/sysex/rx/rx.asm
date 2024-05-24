@@ -15,7 +15,7 @@
 ; =============================================================================
 ; MIDI_SYSEX_RX
 ; =============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC5B8
 ; DESCRIPTION:
 ; Handles incoming MIDI SysEx data.
 ; This subroutine is the entry-point to the SysEx state machine routines.
@@ -73,7 +73,8 @@ midi_rx_sysex_bulk_data_finalise_jump:          SUBROUTINE
 ; =============================================================================
 ; MIDI_SYSEX_RX_VALIDATE_MANUFACTURER_ID
 ; =============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC5DA
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; When receiving a SysEx message, this subroutine validates the SysEx
 ; manufacturer ID to determine whether it matches Yamaha's ID.
@@ -109,7 +110,7 @@ midi_sysex_rx_validate_manufacturer_id:         SUBROUTINE
 ; =============================================================================
 ; MIDI_SYSEX_RX_SUBSTATUS
 ; =============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC5F5
 ; DESCRIPTION:
 ; Stores the incoming SysEx 'sub-status', and jumps to the appropriate
 ; handling function based upon its content.
@@ -140,7 +141,7 @@ midi_sysex_rx_substatus:                        SUBROUTINE
 ; =============================================================================
 ; MIDI_SYSEX_RX_SUBSTATUS_DATA
 ; =============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC601
 ; DESCRIPTION:
 ; Handles the case where the SysEx substatus indicates that the incoming
 ; SysEx data is a data message.
@@ -158,7 +159,7 @@ midi_sysex_rx_substatus_data:                   SUBROUTINE
 ; =============================================================================
 ; MIDI_SYSEX_RX_SUBSTATUS_PARAM
 ; =============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC605
 ; DESCRIPTION:
 ; Handles the case where the SysEx substatus indicates that the incoming
 ; SysEx data is a parameter change message.
@@ -190,6 +191,7 @@ midi_sysex_substatus_invalid:
 ; =============================================================================
 ; MIDI_SYSEX_RX_FORMAT_PARAM_GRP_STORE
 ; =============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC618
 ; DESCRIPTION:
 ; Stores the incoming SysEx format/parameter group byte.
 ;
@@ -206,6 +208,7 @@ midi_sysex_rx_format_param_grp:                 SUBROUTINE
 ; =============================================================================
 ; MIDI_SYSEX_RX_BYTE_COUNT_MSB_PARAM_STORE
 ; =============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC620
 ; DESCRIPTION:
 ; Stores the incoming SysEx data byte count if this is a data message, or
 ; parameter number if this is a parameter change message.
@@ -223,7 +226,7 @@ midi_sysex_rx_byte_count_msb_param:             SUBROUTINE
 ; =============================================================================
 ; MIDI_SYSEX_RX_PROCESS_RECEIVED_DATA
 ; =============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC628
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Stores the last incoming SysEx header data, and begins processing the data.
@@ -283,6 +286,7 @@ midi_sysex_rx_param_voice:                      SUBROUTINE
 ; =============================================================================
 ; MIDI_SYSEX_RX_PARAM_FUNCTION
 ; =============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC63F
 ; DESCRIPTION:
 ; Handles processing an incoming SysEX function parameter change message.
 ;
@@ -329,8 +333,7 @@ midi_sysex_rx_param_end:                        SUBROUTINE
 ;
 ; =============================================================================
 midi_sysex_rx_process_data_msg:                 SUBROUTINE
-; Test whether the synth is in a valid mode to accept SysEx data.
-; If not, exit.
+; Test whether the synth will accept SysEx data. If not, exit.
     TST     sys_info_avail
     BEQ     midi_sysex_rx_force_message_end
 
@@ -351,6 +354,7 @@ midi_sysex_rx_process_data_msg:                 SUBROUTINE
 ; =============================================================================
 ; MIDI_SYSEX_RX_BULK_DATA_SINGLE_VOICE
 ; =============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC675
 ; DESCRIPTION:
 ; This subroutine handles initiating the receiving of a single voice bulk
 ; data dump. It validates the byte count, and sets the internal SysEx
@@ -379,6 +383,7 @@ midi_sysex_rx_bulk_data_single_voice:           SUBROUTINE
 ; =============================================================================
 ; MIDI_SYSEX_RX_BULK_DATA_32_VOICES
 ; =============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC686
 ; DESCRIPTION:
 ; This subroutine handles initiating the receiving of a 32 voice bulk
 ; data dump. It validates the byte count, and sets the internal SysEx
@@ -415,6 +420,7 @@ midi_sysex_rx_bulk_data_32_voices:              SUBROUTINE
 ; =============================================================================
 ; MIDI_SYSEX_RX_BULK_DATA_SETUP
 ; =============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
 ; Initialises the system in preparation of receiving a bulk data dump.
 ;
@@ -449,7 +455,7 @@ midi_sysex_rx_force_message_end:
 ; =============================================================================
 ; MIDI_SYSEX_RX_BULK_DATA_STORE
 ; =============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC6B4
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Stores incoming SysEx data for a bulk voice dump.
@@ -467,6 +473,9 @@ midi_sysex_rx_force_message_end:
 ;
 ; =============================================================================
 midi_sysex_rx_bulk_data_store:                  SUBROUTINE
+; Timer interrupts are disabled, and the SysEx receive flag is set here because
+; up until this point there are numerous ways in which the incoming SysEx
+; message can fail validation, and the process be aborted.
     CLR     <timer_ctrl_status
     LDAB    #1
     STAB    <midi_sysex_rx_active_flag
@@ -537,7 +546,7 @@ midi_sysex_rx_bulk_data_store:                  SUBROUTINE
 ; =============================================================================
 ; MIDI_SYSEX_RX_BULK_DATA_FINALISE
 ; =============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC708
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Finalises the received SysEx bulk patch data.
@@ -620,7 +629,7 @@ midi_rx_sysex_bulk_data_finalise:               SUBROUTINE
 .exit:
     LDAA    #MIDI_STATUS_SYSEX_END
     STAA    <midi_last_command_received
-    JMP     midi_reset_timers
+    JMP     midi_reenable_timer_interrupt
 
 
 ; =============================================================================

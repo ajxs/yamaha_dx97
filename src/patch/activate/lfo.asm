@@ -14,12 +14,13 @@
     .PROCESSOR HD6303
 
 ; ==============================================================================
-; PATCH_ACTIVATE_SCALE_LFO_SPEED
+; PATCH_ACTIVATE_GET_LFO_PHASE_INCREMENT
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD110
 ; DESCRIPTION:
-; Parses, and scales the LFO speed value. This subroutine is called during
-; the patch activation process.
+; Parses the patch LFO speed value, and calculates the correct phase
+; increment for the LFO. This subroutine is called during the patch
+; activation process.
 ;
 ; ARGUMENTS:
 ; Registers:
@@ -29,10 +30,10 @@
 ; * ACCA, ACCB
 ;
 ; RETURNS:
-; * ACCD: The scaled LFO speed value.
+; * ACCD: The LFO phase increment.
 ;
 ; ==============================================================================
-patch_activate_parse_lfo_speed:                 SUBROUTINE
+patch_activate_get_lfo_phase_increment:         SUBROUTINE
 ; If the LFO speed is set to zero, clamp it to a minimum of '267'. This is
 ; done so that the LFO software arithmetic works.
     LDAA    0,x
@@ -80,10 +81,10 @@ patch_activate_parse_lfo_speed:                 SUBROUTINE
 ; * ACCA, ACCB
 ;
 ; RETURNS:
-; * ACCD: The parsed LFO delay value.
+; * ACCD: The parsed LFO delay increment.
 ;
 ; ==============================================================================
-patch_activate_lfo_delay_increment:             SUBROUTINE
+patch_activate_get_lfo_delay_increment:         SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
@@ -121,7 +122,7 @@ patch_activate_lfo_delay_increment:             SUBROUTINE
 ; ==============================================================================
 ; PATCH_ACTIVATE_LFO
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD0DC
 ; DESCRIPTION:
 ; This routine is responsible for parsing the serialised patch LFO data, and
 ; setting up the internal representation of the data used in internal LFO
@@ -131,11 +132,12 @@ patch_activate_lfo_delay_increment:             SUBROUTINE
 ; ==============================================================================
 patch_activate_lfo:                             SUBROUTINE
     LDX     #patch_edit_lfo_speed
-    JSR     patch_activate_parse_lfo_speed
+
+    JSR     patch_activate_get_lfo_phase_increment
     STD     <lfo_phase_increment
 
 ; Parse LFO delay.
-    JSR     patch_activate_lfo_delay_increment
+    JSR     patch_activate_get_lfo_delay_increment
     STD     <lfo_delay_increment
 
 ; Parse the LFO Pitch Mod Depth.

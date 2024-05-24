@@ -254,6 +254,7 @@ ui_patch_init_recall:                           SUBROUTINE
 ui_yes_no_test_entry:                           SUBROUTINE
     CMPA    #INPUT_BUTTON_YES
     BNE     ui_test_entry_reload_patch_and_exit
+
     JSR     test_entry
 
 ui_test_entry_reload_patch_and_exit:

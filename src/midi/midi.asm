@@ -158,22 +158,21 @@ midi_reset_read_buffer:
 
 
 ; ==============================================================================
-; MIDI_RESET_TIMERS
+; MIDI_REENABLE_TIMER_INTERRUPT
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD8CC
 ; DESCRIPTION:
-; Resets the CPU's internal timers.
+; Re-enables the CPU's periodic timer interrupt.
 ; This is called after finishing recieving SysEx data.
-; This is taken directly from the DX9 firmware. It possibly could be replaced
-; with a macro, as it is only called twice.
 ;
 ; ==============================================================================
-midi_reset_timers:                              SUBROUTINE
+midi_reenable_timer_interrupt:                  SUBROUTINE
     LDX     #0
     STX     <free_running_counter
 
 ; Reading this register clears the Timer Overflow Flag (TOF).
     LDAA    <timer_ctrl_status
+
     LDX     #SYSTEM_TICK_PERIOD
     STX     <output_compare
 

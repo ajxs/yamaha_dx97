@@ -29,7 +29,7 @@ test_auto_scaling:                              SUBROUTINE
     CMPA    #$FF
     BNE     .begin_note
 
-; Initialise the patch edit buffer, and activate the settings.
+; Initialise the patch edit buffer, and activate the loaded patch.
     JSR     patch_init_edit_buffer
     JSR     patch_activate
     CLR     test_stage_sub_2

@@ -27,7 +27,7 @@ MIDI_ERROR_OVERRUN                              EQU 2
 ; ==============================================================================
 ; HANDLER_SCI
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC7ED
 ; DESCRIPTION:
 ; Top-level handler for all hardware Serial Communication Interface events.
 ; This subroutine handles the buffering of all incoming, and outgoing MIDI
@@ -96,7 +96,11 @@ handler_sci:                                    SUBROUTINE
     BPL     .tx_byte
 
 ; If the next byte to be sent is a status command, it is stored in a
-; variable to ensure that the same status byte is not sent multiple times.
+; variable so that the synth can take advantage of the MIDI protocol
+; 'Running Status' feature.
+; http://midi.teragonaudio.com/tech/midispec/run.htm
+; This feature allows the synth to omit the status byte when sending
+; multiple MIDI messages of the same type in a row.
 ; If the status byte is a MIDI SysEx start command, this check is ignored.
     CMPA    #MIDI_STATUS_SYSEX_START
     BEQ     .store_last_sent_command

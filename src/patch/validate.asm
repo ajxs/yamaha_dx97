@@ -82,6 +82,7 @@ patch_validate_fix_max_values:                  SUBROUTINE
 ; If so, set it to the maximum value. If not, branch.
     CMPA    0,x
     BCC     .increment_pointer
+
     STAA    0,x
 
 .increment_pointer:

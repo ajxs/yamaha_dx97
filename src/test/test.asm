@@ -16,7 +16,7 @@
 ; ==============================================================================
 ; TEST_ENTRY
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xF738
 ; DESCRIPTION:
 ; This is the main entry point to the synth's diagnostic self-test routines.
 ; Once this is entered, the synth will be put in a loop, cycling through the
@@ -29,7 +29,7 @@ test_entry:                                     SUBROUTINE
 .test_stage_loop:
     JSR     test_entry_get_input
 
-; Load an the current test stage, and clamp this value at '12'.
+; Load the current test stage, and clamp this value at '12'.
 ; This value is then used as an index into the table of diagnostic
 ; function pointers.
     LDX     #table_test_function_ptrs
@@ -96,7 +96,7 @@ test_exit:                                      SUBROUTINE
 ; ==============================================================================
 ; TEST_ENTRY_RESET_SYSTEM
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xF768
 ; DESCRIPTION:
 ; Resets system variables when entering the synth's self-test diagnostic mode.
 ; The EGS voice data will also be reset.
@@ -165,7 +165,7 @@ test_entry_get_input:                           SUBROUTINE
 ; ==============================================================================
 ; TEST_ENTRY_GET_INPUT_INCREMENT_STAGE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xF7A4
 ; DESCRIPTION:
 ; Increment the current test stage.
 ; This is triggered by user input during the test entry main loop.
@@ -241,7 +241,7 @@ test_entry_store_updated_stage:                 SUBROUTINE
 ; ==============================================================================
 ; TEST_ENTRY_GET_INPUT_DECREMENT_STAGE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xF7D7
 ; @PRIVATE
 ; DESCRIPTION:
 ; Decrements the current test stage.
@@ -417,6 +417,7 @@ table_led_patterns:
 ; ==============================================================================
 test_lcd_set_write_pointer_to_position_7:       SUBROUTINE
     LDD     #(lcd_buffer_next + 7)
+; Falls-through below.
 
 test_lcd_store_write_pointer:
     STD     <memcpy_ptr_dest

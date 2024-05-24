@@ -15,7 +15,6 @@
 ; ==============================================================================
 ; TEST_EG_OP
 ; ==============================================================================
-; @NEEDS_TO_BE_REMADE_FOR_6_OP
 ; DESCRIPTION:
 ; This diagnostic routine tests the synth's EGS, and OP chips.
 ; It does so by playing notes from several preset test patches.
@@ -69,6 +68,7 @@ test_eg_op_init:                                SUBROUTINE
 ; ==============================================================================
 ; TEST_EG_OP_WAIT_TO_START
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
 ; Scans for front panel input to test whether the '1' button was pressed.
 ; This initiates the test routine.
@@ -90,6 +90,7 @@ test_eg_op_wait_to_start:                       SUBROUTINE
 ; ==============================================================================
 ; TEST_EG_OP_LOAD_NEXT_TEST_STAGE
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
 ; Loads the next test 'sub-stage'.
 ; This prints the test stage name, and loads the associated patch.
@@ -191,7 +192,7 @@ test_eg_op_prompt_for_advance:                  SUBROUTINE
 ; TEST_EG_OP_REMOVE_VOICE
 ; ==============================================================================
 ; DESCRIPTION:
-; Removes the test voice/
+; Removes the test voice
 ;
 ; ==============================================================================
 test_eg_op_remove_voice:                        SUBROUTINE

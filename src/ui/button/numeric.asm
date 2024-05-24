@@ -243,7 +243,7 @@ ui_button_edit_15_16_jump:                      SUBROUTINE
     JMP     ui_button_edit_15_16_select_eg_stage
 
 ; ==============================================================================
-; UI_BUTTON_EDIT_12_13_JUMP
+; UI_STORE_LAST_BUTTON_AND_LOAD_MAX_VALUE_JUMP
 ; ==============================================================================
 ui_store_last_button_and_load_max_value_jump:  SUBROUTINE
     JMP     ui_store_last_button_and_load_max_value

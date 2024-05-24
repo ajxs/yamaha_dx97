@@ -38,6 +38,7 @@ test_adc:                                       SUBROUTINE
     JSR     adc_set_source
     JSR     adc_update_input_source
     BCS     .decrement_input_source
+
     JSR     lcd_clear_line_2
 
 ; Get pointer to string.
@@ -54,7 +55,7 @@ test_adc:                                       SUBROUTINE
     LDAB    analog_input_source_next
     ABX
     LDAA    0,x
-    LDAB    #$64 ; 'd'
+    LDAB    #$64
     MUL
     JSR     test_print_number_to_led
     JSR     lcd_update
@@ -63,6 +64,7 @@ test_adc:                                       SUBROUTINE
     LDAB    analog_input_source_next
     DECB
     BPL     .store_input_source
+
     LDAB    #ADC_SOURCE_SLIDER
 
 .store_input_source:

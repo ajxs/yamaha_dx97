@@ -47,11 +47,11 @@ midi_process_incoming_data:                     SUBROUTINE
     CLR     <midi_rx_processing_pending
 
 ; In the event that the MIDI RX buffer is empty:
-; Test whether the synth is currently receiving SysEx data.
-; If this is the case reset the periodic interrupt, and exit.
+; Test whether the synth was previously receiving SysEx data.
+; If this is the case re-enable the periodic interrupt, and exit.
 ; This functionality was copied from the DX9 firmware.
     LDAA    <midi_sysex_rx_active_flag
-    BNE     .reset_and_exit
+    BNE     .reenable_timer_interrupt_and_exit
 
     RTS
 
@@ -81,9 +81,9 @@ midi_process_incoming_data:                     SUBROUTINE
 
     BRA     midi_process_status_message
 
-.reset_and_exit:
+.reenable_timer_interrupt_and_exit:
     CLR     midi_sysex_rx_active_flag
-    JMP     midi_reset_timers
+    JMP     midi_reenable_timer_interrupt
 
 
 ; ==============================================================================
@@ -406,7 +406,7 @@ midi_rx_aftertouch:                             SUBROUTINE
 ; ==============================================================================
 ; MIDI_RX_PROGRAM_CHANGE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC4DC
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Handles incoming MIDI data when the pending MIDI event is a
@@ -458,6 +458,7 @@ midi_rx_program_change:                         SUBROUTINE
 ; ==============================================================================
 ; MIDI_RX_PITCH_BEND
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC4C9
 ; DESCRIPTION:
 ; Handles incoming MIDI 'Pitch Bend' events.
 ; If the incoming data is the first of the two required bytes, this function

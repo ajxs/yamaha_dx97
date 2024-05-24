@@ -16,7 +16,7 @@
 ; ==============================================================================
 ; UI_BUTTON_MAIN
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDE35
 ; @PRIVATE
 ; DESCRIPTION:
 ; Main UI subroutine for the 'main', non-numeric, front-panel buttons.
@@ -170,9 +170,9 @@ ui_button_function_play:                        SUBROUTINE
 
 
 ; ==============================================================================
-; UI_MODE_EDIT_BTN_STORE
+; UI_BUTTON_EDIT_STORE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDE5A
 ; @PRIVATE
 ; DESCRIPTION:
 ; Handles the 'STORE' button being pressed while the synth's UI is in
@@ -190,7 +190,7 @@ ui_button_edit_store:                           SUBROUTINE
 ; ==============================================================================
 ; UI_MEMORY_PROTECT_STATE_SET
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xDE5F
 ; @PRIVATE
 ; DESCRIPTION:
 ; This subroutine sets the memory protect bits in the UI state register.

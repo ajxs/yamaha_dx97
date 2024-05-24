@@ -31,6 +31,7 @@ INPUT_BUTTON_20:                                EQU 27
 ; ==============================================================================
 ; MAIN_INPUT_HANDLER
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC3A3
 ; DESCRIPTION:
 ; This is the entry point for the synth's input handling.
 ; This is where the synth's analog front-panel input is read, and acted upon.
@@ -50,7 +51,7 @@ main_input_handler:
 ; ==============================================================================
 ; MAIN_INPUT_HANDLER_PROCESS_BUTTON
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC3A9
 ; DESCRIPTION:
 ; Processes an individual front-panel button press.
 ; This subroutine is called from various places to arbitrarily process an
@@ -137,6 +138,8 @@ input_slider:                                   SUBROUTINE
 ; ==============================================================================
 ; INPUT_BUTTON_YES_NO
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC3CF
+; @CHANGED_FOR_6_OP
 ; @PRIVATE
 ; DESCRIPTION:
 ; The main input handler for when the front-panel 'Yes', or 'No' buttons are
@@ -145,8 +148,7 @@ input_slider:                                   SUBROUTINE
 ; ARGUMENTS:
 ; Registers:
 ; * ACCA: The UI Input Mode.
-; * ACCB: The triggering front-panel button. In this case, either YES(1),
-;         or NO(2).
+; * ACCB: The triggering button code. In this case, either YES(1), or NO(2).
 ;
 ; ==============================================================================
 input_button_yes_no:                            SUBROUTINE
@@ -188,6 +190,7 @@ input_button_yes_no:                            SUBROUTINE
 ; ==============================================================================
 ; INPUT_BUTTON_MAIN
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC3DD
 ; @PRIVATE
 ; DESCRIPTION:
 ; Handles a 'main' front-panel button being pressed.
@@ -220,6 +223,7 @@ input_button_main:                              SUBROUTINE
 ; ==============================================================================
 ; INPUT_BUTTON_NUMERIC
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC3E4
 ; @PRIVATE
 ; DESCRIPTION:
 ; Main input handler function for when the triggering front-panel button press
@@ -269,6 +273,7 @@ input_button_numeric:                           SUBROUTINE
 ; ==============================================================================
 ; INPUT_BUTTON_NUMERIC_FUNCTION_MODE
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC3F8
 ; @PRIVATE
 ; DESCRIPTION:
 ; Handles a front-panel numeric button press while the synth's user-interface
@@ -293,6 +298,7 @@ input_button_numeric_function_mode:             SUBROUTINE
 ; ==============================================================================
 ; INPUT_BUTTON_NUMERIC_EDIT_MODE
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC3FA
 ; @PRIVATE
 ; DESCRIPTION:
 ; Handles a front-panel numeric button press while the synth's user-interface
@@ -314,8 +320,9 @@ input_button_numeric_edit_mode:                 SUBROUTINE
 ; ==============================================================================
 ; INPUT_BUTTON_NUMERIC_PLAY_MODE
 ; ==============================================================================
-; @PRIVATE
+; @TAKEN_FROM_DX9_FIRMWARE:0xC3FF
 ; @CHANGED_FOR_6_OP
+; @PRIVATE
 ; DESCRIPTION:
 ; Handles a front-panel numeric button press while the synth's user-interface
 ; is in 'Play Mode'. Specifically this means 'Memory Select' mode while
@@ -341,6 +348,7 @@ input_button_numeric_play_mode:                 SUBROUTINE
 ; ==============================================================================
 ; INPUT_BUTTON_NUMERIC_EG_COPY_MODE
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xC404
 ; @PRIVATE
 ; DESCRIPTION:
 ; Handles a front-panel numeric button press while the synth's user-interface
