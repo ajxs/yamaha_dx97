@@ -137,6 +137,7 @@ ui_print_osc_freq_get_tens:                     SUBROUTINE
 ; UI_PRINT_PARAMETER_VALUE_OSC_FREQ
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; @PRIVATE
 ; DESCRIPTION:
 ; Prints the oscillator frequency to the LCD.

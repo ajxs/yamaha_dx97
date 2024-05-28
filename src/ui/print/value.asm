@@ -36,7 +36,7 @@
 ; ==============================================================================
 ui_print_param_value_equals_and_load_value:     SUBROUTINE
     LDAA    #'=
-; Fall-through below.
+; Falls-through below.
 
 ; ==============================================================================
 ; UI_PRINT_PARAM_VALUE_SEPARATOR_CHARACTER

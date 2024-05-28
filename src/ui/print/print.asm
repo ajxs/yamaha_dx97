@@ -17,6 +17,8 @@
 ; ==============================================================================
 ; UI_PRINT
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xE44A
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Main entry point to the synth's menu functionality.
 ; This subroutine will print the user-interface containing the currently
@@ -114,10 +116,11 @@ ui_print_play_mode:                             SUBROUTINE
 ; UI_PRINT_MEMORY_STORE_MODE
 ; ==============================================================================
 ; DESCRIPTION:
-; @TODO
+; Prints the main UI menu when the synth's UI is in 'Store' mode, and the
+; synth's memory protection is disabled.
 ;
 ; ==============================================================================
-ui_print_memory_store_mode:
+ui_print_memory_store_mode:                     SUBROUTINE
     LDX     #str_memory_store
     BRA     ui_print_copy_string_and_update
 
@@ -126,10 +129,11 @@ ui_print_memory_store_mode:
 ; UI_PRINT_MEMORY_PROTECTED
 ; ==============================================================================
 ; DESCRIPTION:
-; @TODO
+; Prints the main UI menu when the synth's UI is in 'Store' mode, and the
+; synth's memory protection is enabled.
 ;
 ; ==============================================================================
-ui_print_memory_protected:
+ui_print_memory_protected:                      SUBROUTINE
     LDX     #str_memory_protect
 ; Falls-through below.
 
@@ -137,10 +141,11 @@ ui_print_memory_protected:
 ; UI_PRINT_COPY_STRING_AND_UPDATE
 ; ==============================================================================
 ; DESCRIPTION:
-; @TODO
+; Performs a string copy and updates the LCD, as part of the synth's main
+; UI functionality.
 ;
 ; ==============================================================================
-ui_print_copy_string_and_update:
+ui_print_copy_string_and_update:                SUBROUTINE
     JSR     lcd_strcpy
     JMP     lcd_update
 
@@ -148,7 +153,7 @@ ui_print_copy_string_and_update:
 ; ==============================================================================
 ; UI_PRINT_EG_COPY_MODE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xE47E
 ; @CHANGED_FOR_6_OP
 ; @PRIVATE
 ; DESCRIPTION:
@@ -193,7 +198,7 @@ ui_print_eg_copy_mode:                          SUBROUTINE
 ; ==============================================================================
 ; UI_PRINT_EDIT_MODE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xE4B3
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Prints the 'Edit Mode' user-interface.
@@ -289,6 +294,7 @@ ui_print_edit_mode:                             SUBROUTINE
 
     CMPB    #BUTTON_EDIT_15_EG_RATE
     BCS     ui_print_parameter
+
     CMPB    #BUTTON_EDIT_17_KBD_SCALE_RATE
     BCC     ui_print_parameter
 
@@ -306,6 +312,7 @@ ui_print_edit_mode:                             SUBROUTINE
 ; ==============================================================================
 ; UI_PRINT_FUNCTION_MODE
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xE519
 ; DESCRIPTION:
 ; Prints the main user-interface when the synth is in 'Function Mode'.
 ; This subroutine will print the function mode header, the parameter currently
@@ -364,8 +371,7 @@ ui_print_parameter:                             SUBROUTINE
     STX     <memcpy_ptr_dest
 
 ; Load the last numeric button pressed, and subtract '4' from this value.
-; This arrangement is done because buttons 1-4 in 'Edit mode' don't trigger
-; any UI changes.
+; This happens because buttons 1-4 in 'Edit mode' don't trigger UI changes.
     LDAB    ui_btn_numeric_last_pressed
     SUBB    #4
 
