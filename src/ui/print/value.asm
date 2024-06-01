@@ -390,7 +390,7 @@ ui_print_parameter_value_midi_channel:          SUBROUTINE
 ; This subroutine is used to update the synth's UI after various user actions.
 ;
 ; ==============================================================================
-ui_print_update_led_and_menu:
+ui_print_update_led_and_menu:                   SUBROUTINE
     JSR     led_print_patch_number
     JMP     ui_print
 
@@ -407,7 +407,7 @@ ui_print_update_led_and_menu:
 ; * ACCA
 ;
 ; ==============================================================================
-ui_print_parameter_value_osc_mode:
+ui_print_parameter_value_osc_mode:              SUBROUTINE
     LDX     #(lcd_buffer_next + 24)
     LDAA    #':
 

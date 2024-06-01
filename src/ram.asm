@@ -412,8 +412,8 @@ ui_btn_edit_5_sub_function:                     DS 1
 ui_btn_edit_9_sub_function:                     DS 1
 
 ; Edit mode button 10 sub-function:
-; * 0: Amp Mod Sens
-; * 1: Pitch ""
+; * 0: LFO Amp Mod Sens
+; * 1: LFO Pitch ""
 ui_btn_edit_10_sub_function:                    DS 1
 
 ; Edit mode button 14 sub-function:

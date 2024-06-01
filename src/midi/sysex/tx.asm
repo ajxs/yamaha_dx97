@@ -404,6 +404,7 @@ midi_sysex_tx_param_change_operator_enable:     SUBROUTINE
 ; ==============================================================================
 ; MIDI_SYSEX_TX_KEY_TRANSPOSE
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xF13E
 ; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Transmits the synth's key transpose settings via SysEx.

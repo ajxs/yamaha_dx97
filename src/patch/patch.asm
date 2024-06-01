@@ -257,7 +257,7 @@ patch_restore_edit_buffer_from_compare:         SUBROUTINE
 ; ==============================================================================
 ; PATCH_SET_NEW_INDEX_AND_SAVE_EDIT_BUFFER_TO_COMPARE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xE22F
 ; DESCRIPTION:
 ; This subroutine is invoked when changing patches.
 ; It sets the newly selected patch index, and if the currently loaded patch

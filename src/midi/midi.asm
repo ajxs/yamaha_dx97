@@ -228,8 +228,10 @@ midi_print_error_message:                       SUBROUTINE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE:0xEFB4
 ; DESCRIPTION:
-; Pushes a MIDI message byte to the MIDI TX ring buffer.
-; This message will be sent in the next SIO interrupt handler event.
+; Pushes a MIDI message byte to the MIDI TX ring buffer, and sets the TIE
+; flag in the 'SCI Control Status' register. This will cause a TDRE interrupt
+; to be generated, which will send the MIDI message in the next SCI TDRE IRQ.
+; This happens in the 'handler_sci' SCI interrupt handler routine.
 ;
 ; ARGUMENTS:
 ; Registers:
@@ -262,6 +264,9 @@ midi_tx:                                        SUBROUTINE
     STX     <midi_buffer_ptr_tx_write
 
 ; Enable TX, RX, TX interrupts, and RX interrupts.
+; @TODO: According to the Hitachi HD6303R User's Manual, only the lower 4
+; bits of the SCI Control Status register are writeable. This means that
+; setting the 'TDRE' field has no effect, and should be removed.
     LDAA    #(SCI_CTRL_TE | SCI_CTRL_TIE | SCI_CTRL_RE | SCI_CTRL_RIE | SCI_CTRL_TDRE)
     STAA    <sci_ctrl_status
 
@@ -283,6 +288,7 @@ midi_tx_active_sensing:                         SUBROUTINE
 ; ==============================================================================
 ; MIDI_TX_PROGRAM_CHANGE_CURRENT_PATCH
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xF016
 ; DESCRIPTION:
 ; If SysEx is enabled, this subroutine sends a MIDI 'Program Change' event
 ; with the currently selected patch index.

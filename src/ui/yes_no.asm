@@ -215,6 +215,7 @@ ui_yes_no_fn_btn_19:                            SUBROUTINE
 ui_patch_init_recall:                           SUBROUTINE
     LDAA    ui_btn_function_19_sub_function
     BEQ     .edit_recall
+
     DECA
     BEQ     .patch_init
 

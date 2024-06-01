@@ -365,7 +365,7 @@ ui_button_edit_9_pmd_amd:                       SUBROUTINE
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; @PRIVATE
 ; DESCRIPTION:
-; Handles the numeric buttons 10 being pressed when in 'Edit Mode'.
+; Handles the numeric button 10 being pressed when in 'Edit Mode'.
 ;
 ; ==============================================================================
 ui_button_edit_10:                              SUBROUTINE
@@ -390,7 +390,7 @@ ui_button_edit_10:                              SUBROUTINE
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; @PRIVATE
 ; DESCRIPTION:
-; Handles the numeric buttons 14 being pressed when in 'Edit Mode'.
+; Handles the numeric button 14 being pressed when in 'Edit Mode'.
 ;
 ; ==============================================================================
 ui_button_edit_14:                              SUBROUTINE
@@ -496,7 +496,7 @@ ui_button_edit_15_16_select_eg_stage:           SUBROUTINE
     INCA
     ANDA    #%11
     STAA    ui_currently_selected_eg_stage
-; Fall-through below.
+; Falls-through below.
 
 ; ==============================================================================
 ; UI_STORE_LAST_BUTTON_AND_LOAD_MAX_VALUE
@@ -763,8 +763,9 @@ ui_button_function_20:                          SUBROUTINE
 ; Falls-through below.
 
 ; ==============================================================================
-; UI_BTN_FUNCTION_SET_ACTIVE_PARAMETER
+; UI_BUTTON_FUNCTION_SET_ACTIVE_PARAMETER
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xE0DC
 ; DESCRIPTION:
 ; This subroutine sets the currently selected 'Edit Parameter' and its
 ; associated maximum value when a numeric button is pressed while the synth is

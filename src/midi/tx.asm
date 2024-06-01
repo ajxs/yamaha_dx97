@@ -102,6 +102,8 @@ midi_tx_analog_input_event:                     SUBROUTINE
 ; ==============================================================================
 ; MIDI_TX_PEDAL_STATUS_SUSTAIN
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xEFF9
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Sends a MIDI 'Mode Change' event corresponding to the sustain pedal status.
 ; Sends either a 0, or 0xFF value, depending on whether the pedal status is
@@ -117,6 +119,8 @@ midi_tx_pedal_status_sustain:                   SUBROUTINE
 ; ==============================================================================
 ; MIDI_TX_ANALOG_INPUT_SUSTAIN_PORTA
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE
+; @CHANGED_FOR_6_OP
 ; DESCRIPTION:
 ; Sends a MIDI message corresponding to portamento, and sustain analog inputs.
 ;
@@ -127,6 +131,7 @@ midi_tx_pedal_status_sustain:                   SUBROUTINE
 ; ==============================================================================
 midi_tx_analog_input_sustain_porta:             SUBROUTINE
     BEQ     .send_input_event
+
     COMA
 
 .send_input_event:
@@ -175,7 +180,7 @@ midi_tx_cc_increment_decrement:                 SUBROUTINE
 ; ==============================================================================
 ; MIDI_TX_PITCH_BEND
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xF029
 ; DESCRIPTION:
 ; Sends a MIDI event corresponding to an update from the front-panel
 ; pitch-bend wheel.
