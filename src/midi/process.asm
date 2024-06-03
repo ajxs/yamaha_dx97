@@ -56,9 +56,6 @@ midi_process_incoming_data:                     SUBROUTINE
     RTS
 
 .process_incoming_data:
-    LDAA    #1
-    STAA    <midi_rx_processing_pending
-
 ; Read the next incoming data byte.
 ; IX still contains the MIDI RX buffer read pointer.
     LDAA    0,x
