@@ -24,6 +24,10 @@
 ;
 ; =============================================================================
 midi_sysex_rx_param_voice_process:              SUBROUTINE
+; Exit without any action if 'Patch Compare Mode' is active.
+    TST     patch_compare_mode_active
+    BNE     .exit
+
 ; The full parameter offset is contained in both the param number byte,
 ; and the two least-significant bits of the parameter group byte.
 ; These need to be combined.
@@ -53,6 +57,13 @@ midi_sysex_rx_param_voice_process:              SUBROUTINE
     BEQ     .exit
 
     STAA    0,x
+
+; Trigger a patch reload with the newly stored voice data.
+    LDAA    #EVENT_RELOAD_PATCH
+    STAA    main_patch_event_flag
+
+; Set the patch edit buffer as having been modified.
+    STAA    patch_current_modified_flag
 
 .exit:
     JMP     ui_print_update_led_and_menu
