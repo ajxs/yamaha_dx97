@@ -140,7 +140,7 @@ lcd_update:                                     SUBROUTINE
 ; DESCRIPTION:
 ; Clears the second line of the LCD (next) buffer.
 ;
-; MEMORY USED:
+; MEMORY MODIFIED:
 ; * memcpy_ptr_dest: A pointer to the second line of the LCD next contents
 ; buffer is stored in the copy destination pointer.
 ;
@@ -162,9 +162,9 @@ lcd_clear_line_2:                               SUBROUTINE
 ; DESCRIPTION:
 ; Clears the LCD (next) buffer.
 ;
-; MEMORY USED:
+; MEMORY MODIFIED:
 ; * memcpy_ptr_dest: A pointer to the start of the LCD next contents buffer is
-; stored in the copy dest pointer.
+;    stored in the copy dest pointer.
 ;
 ; REGISTERS MODIFIED:
 ; * ACCA, ACCB, IX
@@ -282,7 +282,7 @@ lcd_init:                                       SUBROUTINE
 ; Registers:
 ; * IX:   A pointer to the string to print.
 ;
-; MEMORY USED:
+; MEMORY MODIFIED:
 ; * memcpy_ptr_dest: The destination string buffer pointer.
 ;
 ; REGISTERS MODIFIED:

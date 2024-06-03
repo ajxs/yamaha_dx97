@@ -170,7 +170,7 @@ test_entry_get_input:                           SUBROUTINE
 ; Increment the current test stage.
 ; This is triggered by user input during the test entry main loop.
 ;
-; MEMORY USED:
+; MEMORY MODIFIED:
 ; * test_stage_current: The current test stage being changed.
 ;
 ; ==============================================================================
@@ -276,7 +276,7 @@ test_entry_get_input_decrement_stage:           SUBROUTINE
 ;
 ; RETURNS:
 ; * ACCB: The result of reading the front-panel button input.
-;         '0' if no input, '1' if 'YES', '2' if 'NO'.
+;    '0' if no input, '1' if 'YES', '2' if 'NO'.
 ;
 ; ==============================================================================
 test_entry_get_user_input_read_buttons:         SUBROUTINE

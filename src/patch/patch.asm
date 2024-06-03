@@ -374,7 +374,7 @@ patch_save:
 ; Registers:
 ; * ACCB: The number of the operator to copy the EG settings to.
 ;
-; MEMORY USED:
+; MEMORY MODIFIED:
 ; * operator_selected_dest: The selected operator number, which will be the
 ;    source of the copied EG information.
 ;

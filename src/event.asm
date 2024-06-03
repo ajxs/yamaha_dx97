@@ -12,11 +12,10 @@
 ; triggering the reloading of patch data to the voice chips based upon the
 ; value of an event dispatch flag variable
 ;
-; MEMORY USED:
+; MEMORY MODIFIED:
 ; * main_patch_event_flag: This is used as an event dispatch flag.
-;           Depending on the value set, it will either cause the patch data
-;           to be reloaded to the EGS/OPS, or the data reloaded and all
-;           active voices halted.
+;    Depending on the value set, it will either cause the patch data to be
+;    reloaded to the EGS/OPS, or the data reloaded and all active voices halted.
 ;
 ; ==============================================================================
 
