@@ -14,31 +14,6 @@
     .PROCESSOR HD6303
 
 ; ==============================================================================
-; PORTAMENTO_CONVERT_INCOMING_MIDI_VALUE
-; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE:0xD00B
-; DESCRIPTION:
-; Converts an incoming portamento time value received via a MIDI control code
-; message to the synth's internal format.
-;
-; ARGUMENTS:
-; Registers:
-; * ACCA: The value to scale.
-;
-; REGISTERS MODIFIED:
-; * ACCA, ACCB
-;
-; RETURNS:
-; * ACCD: The scaled value.
-;
-; ==============================================================================
-portamento_convert_incoming_midi_value:         SUBROUTINE
-    LDAB    #200
-    MUL
-    RTS
-
-
-; ==============================================================================
 ; PORTAMENTO_CALCULATE_RATE
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE

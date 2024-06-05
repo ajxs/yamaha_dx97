@@ -4,7 +4,7 @@
 ;
 ; SPDX-License-Identifier: GPL-3.0-or-later
 ; ==============================================================================
-; voice/add.asm
+; pitch_eg.asm
 ; ==============================================================================
 ; DESCRIPTION:
 ; This file contains the subroutines used to add a voice with a new note, in
@@ -17,6 +17,7 @@
 ; PITCH_EG_PROCESS
 ; ==============================================================================
 ; @TAKEN_FROM_DX7_FIRMWARE:0xE616
+; @CALLED_DURING_OCF_HANDLER
 ; DESCRIPTION:
 ; Processes the pitch EG for all voices.
 ; This subroutine loads the levels of each of the synth's 16 voices, testing
@@ -56,7 +57,7 @@ pitch_eg_process:                               SUBROUTINE
     CMPA    #3
     BNE     .is_eg_step_5
 
-    JMP     .increment_pointers
+    BRA     .increment_pointers
 
 .is_eg_step_5:
 ; As noted above, when a voice is removed its pitch EG step is set to '4'.
@@ -66,7 +67,7 @@ pitch_eg_process:                               SUBROUTINE
     CMPA    #5
     BNE     .process_eg_stage
 
-    JMP     .increment_pointers
+    BRA     .increment_pointers
 
 .process_eg_stage:
 ; Load the pitch EG values, clamping the index at 3.
@@ -173,7 +174,7 @@ pitch_eg_process:                               SUBROUTINE
     DEC     .pitch_eg_voice_index
     BEQ     .exit
 
-    JMP     .process_voice_loop
+    BRA     .process_voice_loop
 
 .exit:
     RTS

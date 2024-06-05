@@ -56,7 +56,7 @@ active_sensing_test_for_timeout:             SUBROUTINE
     STAA    <midi_active_sensing_rx_counter_enabled
     STAA    <midi_active_sensing_rx_counter
 
-    JSR     voice_reset
+    JMP     voice_reset
 
 .exit:
     RTS
@@ -215,7 +215,7 @@ handler_ocf:                                    SUBROUTINE
     BNE     .process_pitch_modulation
 
     JSR     pitch_eg_process
-    JSR     handler_ocf_compare_mode_led_blink
+    BSR     handler_ocf_compare_mode_led_blink
 
 .process_pitch_modulation:
     JSR     pitch_bend_process

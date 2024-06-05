@@ -49,8 +49,6 @@ midi_rx_control_code:                           SUBROUTINE
     DC.B 2
     DC.B midi_rx_cc_2_breath_controller - *
     DC.B 3
-    DC.B midi_rx_cc_unsupported - *
-    DC.B 4
     DC.B midi_rx_cc_unsupported- *
     DC.B 5
     DC.B midi_rx_cc_5_portamento_time - *
@@ -60,8 +58,6 @@ midi_rx_control_code:                           SUBROUTINE
 ; Unlike the DX7, MIDI Volume is not supported on the DX9.
 ; As best I can tell the DAC's volume port is not wired into the CPU's IO
 ; ports, or address bus.
-    DC.B midi_rx_cc_unsupported - *
-    DC.B 8
     DC.B midi_rx_cc_unsupported - *
     DC.B 64
     DC.B midi_rx_cc_64_sustain - *
@@ -151,7 +147,8 @@ midi_rx_cc_2_breath_controller:                 SUBROUTINE
 ;
 ; ==============================================================================
 midi_rx_cc_5_portamento_time:                   SUBROUTINE
-    JSR     portamento_convert_incoming_midi_value
+    LDAB    #200
+    MUL
     STAA    portamento_time
     JSR     portamento_calculate_rate
 

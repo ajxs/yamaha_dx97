@@ -80,6 +80,7 @@ lfo_process:                                    SUBROUTINE
 ; If the LFO phase accumulator overflows after adding the LFO phase
 ; increment, set the flag to update the Sample and Hold LFO amplitude.
     BVC     .update_sample_and_hold
+
     OIMD    #%10000000, lfo_sample_and_hold_update_flag
     BRA     .store_phase_accumulator
 
