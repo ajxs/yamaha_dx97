@@ -430,7 +430,7 @@ ui_print_parameter:                             SUBROUTINE
 
 .is_edit_button_14:
     CMPB    #BUTTON_EDIT_14_DETUNE_SYNC - 4
-    BNE     .is_function_button_4
+    BNE     .is_function_button_6
 
 ; Value 9 (13) = Button 14 (Detune/Osc Sync).
 ; Test the value of the Edit Button 14 sub-status.
@@ -442,26 +442,12 @@ ui_print_parameter:                             SUBROUTINE
     BEQ     .parameter_osc_key_sync
 
 ; Load the string table offset for 'Osc Mode'.
-    LDAB    #46
+    LDAB    #45
     BRA     .print_parameter_name
 
 .parameter_osc_key_sync:
 ; Load the string table offset for 'Osc Key Sync'.
     LDAB    #37
-    BRA     .print_parameter_name
-
-.is_function_button_4:
-    CMPB    #BUTTON_FUNCTION_4 - 4
-    BNE     .is_function_button_6
-
-; Value 19 (23) = Function Mode Button 4.
-; Test the value of the Function Button 4 sub-status.
-; 0 = Portamento Mode, 1 = Glissando Enabled.
-    LDAA    ui_btn_function_4_sub_function
-    BEQ     .print_parameter_name
-
-; Load the string table offset for 'Glissando'.
-    LDAB    #45
     BRA     .print_parameter_name
 
 .is_function_button_6:
@@ -625,7 +611,6 @@ table_menu_parameter_names:
     DC.W str_tape_verify
     DC.W str_sys_info
     DC.W str_midi_transmit
-    DC.W str_glissando
     DC.W str_osc_mode
 
 ; ==============================================================================

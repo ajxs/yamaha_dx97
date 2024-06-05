@@ -287,20 +287,12 @@ voice_add_poly_set_initial_frequency:           SUBROUTINE
 .operator_loop_index:                           EQU #temp_variables + 13
 
 ; ==============================================================================
-    LDAB    .voice_buffer_offset
-    LDX     #voice_frequency_current_portamento
-    ABX
-
-; This 'load IX, add B to index, push, repeat, store, pull' routine
-; here avoids the need to load ACCD twice.
-    PSHX
-    LDX     #voice_frequency_current_glissando
-    ABX
-    LDD     note_frequency_previous
-
 ; Store 14-bit key log frequency.
-    STD     0,x
-    PULX
+    LDAB    .voice_buffer_offset
+    LDX     #voice_frequency_current
+    ABX
+
+    LDD     note_frequency_previous
     STD     0,x
 
     RTS

@@ -216,7 +216,7 @@ ui_print_parameter_value_osc_freq:              SUBROUTINE
 ; This will be used later to determine how many digits lie before the decimal
 ; point when printing the value.
 ; The value is clamped at 4, since there are only 4 actual valid values for a
-; fixed frequency: 1hz = 0, 10hz = 1, 100hz = 2, 1000hz.
+; fixed frequency: 1hz = 0, 10hz = 1, 100hz = 2, 1000hz = 3.
 ; The second entry in the table is 1023. If the coarse freq is 100hz then
 ; this will print as: 102.3xx
     LDAB    PATCH_OP_FREQ_COARSE,x

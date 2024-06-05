@@ -69,7 +69,7 @@ voice_reset_frequency_data:                     SUBROUTINE
     STD     0,x
     INX
     INX
-    CPX     #(voice_frequency_current_glissando + 32)
+    CPX     #(voice_frequency_current + 32)
     BNE     .reset_frequency_buffers_loop
 
     PULX

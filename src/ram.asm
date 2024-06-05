@@ -292,8 +292,6 @@ pitch_bend_step:                                DS 1
 ; * 1: Follow.
 portamento_mode:                                DS 1
 
-portamento_glissando_enabled:                   DS 1
-
 portamento_time:                                DS 1
 mod_wheel_range:                                DS 1
 mod_wheel_pitch:                                DS 1
@@ -422,11 +420,6 @@ ui_btn_edit_10_sub_function:                    DS 1
 ; * 2: Oscillator Mode
 ui_btn_edit_14_sub_function:                    DS 1
 
-; Function mode button 4 sub-function:
-; * 0: Portamento Mode
-; * 1: Glissando Enabled
-ui_btn_function_4_sub_function:                 DS 1
-
 ; Function mode button 6 sub-function:
 ; * 0: MIDI Channel
 ; * 1: Sys Info
@@ -532,14 +525,11 @@ voice_status:                                   DS 32
 ; This is the target, final frequency for each voice's frequency transition
 ; during portamento between two notes.
 voice_frequency_target:                         DS 32
-; This buffer holds the current portamento frequency of the synth's 16 voices.
+; This buffer holds the current frequency of the synth's 16 voices.
 ; If portamento is currently active the individual voices will transition from
 ; this current frequency towards their target frequency.
 ; This frequency is set by the main 'Voice add' subroutines.
-voice_frequency_current_portamento:             DS 32
-; This buffer holds the current glissando frequency of the synth's 16 voices.
-; @TODO: Investigate using one buffer for both portamento/glissando.
-voice_frequency_current_glissando:              DS 32
+voice_frequency_current:                        DS 32
 
 ; These temporary variables are used in various routines throughout the
 ; firmware, and are given appropriate contextual names in the routines where

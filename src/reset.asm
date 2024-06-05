@@ -231,7 +231,6 @@ handler_reset_parameter_reset:                  SUBROUTINE
 ; The internal scaled rate will be calculated when the patch is 'activated'.
     CLR     portamento_time
     CLR     portamento_mode
-    CLR     portamento_glissando_enabled
 
     CLR     mod_wheel_range
     CLR     mod_wheel_pitch
@@ -411,11 +410,12 @@ main_loop:
     JSR     keyboard_event_handler
     JSR     adc_process
     JSR     main_input_handler
-    JSR     main_process_events
+; In the original DX9 firmware, 'patch events' were handled twice in the
+; main loop. The first time to respond to user-input, the second to respond to
+; incoming MIDI messages.
+; In order to speed up the handling of user-input and printing the user
+; interface, the first patch event handling call has been disabled.
+;    JSR     main_process_events
     JSR     midi_process_incoming_data
     JSR     main_process_events
-; The exact reason for this 'NOP' instruction will never be known, however it
-; was likely put here to slightly decrease the polling rate of the synth's
-; various peripherals.
-    NOP
     BRA     main_loop

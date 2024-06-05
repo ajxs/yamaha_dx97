@@ -67,10 +67,6 @@ ui_button_numeric:                              SUBROUTINE
     DC.B ui_button_edit_20_jump - *
     DC.B 20
     DC.B ui_button_function_set_active_parameter_jump - *
-    DC.B 23
-    DC.B ui_button_function_4_jump - *
-    DC.B 24
-    DC.B ui_button_function_set_active_parameter_jump - *
     DC.B 25
     DC.B ui_button_function_6_jump - *
     DC.B 26
@@ -271,12 +267,6 @@ ui_button_function_7_jump:                      SUBROUTINE
 ; ==============================================================================
 ui_button_function_19_jump:                     SUBROUTINE
     JMP ui_button_function_19
-
-; ==============================================================================
-; UI_BUTTON_FUNCTION_4_JUMP
-; ==============================================================================
-ui_button_function_4_jump:                      SUBROUTINE
-    JMP ui_button_function_4
 
 ; ==============================================================================
 ; UI_BUTTON_FUNCTION_6_JUMP
@@ -596,45 +586,6 @@ ui_button_edit_get_active_parameter_address:    SUBROUTINE
 .store_param_pointer:
     STX     ui_active_param_address
     JMP     ui_load_active_param_ptr_and_max_value
-
-
-; ==============================================================================
-; UI_BUTTON_FUNCTION_4
-; ==============================================================================
-; @NEW_FUNCTIONALITY
-; DESCRIPTION:
-; Handles a press to button '4' when the synth is in function mode.
-; This routine cycles through the sub-functions associated with this button.
-; This is newly added functionality to facilitate enabling glissando.
-;
-; ARGUMENTS:
-; Registers:
-; * ACCB: The triggering front-panel numeric button number.
-;
-; MEMORY MODIFIED:
-; * ui_btn_function_4_sub_function
-;
-; REGISTERS MODIFIED:
-; * ACCA, ACCB, IX
-;
-; ==============================================================================
-ui_button_function_4:                           SUBROUTINE
-; If this button has been pressed twice in succession, cycle the sub-function.
-    CMPB    ui_btn_numeric_last_pressed
-    BNE     .set_active_parameter
-
-    TOGGLE_BUTTON_SUB_FUNCTION ui_btn_function_4_sub_function
-
-    TBA
-
-.set_active_parameter:
-    TST     ui_btn_function_4_sub_function
-    BEQ     ui_button_function_set_active_parameter
-
-; Set the correct offset for loading the 'glissando_enabled' variable and
-; maximum value from the table.
-    LDAA    #42
-    BRA     ui_button_function_set_active_parameter
 
 
 ; ==============================================================================
@@ -962,6 +913,4 @@ table_max_parameter_values_function_mode:
     DC.W null_edit_parameter
     DC.B 1
     DC.W sys_info_avail
-    DC.B 1
-    DC.W portamento_glissando_enabled
     DC.B 1
