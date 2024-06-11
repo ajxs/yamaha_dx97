@@ -75,12 +75,11 @@ portamento_process:                             SUBROUTINE
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
 .pitch_eg_frequency_current_ptr:                EQU #interrupt_temp_variables
-.voice_frequency_current_ptr:                   EQU #interrupt_temp_variables + 2
-.voice_frequency_target_ptr:                    EQU #interrupt_temp_variables + 4
-.egs_voice_frequency_ptr:                       EQU #interrupt_temp_variables + 6
-.voice_final_portamento_frequency:              EQU #interrupt_temp_variables + 8
-.portamento_frequency_decrement                 EQU #interrupt_temp_variables + 10
-.voice_loop_index:                              EQU #interrupt_temp_variables + 12
+.voice_frequency_ptr:                           EQU #interrupt_temp_variables + 2
+.egs_voice_frequency_ptr:                       EQU #interrupt_temp_variables + 4
+.voice_target_frequency:                        EQU #interrupt_temp_variables + 6
+.portamento_frequency_decrement                 EQU #interrupt_temp_variables + 8
+.voice_loop_index:                              EQU #interrupt_temp_variables + 10
 
 ; ==============================================================================
 ; This flag acts as a 'toggle' switch to control which voices are processed.
@@ -103,36 +102,29 @@ portamento_process:                             SUBROUTINE
     ABX
     STX     <.pitch_eg_frequency_current_ptr
 
-    LDX     #voice_frequency_current
-    ABX
-    STX     <.voice_frequency_current_ptr
-
     LDX     #egs_voice_frequency
     ABX
     STX     <.egs_voice_frequency_ptr
 
     LDX     #voice_frequency_target
     ABX
-    STX     <.voice_frequency_target_ptr
+    STX     <.voice_frequency_ptr
 
 ; Set up the loop index.
     LDAA    #8
     STAA    <.voice_loop_index
 
 .process_voice_loop:
-; Store the current voice's target frequency as this voice's portamento
-; final frequency. This value will be used in the calculations below.
+; At this point IX contains the voice frequency pointer.
+; Store the current voice's target frequency for use in the arithmetic below.
     LDD     0,x
-    STD     <.voice_final_portamento_frequency
-
-; Load this voice's CURRENT portamento frequency into ACCD.
-    LDX     <.voice_frequency_current_ptr
-    LDD     0,x
+    STD     <.voice_target_frequency
 
 ; Check whether this voice's current portamento frequency is above or below
 ; the voice's target frequency.
 ; If *(voice_frequency_current[B]) - *(voice_frequency_target[B]) < 0, branch.
-    SUBD    <.voice_final_portamento_frequency
+    LDD     32,x
+    SUBD    <.voice_target_frequency
     BMI     .frequency_below_target
 
 ; If the current portamento frequency is above the target frequency,
@@ -148,32 +140,19 @@ portamento_process:                             SUBROUTINE
     MUL
     STD     <.portamento_frequency_decrement
 
-; Subtract the portamento frequency decrement from this voice's current
-; portamento frequency.
-    LDX     <.voice_frequency_current_ptr
-    LDD     0,x
+; Subtract the frequency decrement from this voice's current frequency.
+    LDD     32,x
     SUBD    <.portamento_frequency_decrement
 
 ; If subtracting the decrement causes the resulting frequency to be below the
 ; target frequency value, clamp at the target frequency.
     XGDX
-    CPX     <.voice_final_portamento_frequency
+    CPX     <.voice_target_frequency
     XGDX
-    BCC     .store_decremented_frequency
+    BCC     .store_final_frequency
 
-    LDD     <.voice_final_portamento_frequency
-
-.store_decremented_frequency:
-    LDX     <.voice_frequency_current_ptr
-    STD     0,x
-    STD     <.voice_final_portamento_frequency
-
-; Increment pointer.
-    INX
-    INX
-    STX     <.voice_frequency_current_ptr
-
-    BRA     .add_pitch_eg_frequency
+    LDD     <.voice_target_frequency
+    BRA     .store_final_frequency
 
 .frequency_below_target:
 ; If the current portamento frequency is below the target frequency, calculate
@@ -187,34 +166,30 @@ portamento_process:                             SUBROUTINE
 
     MUL
 
-; Add the portamento frequency decrement to this voice's current
-; portamento frequency.
-    LDX     <.voice_frequency_current_ptr
-    ADDD    0,x
+; Add the portamento frequency increment to this voice's current frequency.
+    ADDD    32,x
 
 ; If adding the increment causes the resulting frequency to be above the
 ; target frequency value, clamp at the target frequency.
     XGDX
-    CPX     <.voice_final_portamento_frequency
+    CPX     <.voice_target_frequency
     XGDX
-    BCS     .store_incremented_frequency
+    BCS     .store_final_frequency
 
-    LDD     <.voice_final_portamento_frequency
+    LDD     <.voice_target_frequency
 
-.store_incremented_frequency:
-    LDX     <.voice_frequency_current_ptr
-    STD     0,x
-    STD     <.voice_final_portamento_frequency
+.store_final_frequency:
+    STD     32,x
+    STD     <.voice_target_frequency
 
-; Increment pointer.
+; Increment and save the voice frequency pointer.
     INX
     INX
-    STX     <.voice_frequency_current_ptr
+    STX     <.voice_frequency_ptr
 
-.add_pitch_eg_frequency:
 ; Add the voice's current Pitch EG level to the portamento frequency.
     LDX     <.pitch_eg_frequency_current_ptr
-    ADDD    0,x
+    ADDD    64,x
     SUBD    #$1BA8
 
 ; If the result after this subtraction would be negative, clamp at 0.
@@ -230,18 +205,13 @@ portamento_process:                             SUBROUTINE
 ; Add the master tune offset, and then store this final frequency value to
 ; the EGS frequency buffer.
     ADDD    master_tune
+
     LDX     <.egs_voice_frequency_ptr
     STAA    0,x
     INX
     STAB    0,x
     INX
     STX     <.egs_voice_frequency_ptr
-
-; Increment voice target frequency pointer.
-    LDX     <.voice_frequency_target_ptr
-    INX
-    INX
-    STX     <.voice_frequency_target_ptr
 
 ; Decrement the loop index.
     DEC     .voice_loop_index
