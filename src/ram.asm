@@ -338,15 +338,6 @@ tape_patch_index:                               DS 1
 ; The current Pitch EG step for each of the synth's voices.
 pitch_eg_current_step:                          DS 16
 
-; The current Pitch EG frequency for each of the synth's voices.
-; The default value for each of these 16 entries is 0x4000. Since the pitch
-; EG range is +-4 octaves, and in the EGS frequency registers each octave is
-; represented by a logarithmic value of 0x1000, this represents the middle of
-; that 8 octave range.
-; This default value corresponds to a value of '50' in a patch's Pitch EG
-; level.
-pitch_eg_current_frequency:                     DS 32
-
 ; When a patch is loaded, the serialised pitch EG rate/level values are
 ; converted into the format used internally to process the pitch EG, and stored
 ; to these two buffers.
@@ -507,6 +498,29 @@ lcd_buffer_next:                                DS 32
 lcd_buffer_next_line_2:                         EQU (#lcd_buffer_next + 16)
 lcd_buffer_next_end:                            EQU *
 
+; These temporary variables are used in various routines throughout the
+; firmware, and are given appropriate contextual names in the routines where
+; they are used, and are referenced in the re-definitions by this address.
+; Note: These variables cannot be used in subroutines called during interrupts,
+; otherwise they could clobber their usage in ordinary routines.
+; Note: Also ensure that these variables are not used in subroutines that call
+; one another. If these are used in such situations, ensure that they do not
+; clobber eachother.
+temp_variables:                                 DS 18
+
+; Like in the original DX9 ROM the voice buffers occupy a fixed space adjacent
+; to the EGS chip. This allows for optimisation of the portamento routine.
+; The stack occupies all of the free space left between the end of the defined
+; variables, and the start of these voice buffers.
+; This likely accounts for the stack's highly arbitrary size in the DX9.
+; I'm not sure what the ideal size for the stack is, however it can likely be
+; much smaller than it is in both the original DX9 (222), and the DX7 (448).
+stack_bottom:                                   EQU *
+
+stack_top:                                      EQU $177F
+
+    ORG $1780
+
 ; The voice status array is used to store the current note, and voice status
 ; for each of the synth's 16 voices.
 ; Each entry is a two byte structure with the format:
@@ -531,24 +545,11 @@ voice_frequency_target:                         DS 32
 ; This frequency is set by the main 'Voice add' subroutines.
 voice_frequency_current:                        DS 32
 
-; These temporary variables are used in various routines throughout the
-; firmware, and are given appropriate contextual names in the routines where
-; they are used, and are referenced in the re-definitions by this address.
-; Note: These variables cannot be used in subroutines called during interrupts,
-; otherwise they could clobber their usage in ordinary routines.
-; Note: Also ensure that these variables are not used in subroutines that call
-; one another. If these are used in such situations, ensure that they do not
-; clobber eachother.
-temp_variables:                                 DS 18
-
-; In the original DX9 ROM the voice buffers occupied a fixed space adjacent to
-; the EGS chip's registers. This was used for optimisations during the voice
-; subroutines. The stack was positioned in a way that occupied all of the free
-; space left between the end of the defined variables, and the start of these
-; voice buffers. This likely accounted for the stack's highly arbitrary size.
-; I'm not sure what the ideal size for the stack is, however it can likely be
-; much smaller than it is in both the original DX9 (222), and the DX7 (448).
-; In this ROM, the stack occupies the remainder of free RAM.
-stack_bottom:                                   EQU *
-
-stack_top:                                      EQU $17FF
+; The current Pitch EG frequency for each of the synth's voices.
+; The default value for each of these 16 entries is 0x4000. Since the pitch
+; EG range is +-4 octaves, and in the EGS frequency registers each octave is
+; represented by a logarithmic value of 0x1000, this represents the middle of
+; that 8 octave range.
+; This default value corresponds to a value of '50' in a patch's Pitch EG
+; level.
+pitch_eg_current_frequency:                     DS 32

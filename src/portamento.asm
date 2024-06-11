@@ -74,12 +74,10 @@ portamento_process:                             SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
-.pitch_eg_frequency_current_ptr:                EQU #interrupt_temp_variables
-.voice_frequency_ptr:                           EQU #interrupt_temp_variables + 2
-.egs_voice_frequency_ptr:                       EQU #interrupt_temp_variables + 4
-.voice_target_frequency:                        EQU #interrupt_temp_variables + 6
-.portamento_frequency_decrement                 EQU #interrupt_temp_variables + 8
-.voice_loop_index:                              EQU #interrupt_temp_variables + 10
+.current_voice_ptr:                                     EQU #interrupt_temp_variables
+.voice_target_frequency:                        EQU #interrupt_temp_variables + 2
+.portamento_frequency_decrement                 EQU #interrupt_temp_variables + 4
+.voice_loop_index:                              EQU #interrupt_temp_variables + 6
 
 ; ==============================================================================
 ; This flag acts as a 'toggle' switch to control which voices are processed.
@@ -91,24 +89,18 @@ portamento_process:                             SUBROUTINE
     BPL     .process_voices_8_to_15
 
     CLRB
-    BRA     .setup_pointers
+    BRA     .setup_voice_ptr
 
 .process_voices_8_to_15:
     LDAB    #16
 
-.setup_pointers:
-; Initialiase the pointers used within the routine.
-    LDX     #pitch_eg_current_frequency
-    ABX
-    STX     <.pitch_eg_frequency_current_ptr
-
-    LDX     #egs_voice_frequency
-    ABX
-    STX     <.egs_voice_frequency_ptr
-
+.setup_voice_ptr:
+; This pointer indexes the current voice.
+; It is used to index the voice frequency buffers, pitch EG frequency,
+; and the EGS voice frequency buffer.
     LDX     #voice_frequency_target
     ABX
-    STX     <.voice_frequency_ptr
+    STX     <.current_voice_ptr
 
 ; Set up the loop index.
     LDAA    #8
@@ -182,36 +174,30 @@ portamento_process:                             SUBROUTINE
     STD     32,x
     STD     <.voice_target_frequency
 
-; Increment and save the voice frequency pointer.
-    INX
-    INX
-    STX     <.voice_frequency_ptr
-
 ; Add the voice's current Pitch EG level to the portamento frequency.
-    LDX     <.pitch_eg_frequency_current_ptr
     ADDD    64,x
     SUBD    #$1BA8
 
 ; If the result after this subtraction would be negative, clamp at 0.
-    BCC     .increment_pitch_eg_ptr
+    BCC     .update_egs_voice_frequency
 
     LDD     #0
 
-.increment_pitch_eg_ptr:
-    INX
-    INX
-    STX     <.pitch_eg_frequency_current_ptr
-
-; Add the master tune offset, and then store this final frequency value to
+.update_egs_voice_frequency:
+; Add the master tune offset, and then write this final frequency value to
 ; the EGS frequency buffer.
     ADDD    master_tune
 
-    LDX     <.egs_voice_frequency_ptr
-    STAA    0,x
+; Note that the EGS voice frequency buffer is adjacent to these voice buffers,
+; so it can be indexed with IX. This optimisation was copied from the DX9 ROM.
+    STAA    96,x
+    NOP
+    STAB    97,x
+
+; Increment the voice pointer.
     INX
-    STAB    0,x
     INX
-    STX     <.egs_voice_frequency_ptr
+    STX     <.current_voice_ptr
 
 ; Decrement the loop index.
     DEC     .voice_loop_index
