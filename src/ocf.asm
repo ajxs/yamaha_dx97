@@ -14,7 +14,7 @@
 
 ; The period between the synth's periodic interrupts.
 ; This value is taken from the DX9 ROM.
-SYSTEM_TICK_PERIOD:                             EQU 3140
+SYSTEM_TICK_PERIOD:                             EQU 2500
 
 
 ; ==============================================================================
@@ -56,7 +56,7 @@ active_sensing_test_for_timeout:             SUBROUTINE
     STAA    <midi_active_sensing_rx_counter_enabled
     STAA    <midi_active_sensing_rx_counter
 
-    JSR     voice_reset
+    JMP     voice_reset
 
 .exit:
     RTS
@@ -164,10 +164,10 @@ handler_ocf_compare_mode_led_blink:             SUBROUTINE
 ; According to the schematics, the CPU is clocked with a 3.77MHz crystal.
 ; The HD63B03RP has built in divide-by-4 circuitry, so the synth's actual clock
 ; rate is 0.9425MHz.
-; The DX7's OCF interrupt resets the 'Output Compare' register to '3140'.
+; The DX9's OCF interrupt resets the 'Output Compare' register to '2500'.
 ; From this we can use the following formula to calculate the actual rate of
 ; the periodic interrupt:
-; ((3.77 / 4) ⋅ 10^6) / 3140 = 300.15924Hz
+; 3.77MHz / 4 / 2500 = 377Hz
 
 ; MEMORY MODIFIED:
 ; * pitch_eg_update_toggle
@@ -199,8 +199,8 @@ handler_ocf:                                    SUBROUTINE
     JSR     mod_amp_update
     JSR     voice_update_sustain_status
 
-; If there is received MIDI data pending processing skip processing the
-; portamento, and pitch EG processing.
+; If there is incoming MIDI data pending, don't process the portamento, or
+; pitch EG.
 ; This logic is taken from the DX7.
     TST     midi_rx_processing_pending
     BNE     .process_pitch_modulation
@@ -210,11 +210,12 @@ handler_ocf:                                    SUBROUTINE
 ; Toggle the flag to determine whether portamento, or pitch modulation are
 ; updated in this interrupt.
 ; Refer to documentation in the variable definition file `ram.asm`.
+; This logic is taken from the DX7.
     COM     pitch_eg_update_toggle
     BNE     .process_pitch_modulation
 
     JSR     pitch_eg_process
-    JSR     handler_ocf_compare_mode_led_blink
+    BSR     handler_ocf_compare_mode_led_blink
 
 .process_pitch_modulation:
     JSR     pitch_bend_process

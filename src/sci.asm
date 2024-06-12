@@ -54,6 +54,9 @@ handler_sci:                                    SUBROUTINE
     BRA     .handler_sci_exit
 
 .receive_incoming_data:
+    LDAA    #1
+    STAA    <midi_rx_processing_pending
+
 ; Load the incoming data, store it into the RX buffer.
     LDAA    <sci_rx
     LDX     <midi_buffer_ptr_rx_write

@@ -151,8 +151,9 @@ voice_convert_midi_note_to_log_freq:            SUBROUTINE
 ; ==============================================================================
 ; VOICE_UDPATE_SUSTAIN_STATUS
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD4E3
 ; @CHANGED_FOR_6_OP
+; @CALLED_DURING_OCF_HANDLER
 ; DESCRIPTION:
 ; Tests to see whether the status of the sustain pedal has transition from
 ; active to inactive. If this is the case, this subroutine tests all voices to
@@ -185,7 +186,8 @@ voice_update_sustain_status:                    SUBROUTINE
     ANDA    <sustain_status
     BEQ     .save_sustain_status_and_exit
 
-; Deactivate each voice in the EGS to disable sustain.
+; If the sustain pedal has transitioned to inactive, send an 'Off' event for
+; each voice to the EGS to disable sustain.
     LDX     #voice_status
     LDAB    #EGS_VOICE_EVENT_OFF
 
@@ -193,7 +195,7 @@ voice_update_sustain_status:                    SUBROUTINE
 ; If so, update the voice status array, and send the voice event signal to
 ; the EGS turn the voice off.
 .test_for_sustained_voices_loop:
-    TIMX    #VOICE_STATUS_SUSTAIN, 1
+    TIMX    #VOICE_STATUS_SUSTAIN, 1,x
     BEQ     .increment_loop_counter
 
     STAB    egs_key_event

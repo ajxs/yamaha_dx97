@@ -22,6 +22,7 @@ LFO_SAMPLE_AND_HOLD_PRIME_2:                    EQU 11
 ; LFO_PROCESS
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE:0xD5D2
+; CHANGED_FOR_6_OP
 ; @CALLED_DURING_OCF_HANDLER
 ; DESCRIPTION:
 ; Calculates, and stores the instantaneous amplitude of the synth's LFO at its
@@ -80,6 +81,7 @@ lfo_process:                                    SUBROUTINE
 ; If the LFO phase accumulator overflows after adding the LFO phase
 ; increment, set the flag to update the Sample and Hold LFO amplitude.
     BVC     .update_sample_and_hold
+
     OIMD    #%10000000, lfo_sample_and_hold_update_flag
     BRA     .store_phase_accumulator
 
@@ -89,20 +91,24 @@ lfo_process:                                    SUBROUTINE
 .store_phase_accumulator:
     STD     <lfo_phase_accumulator
 
-; Jumpoff to the specific LFO shape functions.
+; Jump to the specific LFO shape functions.
+    LDX     #table_lfo_functions
     LDAB    lfo_waveform
     ANDB    #%111
-    JSR     jumpoff_indexed
+    ASLB
+    ABX
+    LDX     0,x
+    JMP     0,x
 
-    DC.B lfo_process_tri - *
-    DC.B lfo_process_saw_down - *
-    DC.B lfo_process_saw_up - *
-    DC.B lfo_process_square - *
-    DC.B lfo_process_sin - *
-    DC.B lfo_process_sh - *
-    DC.B lfo_process_sh - *
-    DC.B lfo_process_sh - *
-
+table_lfo_functions:
+    DC.W lfo_process_tri
+    DC.W lfo_process_saw_down
+    DC.W lfo_process_saw_up
+    DC.W lfo_process_square
+    DC.W lfo_process_sin
+    DC.W lfo_process_sh
+    DC.W lfo_process_sh
+    DC.W lfo_process_sh
 
 ; ==============================================================================
 ; LFO_PROCESS_TRI
@@ -143,7 +149,7 @@ lfo_process_tri:                                SUBROUTINE
 ; ==============================================================================
 ; LFO_PROCESS_SAW_DOWN
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD617
 ; DESCRIPTION:
 ; Calculates the instantaneous amplitude of the synth's LFO at its current
 ; phase when the 'Saw Down' shape is selected.
@@ -163,7 +169,7 @@ lfo_process_saw_down:                           SUBROUTINE
 ; ==============================================================================
 ; LFO_PROCESS_SAW_UP
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD618
 ; DESCRIPTION:
 ; Calculates the instantaneous amplitude of the synth's LFO at its current
 ; phase when the 'Saw Up' shape is selected.
@@ -183,7 +189,7 @@ lfo_process_saw_up:                             SUBROUTINE
 ; ==============================================================================
 ; LFO_PROCESS_SQUARE
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD61A
 ; DESCRIPTION:
 ; Calculates the instantaneous amplitude of the synth's LFO at its current
 ; phase when the 'Square' shape is selected.
@@ -212,7 +218,7 @@ lfo_process_square:                             SUBROUTINE
 ; ==============================================================================
 ; LFO_PROCESS_SIN
 ; ==============================================================================
-; @TAKEN_FROM_DX9_FIRMWARE
+; @TAKEN_FROM_DX9_FIRMWARE:0xD622
 ; DESCRIPTION:
 ; Calculates the instantaneous amplitude of the synth's LFO at its current
 ; phase when the 'Sine' shape is selected.
@@ -260,6 +266,7 @@ lfo_process_sin:                                SUBROUTINE
 ; ==============================================================================
 ; LFO_PROCESS_SH
 ; ==============================================================================
+; @TAKEN_FROM_DX9_FIRMWARE:0xD638
 ; DESCRIPTION:
 ; Calculates the instantaneous amplitude of the synth's LFO at its current
 ; phase when the 'Sample and Hold' shape is selected.

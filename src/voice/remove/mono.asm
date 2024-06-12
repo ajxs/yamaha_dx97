@@ -115,8 +115,7 @@ voice_remove_mono:                              SUBROUTINE
 
 .no_portamento:
     LDD     voice_frequency_target
-    STD     voice_frequency_current_portamento
-    STD     voice_frequency_current_glissando
+    STD     voice_frequency_current
 
     RTS
 

@@ -98,12 +98,15 @@ jumpoff_indexed_from_acca:
 ; * ACCB: The relative offset of the function offset from the calling
 ;         function's return address.
 ;
+; TOTAL CPU CYCLES: 20
+;
 ; ==============================================================================
 jumpoff_indexed:
     PULX
     PSHB
 
 jumpoff_indexed_from_accb:
+; TOTAL CPU CYCLES: 12
     ABX
     LDAB    0,x
     ABX

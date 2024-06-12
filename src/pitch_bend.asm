@@ -17,6 +17,7 @@
 ; PITCH_BEND_PROCESS
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
+; @CALLED_DURING_OCF_HANDLER
 ; DESCRIPTION:
 ; Updates the 'Pitch Bend base frequency' periodically as part of the OCF
 ; interrupt handler. This frequency is loaded to the EGS' pitch modulation

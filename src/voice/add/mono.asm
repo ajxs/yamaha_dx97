@@ -255,8 +255,7 @@ voice_add_mono_multiple_voices:                 SUBROUTINE
 ; ==============================================================================
 voice_add_mono_clear_porta_frequency:           SUBROUTINE
     LDD     voice_frequency_target
-    STD     voice_frequency_current_portamento
-    STD     voice_frequency_current_glissando
+    STD     voice_frequency_current
 
     RTS
 
