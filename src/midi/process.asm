@@ -125,7 +125,7 @@ midi_process_status_message:                    SUBROUTINE
 
 ; Return back to process any further incoming data in the buffer.
 .exit:
-    JMP     midi_process_incoming_data
+    BRA     midi_process_incoming_data
 
 
 ; ==============================================================================
@@ -163,10 +163,10 @@ midi_process_data_message:                      SUBROUTINE
 .test_midi_channel:
 ; Mask the MIDI channel nibble, and validate whether it matches the synth's
 ; selected MIDI receive channel.
-; Exit if this message is not intended for this device.
+; If this message is not intended for this device process the next MIDI data.
     ANDB    #%1111
     CMPB    midi_channel_rx
-    BNE     .exit
+    BNE     midi_process_incoming_data
 
 ; Load the last status byte received, shift it right 4 bits, and mask the three
 ; least-significant bits. This will create a usable index from the MIDI status
@@ -185,9 +185,6 @@ midi_process_data_message:                      SUBROUTINE
     ABX
     LDX     0,x
     JMP     0,x
-
-.exit
-    RTS
 
 
 ; ==============================================================================
