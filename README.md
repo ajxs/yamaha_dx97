@@ -18,7 +18,6 @@ If you would like to try this firmware ROM, but you're unable to flash this ROM 
 * The synth is now sensitive to the velocity of incoming MIDI notes.
 * Implements the DX7's pitch EG.
 * Implements DX7 style operator scaling.
-* Implements DX7 style portamento/glissando.
 
 ## Important: First Time Installation or Upgrade
 
@@ -37,6 +36,8 @@ This alternative firmware ROM has been thoroughly tested, and is considered read
 The risk of any harm coming to your DX9 as a result of using this ROM is incredibly, *incredibly* small, however the developers take no responsibility for any issues that may arise as a result of using this alternate firmware. All care has been taken, and considerable testing has been performed, however you are using this software at your own risk.
 
 ## Known Issues
+* There are currently some performance issues related to the extra processing required to run the synth's pitch EG. The DX9's CPU runs at a lower clock rate than the DX7, which means that there is less time to process user input between periodically updating the voice chips, which occurs at a fixed rate. The effect of this is that real-time control is a bit laggy. This is a known issue, and work to optimise the firmware is ongoing.
+
 * Despite this firmware making the DX9 patch-compatible with the DX7, it can't emulate *all* of the DX7's functionality. While your DX9 might think that it's actually a DX7, your patch editor might not be so easily fooled. Some SysEx functionality just can't be emulated in any reasonable way, such as triggering DX7-specific button-presses, and changes to the DX7-specific function parameters. This might cause issues communicating with some patch editors.
 Receiving individual/bulk patch dumps via SysEx *does* work, however. Every effort is being made to make the ROM as compatible as possible, however some discrepancies will inevitably remain.
 
@@ -47,6 +48,7 @@ In the DX7 the analog pitch-bend wheel input is read by the sub-CPU and transmit
 * Pitch-bend step
 * MIDI Output Channel Selection
 * Patch name editing
+* Glissando
 
 ## Reporting Issues
 
