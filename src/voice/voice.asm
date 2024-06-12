@@ -195,7 +195,7 @@ voice_update_sustain_status:                    SUBROUTINE
 ; If so, update the voice status array, and send the voice event signal to
 ; the EGS turn the voice off.
 .test_for_sustained_voices_loop:
-    TIMX    #VOICE_STATUS_SUSTAIN, 1
+    TIMX    #VOICE_STATUS_SUSTAIN, 1,x
     BEQ     .increment_loop_counter
 
     STAB    egs_key_event
