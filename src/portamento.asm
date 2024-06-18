@@ -63,7 +63,6 @@ portamento_calculate_rate:                      SUBROUTINE
 ; process glissando.
 ;
 ; MEMORY MODIFIED:
-; * voice_frequency_target
 ; * voice_frequency_current
 ;
 ; REGISTERS MODIFIED:
@@ -74,7 +73,7 @@ portamento_process:                             SUBROUTINE
 ; ==============================================================================
 ; LOCAL TEMPORARY VARIABLES
 ; ==============================================================================
-.current_voice_ptr:                                     EQU #interrupt_temp_variables
+.current_voice_ptr:                             EQU #interrupt_temp_variables
 .voice_target_frequency:                        EQU #interrupt_temp_variables + 2
 .portamento_frequency_decrement                 EQU #interrupt_temp_variables + 4
 .voice_loop_index:                              EQU #interrupt_temp_variables + 6
@@ -112,11 +111,17 @@ portamento_process:                             SUBROUTINE
     LDD     0,x
     STD     <.voice_target_frequency
 
-; Check whether this voice's current portamento frequency is above or below
-; the voice's target frequency.
-; If *(voice_frequency_current[B]) - *(voice_frequency_target[B]) < 0, branch.
+; Test whether this voice is already at its target frequency.
+; If so, skip the portamento calculation.
+; @NOTE: The DX7, and DX9 firmware do not perform this check.
+; This is only implemented in DX9/7 as an optimisation.
     LDD     32,x
     SUBD    <.voice_target_frequency
+    BEQ     .no_portamento
+
+; Test whether this voice's current portamento frequency is above or below
+; the voice's target frequency.
+; If *(voice_frequency_current[B]) - *(voice_frequency_target[B]) < 0, branch.
     BMI     .frequency_below_target
 
 ; If the current portamento frequency is above the target frequency,
@@ -174,6 +179,12 @@ portamento_process:                             SUBROUTINE
     STD     32,x
     STD     <.voice_target_frequency
 
+    BRA     .add_pitch_eg_level
+
+.no_portamento:
+    LDD     <.voice_target_frequency
+
+.add_pitch_eg_level:
 ; Add the voice's current Pitch EG level to the portamento frequency.
     ADDD    64,x
     SUBD    #$1BA8
@@ -191,7 +202,6 @@ portamento_process:                             SUBROUTINE
 ; Note that the EGS voice frequency buffer is adjacent to these voice buffers,
 ; so it can be indexed with IX. This optimisation was copied from the DX9 ROM.
     STAA    96,x
-    NOP
     STAB    97,x
 
 ; Increment the voice pointer.

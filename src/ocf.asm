@@ -199,16 +199,14 @@ handler_ocf:                                    SUBROUTINE
     JSR     mod_amp_update
     JSR     voice_update_sustain_status
 
-; If there is incoming MIDI data pending, don't process the portamento, or
-; pitch EG.
+; If incoming MIDI data is pending, don't process portamento, or pitch EG.
 ; This logic is taken from the DX7.
     TST     midi_rx_processing_pending
     BNE     .process_pitch_modulation
 
     JSR     portamento_process
 
-; Toggle the flag to determine whether portamento, or pitch modulation are
-; updated in this interrupt.
+; Toggle the flag to determine whether pitch EG is updated in this interrupt.
 ; Refer to documentation in the variable definition file `ram.asm`.
 ; This logic is taken from the DX7.
     COM     pitch_eg_update_toggle
