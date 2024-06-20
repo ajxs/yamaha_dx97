@@ -34,14 +34,19 @@ main_process_events:                            SUBROUTINE
     CMPA    #EVENT_RELOAD_PATCH
     BEQ     .reload_patch
 
-    JSR     voice_reset
+    JSR     voice_reset_egs
 
 .reload_patch:
     JSR     patch_activate
 
-; In the original DX9 firmware, this was not reset when the patch was reloaded.
-; This line prevents activation happening twice in the main loop.
-    CLR     main_patch_event_flag
+; 'main_patch_event_flag' is cleared by the main input handler, which is called
+; earlier in the main loop than this routine.
+; In the original DX9 firmware, the 'main_patch_event_flag' is not reset
+; when the patch is reloaded.
+; If this event processing routine is called multiple times, this flag should
+; be cleared to ensure that the patch is not reloaded twice in one iteration
+; of the main loop.
+;    CLR     main_patch_event_flag
 
 .send_remote_signal:
 ; I'm not sure why the tape remote signal is set here in the main loop.
