@@ -36,13 +36,12 @@ This alternative firmware ROM has been thoroughly tested, and is considered read
 The risk of any harm coming to your DX9 as a result of using this ROM is incredibly, *incredibly* small, however the developers take no responsibility for any issues that may arise as a result of using this alternate firmware. All care has been taken, and considerable testing has been performed, however you are using this software at your own risk.
 
 ## Known Issues
-* There are currently some performance issues related to the extra processing required to run the synth's pitch EG. The DX9's CPU runs at a lower clock rate than the DX7, which means that there is less time to process user input between periodically updating the voice chips, which occurs at a fixed rate. The effect of this is that real-time control is a bit laggy. This is a known issue, and work to optimise the firmware is ongoing.
+* There are currently some performance issues related to the extra processing required to run the synth's pitch EG. The DX9's CPU runs at a lower clock rate than the DX7, which means that there is less time to process user input between periodically updating the voice chips, which occurs at a fixed rate. The effect of this is that real-time control may be slightly slower in some cases than the DX7, or the original DX9 firmware. This is a known issue, and work is ongoing to optimise the firmware.
+
+* The pitch EG, and portamento rate is *slightly* different than the original DX7. The DX9's CPU runs at a different clock rate than the DX7, and the periodic interrupt rate used in the DX9 firmware is slightly different. The original DX7's periodic interrupt runs at 375.258758Hz, whereas the DX9's runs at 377Hz. This leads to *slight* discrepancies in the timing. In most cases this won't be noticeable. This may be corrected in a future release.
 
 * Despite this firmware making the DX9 patch-compatible with the DX7, it can't emulate *all* of the DX7's functionality. While your DX9 might think that it's actually a DX7, your patch editor might not be so easily fooled. Some SysEx functionality just can't be emulated in any reasonable way, such as triggering DX7-specific button-presses, and changes to the DX7-specific function parameters. This might cause issues communicating with some patch editors.
 Receiving individual/bulk patch dumps via SysEx *does* work, however. Every effort is being made to make the ROM as compatible as possible, however some discrepancies will inevitably remain.
-
-* In some cases pitch-bend input is updated at a slightly lower frequency than in the original ROM. If the pitch-bend wheel is moved quickly this can result in a noticeable gradation in the pitch transition. This is due to differences in how the DX7 and DX9 read the analog input from the pitch-bend wheel.
-In the DX7 the analog pitch-bend wheel input is read by the sub-CPU and transmitted to the main CPU periodically. The input is parsed by the main CPU only when it is updated. In the DX9 the pitch-bend's analog input is wired directly to the CPU's I/O ports, and is parsed periodically as part of the OCF interrupt routine. This routine may be further optimised to mitigate this issue in the future.
 
 ## Currently Not Implemented
 * Pitch-bend step
