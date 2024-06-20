@@ -63,11 +63,11 @@ adc_set_source:                                 SUBROUTINE
 ;
 ; ==============================================================================
 adc_read:                                       SUBROUTINE
-    TIMD   #PORT_1_ADC_EOC, io_port_1_data
-
 ; Loop until the ADC's EOC line goes high, indicating that the analog data has
 ; been converted.
+    TIMD   #PORT_1_ADC_EOC, io_port_1_data
     BEQ     adc_read
+
     LDAA    <adc_data
     RTS
 
@@ -201,6 +201,7 @@ adc_process:                                    SUBROUTINE
 .test_if_slider_event:
     CMPB    #ADC_SOURCE_SLIDER
     BNE     .send_midi_cc_message
+
     LDAB    #MIDI_CC_DATA_ENTRY
 
 .send_midi_cc_message:
