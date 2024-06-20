@@ -60,6 +60,9 @@ key_transpose_set_mode_active:                  DS 1
 
 keyboard_last_scanned_values:                   DS 12
 
+keyboard_scan_current_key:                      DS 1
+keyboard_scan_current_octave:                   DS 1
+
 ; This variable stores the number of the last incoming note received via MIDI.
 ; It also stores the last scanned key, and pending key event.
 ; If this value is 0xFF, it indicates there is no key event pending.

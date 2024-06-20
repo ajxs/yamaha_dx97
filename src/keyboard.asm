@@ -25,8 +25,14 @@
 ; read value has changed since the last call.
 ; If the value read for a key has changed, the value is rotated to find which
 ; octave changed.
+; @NOTE: Previously temporary variables were used in the keyboard scan routine.
+; These have been moved to internal RAM to save CPU cycles.
+; The difference between DIRECT, and EXTENDED mode loads/stores adds up to
+; around 40 cycles.
 ;
 ; MEMORY MODIFIED:
+; * keyboard_scan_current_key
+; * keyboard_scan_current_octave
 ; * keyboard_last_scanned_values
 ; * note_number
 ;
@@ -35,22 +41,15 @@
 ;
 ; ==============================================================================
 keyboard_scan:                                  SUBROUTINE
-; ==============================================================================
-; LOCAL TEMPORARY VARIABLES
-; ==============================================================================
-.keyboard_scan_current_key:                     EQU #temp_variables
-.keyboard_scan_octave:                          EQU #(temp_variables + 1)
-
-; ==============================================================================
     LDX     #keyboard_last_scanned_values
     LDAB    <io_port_1_data
     ANDB    #%11110000
     ORAB    #KEY_SWITCH_SCAN_DRIVER_SOURCE_KEYBOARD
-    STAB    .keyboard_scan_current_key
+    STAB    <keyboard_scan_current_key
 
 ; Iterate over each key.
 .scan_key_loop:
-    LDAB    .keyboard_scan_current_key
+    LDAB    <keyboard_scan_current_key
     STAB    <io_port_1_data
     DELAY_SINGLE
 
@@ -62,9 +61,9 @@ keyboard_scan:                                  SUBROUTINE
     BNE     .key_changed
 
     INX
-    LDAB    .keyboard_scan_current_key
+    LDAB    <keyboard_scan_current_key
     INCB
-    STAB    .keyboard_scan_current_key
+    STAB    <keyboard_scan_current_key
 
 ; Test if ACCB % 16 is zero.
 ; ACCB started at 4, so this will loop 12 times (once for each key).
@@ -78,10 +77,10 @@ keyboard_scan:                                  SUBROUTINE
     BRA     .exit
 
 .key_changed:
-    LDAB    .keyboard_scan_current_key
+    LDAB    <keyboard_scan_current_key
     ANDB    #%1111
-    CLR     .keyboard_scan_octave
-    INC     .keyboard_scan_octave
+    CLR     <keyboard_scan_current_octave
+    INC     <keyboard_scan_current_octave
 
 .get_updated_octave:
 ; Rotate this value right until the carry bit is set, indicating that the
@@ -93,17 +92,18 @@ keyboard_scan:                                  SUBROUTINE
 ; of keys in an octave. 21 (the base key value) is added to the final value
 ; to yield the final key code.
     ADDB    #12
-    ASL     .keyboard_scan_octave
+    ASL     <keyboard_scan_current_octave
     BRA     .get_updated_octave
 
 .get_updated_keycode:
     ADDB    #21
     STAB    <note_number
-    LDAA    .keyboard_scan_octave
+    LDAA    <keyboard_scan_current_octave
 
 ; Test whether this key is being pressed. If so, set bit 7.
     BITA    0,x
     BNE     .store_updated_value
+
     OIMD    #$80, note_number
 
 ; Store the updated input.
