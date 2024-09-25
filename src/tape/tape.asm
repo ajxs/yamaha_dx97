@@ -274,7 +274,7 @@ tape_exit:                                      SUBROUTINE
 tape_wait_for_start_input:                      SUBROUTINE
 ; Read front-panel input to determine the next action.
 ; If 'No' is pressed, the tape UI actions are aborted.
-; If 'Yes' is pressed, the operation proceeeds.
+; If 'Yes' is pressed, the operation proceeds.
 ; If the 'Remote' button is pressed, toggle the remote output polarity,
 ; and loop back to wait for further input.
     JSR     input_read_front_panel

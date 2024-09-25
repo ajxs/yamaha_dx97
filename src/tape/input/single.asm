@@ -16,7 +16,7 @@
 ; incoming patch until the selected one is read.
 ; @NOTE: Even though the DX9/7 firmware can only receive the first 10 patches
 ; when receiving a bulk patch dump from the cassette interface, this function
-; can recieve any individual patch of the 20 patch dump.
+; can receive any individual patch of the 20 patch dump.
 ;
 ; ==============================================================================
 

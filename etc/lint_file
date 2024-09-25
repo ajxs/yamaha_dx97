@@ -15,7 +15,7 @@ INPUT_FILE = None
 
 # Whether to abort the linting process on encountering any error.
 ABORT_ON_ERROR = False
-# The maxmimum length of any line.
+# The maximum length of any line.
 MAX_LENGTH_LINE = 80
 # The maximum length of a label.
 MAX_LENGTH_IDENTIFIER = 48

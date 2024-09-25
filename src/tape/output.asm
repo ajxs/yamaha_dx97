@@ -159,7 +159,7 @@ tape_output_bit_zero:
 ; TAPE_OUTPUT_PULSE
 ; ==============================================================================
 ; DESCRIPTION:
-; Ouptuts a sinusoidal 'pulse' of a fixed width of 16 'cycles' to the
+; Outputs a sinusoidal 'pulse' of a fixed width of 16 'cycles' to the
 ; synth's tape output port. This subroutine is used when outputting a '1' bit.
 ;
 ; ARGUMENTS:
@@ -177,7 +177,7 @@ tape_output_pulse_length_16:
 ; TAPE_OUTPUT_PULSE
 ; ==============================================================================
 ; DESCRIPTION:
-; Ouptuts a sinusoidal 'pulse' of a variable width to the synth's tape output
+; Outputs a sinusoidal 'pulse' of a variable width to the synth's tape output
 ; port. This subroutine will output either a high, or a low pulse, depending
 ; on the input polarity.
 ; Two invocations of this subroutine will create a full sinusoidal period.

@@ -20,7 +20,7 @@
 ; @TAKEN_FROM_DX9_FIRMWARE:0xDBD4
 ; DESCRIPTION:
 ; This subroutine reads the key/switch scan driver to get the state of the
-; synth's front-panel swith input.
+; synth's front-panel switch input.
 ; This routine will return a value suitable for reading in the UI functions.
 ;
 ; Input line 0 covers the 'main' front-panel switches.

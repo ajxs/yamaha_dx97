@@ -115,7 +115,7 @@ checksum_remainder_byte:
     ORG $FFEE
 
 ; This is the main hardware vector table.
-; This table contains the various interupt vectors used by the HD6303 CPU. It
+; This table contains the various interrupt vectors used by the HD6303 CPU. It
 ; always sits in a fixed position at the end of the ROM.
 vector_trap:                                    DC.W handler_reset
 vector_sci:                                     DC.W handler_sci

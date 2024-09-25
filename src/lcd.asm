@@ -442,7 +442,7 @@ lcd_print_number_single_digit:                  SUBROUTINE
 ; This subroutine converts one digit of a number to its ASCII equivalent.
 ; This is used as part of the 'lcd_print_number' routines.
 ; The 'divisor' argument passed in ACCB is used to determine which digit of a
-; multipl digit number is returned.
+; multiple digit number is returned.
 ;
 ; ARGUMENTS:
 ; Registers:

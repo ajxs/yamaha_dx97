@@ -163,7 +163,7 @@ midi_reset_read_buffer:
 ; @TAKEN_FROM_DX9_FIRMWARE:0xD8CC
 ; DESCRIPTION:
 ; Re-enables the CPU's periodic timer interrupt.
-; This is called after finishing recieving SysEx data.
+; This is called after finishing receiving SysEx data.
 ;
 ; ==============================================================================
 midi_reenable_timer_interrupt:                  SUBROUTINE

@@ -20,7 +20,7 @@
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; @PRIVATE
 ; DESCRIPTION:
-; Prints an 'equals' to the LCD buffer, and then laods the currently active
+; Prints an 'equals' to the LCD buffer, and then loads the currently active
 ; edit parameter.
 ;
 ; ARGUMENTS:
@@ -44,7 +44,7 @@ ui_print_param_value_equals_and_load_value:     SUBROUTINE
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; @PRIVATE
 ; DESCRIPTION:
-; Prints the specified separator charactor to the LCD buffer, and then loads
+; Prints the specified separator character to the LCD buffer, and then loads
 ; the selected edit parameter.
 ;
 ; ARGUMENTS:

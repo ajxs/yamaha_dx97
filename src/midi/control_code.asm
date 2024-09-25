@@ -175,7 +175,7 @@ midi_rx_cc_5_portamento_time:                   SUBROUTINE
 ; DESCRIPTION:
 ; Handles a MIDI Control Code event of type '6'.
 ; This is intended to be a 'Data Entry' event.
-; The TX7 Service manual suggests that this CC event is intended to udpate the
+; The TX7 Service manual suggests that this CC event is intended to update the
 ; currently selected "voice or function parameter", however the code appears
 ; to only actually work in function mode, and only work when the last pressed
 ; button was 'Button 1' in 'Function Mode', i.e. The master tune setting.

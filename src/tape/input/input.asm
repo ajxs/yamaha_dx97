@@ -253,7 +253,7 @@ tape_input_read_bit_delay:                 SUBROUTINE
 ; ==============================================================================
 ; @TAKEN_FROM_DX9_FIRMWARE
 ; DESCRIPTION:
-; Triggers a delay for an aribtrary specified period.
+; Triggers a delay for an arbitrary specified period.
 ; This is used in the tape input subroutines.
 ;
 ; ARGUMENTS:

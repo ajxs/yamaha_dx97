@@ -765,7 +765,7 @@ midi_sysex_rx_param_function_64_to_76:          SUBROUTINE
 ; SysEx parameter numbers below '42' correspond to DX7 button presses.
 ; The DX9 only acknowledges '0' to '28'.
 ; This subroutine initiates button presses from receiving SysEx function data.
-; Refer to equivalent functionality in DX7 v1.8 firwmare at 0xEEBB.
+; Refer to equivalent functionality in DX7 v1.8 firmware at 0xEEBB.
 ;
 ; ARGUMENTS:
 ; Registers:

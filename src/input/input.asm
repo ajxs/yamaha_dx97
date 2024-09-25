@@ -123,7 +123,7 @@ input_slider:                                   SUBROUTINE
     CMPA    #UI_MODE_PLAY
     BEQ     .exit
 
-; Check if the current UI sate is in 'Store' mode. If so, exit.
+; Check if the current UI state is in 'Store' mode. If so, exit.
     ANDA    #%1100
     BNE     .exit
 
@@ -156,7 +156,7 @@ input_button_yes_no:                            SUBROUTINE
     CMPA    #UI_MODE_PLAY
     BEQ     .exit
 
-; Check if the current UI sate is in 'Store' mode. If so, exit.
+; Check if the current UI state is in 'Store' mode. If so, exit.
     ANDA    #%1100
     BNE     .exit
 

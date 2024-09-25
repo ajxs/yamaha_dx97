@@ -508,7 +508,7 @@ lcd_buffer_next_end:                            EQU *
 ; otherwise they could clobber their usage in ordinary routines.
 ; Note: Also ensure that these variables are not used in subroutines that call
 ; one another. If these are used in such situations, ensure that they do not
-; clobber eachother.
+; clobber each other.
 temp_variables:                                 DS 18
 
 ; Like in the original DX9 ROM the voice buffers occupy a fixed space adjacent

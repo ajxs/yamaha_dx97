@@ -175,7 +175,7 @@ patch_operator_get_ptr:                         SUBROUTINE
 ; ARGUMENTS:
 ; Memory:
 ; * patch_index_current: The 0-indexed patch number to get the pointer to.
-;   If this is a negative numnber, a pointer to the initialised patch
+;   If this is a negative number, a pointer to the initialised patch
 ;   buffer will be returned.
 ;
 ; REGISTERS MODIFIED:

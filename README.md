@@ -111,7 +111,7 @@ All efforts are being made to optimise the RAM usage for additional patch storag
 **Q: After editing the ROM, is it possible to get the ROM diagnostic test stage to pass?**
 
 **A:** Yes! 
-Please refer to this helper script for instructions on how to resovle this: `etc/get_checksum_remainder_byte`.
+Please refer to this helper script for instructions on how to resolve this: `etc/get_checksum_remainder_byte`.
 
 
 **Q: How do I check which version of the DX9/7 ROM I'm using?**

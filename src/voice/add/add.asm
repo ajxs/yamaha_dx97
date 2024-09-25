@@ -272,7 +272,7 @@ voice_add_load_frequency_to_egs:                SUBROUTINE
     SUBD    #$1BA8
 
 ; Clamp the frequency value to a minimum of zero.
-; If the current vaue of D > 0x1BA8, branch.
+; If the current value of D > 0x1BA8, branch.
     BCC     .add_master_tune
 
     LDD     #0

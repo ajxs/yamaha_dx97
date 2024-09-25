@@ -301,7 +301,7 @@ handler_reset:                                  SUBROUTINE
     CLEAR_BUFFER internal_ram_start, 128
 
 ; Store 0xFF in the note number variable to indicate a 'NULL' value.
-; This will be intepreted as a no-operation by the note handler in the main
+; This will be interpreted as a no-operation by the note handler in the main
 ; event loop.
     LDAA    #$FF
     STAA    <note_number
@@ -393,7 +393,7 @@ handler_reset:                                  SUBROUTINE
 ; ==============================================================================
 ; DESCRIPTION:
 ; Synth firmware executive main loop.
-; This is where the bulk of the synth's functionaly is implemented.
+; This is where the bulk of the synth's functionality is implemented.
 ; The keyboard, and pedal input are first scanned here. Unlike other Yamaha
 ; FM synthesisers, the DX9's 'Note On', and 'Note Off' functionaliy
 ; are implemented via a flag set in the keyboard scan routine.
