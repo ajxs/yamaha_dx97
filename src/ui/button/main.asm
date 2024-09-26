@@ -7,7 +7,7 @@
 ; ui/button/main.asm
 ; ==============================================================================
 ; DESCRIPTION:
-; Contains the subroutines that handle buttonpresses to tye synth's 'main'
+; Contains the subroutines that handle buttonpresses to the synth's 'main'
 ; front-panel buttons. These being 'Store', 'Function', 'Edit', 'Memory'.
 ; ==============================================================================
 
@@ -268,12 +268,12 @@ ui_patch_compare_toggle:                        SUBROUTINE
 
     LDAA    #BUTTON_EDIT_20_KEY_TRANSPOSE
     CMPA    ui_btn_numeric_last_pressed
-    BEQ     .last_button_key_tranpose
+    BEQ     .last_button_key_transpose
 
     LDX     ui_active_param_address
     BRA     .send_active_edit_parameter
 
-.last_button_key_tranpose:
+.last_button_key_transpose:
     LDX     #patch_edit_key_transpose
 
 .send_active_edit_parameter:

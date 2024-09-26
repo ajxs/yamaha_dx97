@@ -119,6 +119,7 @@ voice_add_operator_level_voice_frequency:       SUBROUTINE
 
 ; If this value overflows, clamp at 0xFF.
     BCC     .increment_operator_sensitivity_ptr
+
     LDAA    #$FF
 
 .increment_operator_sensitivity_ptr:

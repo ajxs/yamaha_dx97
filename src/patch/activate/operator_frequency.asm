@@ -104,7 +104,7 @@ patch_activate_operator_frequency:              SUBROUTINE
     LDD     0,x
     STD     .operator_coarse_freq
 
-; Scale the fine fixed frequency by multipying by 136.
+; Scale the fine fixed frequency by multiplying by 136.
     LDX     .operator_pointer
     LDAA    PATCH_OP_FREQ_FINE,x
     LDAB    #136

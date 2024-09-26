@@ -677,7 +677,6 @@ ui_button_function_7:                           SUBROUTINE
 ; ==============================================================================
 ; DESCRIPTION:
 ; Handles a press to button '19' when the synth is in function mode.
-; Thi
 ;
 ; ==============================================================================
 ui_button_function_19:                          SUBROUTINE

@@ -18,7 +18,7 @@
 ; ==============================================================================
 ; DESCRIPTION:
 ; The keyboard circuitry is grouped by key, with the same key from each octave
-; wired together. The individual keys of an octive are wired to lines 4-15 of
+; wired together. The individual keys of an octave are wired to lines 4-15 of
 ; the key switch scan driver. The value returned is the octave of the pressed
 ; key (1 << octave).
 ; This subroutine iterates over the 12 different keys, checking whether each
@@ -164,7 +164,7 @@ keyboard_event_handler:                         SUBROUTINE
 ; Mask the note number.
     ANDB    #%1111111
 
-; Test whether the 'Set Key Tranpose' mode is active.
+; Test whether the 'Set Key Transpose' mode is active.
 ; In this case the next keypress sets the root note.
     LDAA    <key_transpose_set_mode_active
     BNE     keyboard_set_key_transpose
@@ -190,7 +190,7 @@ keyboard_event_handler:                         SUBROUTINE
 ; This subroutine sets the 'Key Transpose' centre-note value.
 ; This function is called as part of the 'keyboard_event_handler' routine if
 ; the appropriate flag is set to indicate that the synth is in
-; 'Set Key Tranpose' mode. If this flag is set the next key note value is to
+; 'Set Key Transpose' mode. If this flag is set the next key note value is to
 ; be stored as the centre-note value.
 ;
 ; ARGUMENTS:
@@ -206,11 +206,11 @@ keyboard_event_handler:                         SUBROUTINE
 ; ==============================================================================
 keyboard_set_key_transpose:                     SUBROUTINE
 ; Test whether the note is below 48.
-; If so, set to 48 to initialise the tranpose key at the minimum.
+; If so, set to 48 to initialise the transpose key at the minimum.
     CMPB    #48
     BMI     .key_under_48
 
-; Test whether the tranpose key is above 72.
+; Test whether the transpose key is above 72.
 ; If so, set to its maximum of 72.
     CMPB    #72
     BLS     .set_transpose_key

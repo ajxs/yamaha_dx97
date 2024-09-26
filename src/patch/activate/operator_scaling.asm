@@ -230,6 +230,7 @@ patch_activate_operator_keyboard_scaling_level: SUBROUTINE
 
 ; If the MSB of the result is less than 127, clamp.
     BPL     .get_right_curve_polarity
+
     LDAA    #127
 
 .get_right_curve_polarity:

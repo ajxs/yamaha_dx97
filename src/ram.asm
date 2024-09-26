@@ -451,7 +451,7 @@ ui_active_param_max_value:                      DS 1
 ; This is used in the slider parameter update routine.
 ui_slider_value_previous:                       DS 1
 
-; This flag appears to disable 'Key Tranpose' UI functionality.
+; This flag appears to disable 'Key Transpose' UI functionality.
 ; This is ostensibly used so that the user doesn't activate the 'Key Transpose'
 ; mode by accident.
 ui_flag_blocks_key_transpose:                   DS 1
